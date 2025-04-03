@@ -62,7 +62,9 @@ export default class Book extends BaseModel {
   })
   declare authors: ManyToMany<typeof Author>
 
-  @manyToMany(() => Narrator)
+  @manyToMany(() => Narrator, {
+    pivotColumns: ['role'],
+  })
   declare narrators: ManyToMany<typeof Narrator>
 
   @manyToMany(() => Genre)

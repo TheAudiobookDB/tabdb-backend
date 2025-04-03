@@ -39,6 +39,7 @@ export const createBookValidator = vine.compile(
           name: vine.string().minLength(3).maxLength(255),
           description: vine.string().optional(),
           image: vine.string().url().optional(),
+          role: vine.string().maxLength(255).optional(),
         })
       )
       .optional(),

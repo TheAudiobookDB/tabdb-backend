@@ -16,7 +16,9 @@ export default class Narrator extends BaseModel {
   @column()
   declare image: string | null
 
-  @manyToMany(() => Book)
+  @manyToMany(() => Book, {
+    pivotColumns: ['role'],
+  })
   declare books: ManyToMany<typeof Book>
 
   @column.dateTime({ autoCreate: true })
