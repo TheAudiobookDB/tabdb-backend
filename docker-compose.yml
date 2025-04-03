@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
 
     ports:
-      - "192.168.178.100:3333:3333"
+      - "3333:3333"
 
     # Maybe needed later
     # volumes:
@@ -13,6 +13,7 @@ services:
     environment:
       # These need to be changed
       - APP_KEY=
+      - APP_URL=https://example.com
 
       # Either RESEND or SMTP
       - RESEND_API_KEY=
@@ -37,10 +38,7 @@ services:
       - REDIS_PASSWORD=dor2hv*dj1dga
       - LIMITER_STORE=redis
       - LOG_LEVEL=info
-
-      # These should be changed for production
-      - HOST=localhost
-      - APP_URL=http://${HOST}:${PORT}
+      - HOST=0.0.0.0
 
     depends_on:
       - postgres
