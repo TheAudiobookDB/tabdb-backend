@@ -1,0 +1,82 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    ports:
+      - "192.168.178.100:3333:3333"
+
+    # Maybe needed later
+    # volumes:
+
+    environment:
+      # These need to be changed
+      - APP_KEY=
+
+      # Either RESEND or SMTP
+      - RESEND_API_KEY=
+
+
+      - SMTP_HOST=
+      - SMTP_PORT=
+      - SMTP_USERNAME=
+      - SMTP_PASSWORD=
+
+      # These are the default values and are optional
+      - TZ=UTC
+      - PORT=3333
+      - NODE_ENV=production
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=adonis
+      - DB_PASSWORD=dor2hv*dj1dga
+      - DB_DATABASE=adonis
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=dor2hv*dj1dga
+      - LIMITER_STORE=redis
+      - LOG_LEVEL=info
+
+      # These should be changed for production
+      - HOST=localhost
+      - APP_URL=http://${HOST}:${PORT}
+
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:latest
+    restart: always
+    environment:
+      POSTGRES_USER: adonis
+      POSTGRES_PASSWORD: dor2hv*dj1dga
+      POSTGRES_DB: adonis
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U adonis"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7.4.2-alpine
+    restart: always
+    command: redis-server --save 20 1 --loglevel warning --requirepass dor2hv*dj1dga
+    volumes:
+      - cache:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -h localhost -a dor2hv*dj1dga ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  cache:
+    driver: local
+  pgdata:
+    driver: local
