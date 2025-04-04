@@ -27,7 +27,7 @@ export default class BooksController {
       .preload('identifiers')
       .preload('series')
       .preload('tracks')
-
+      .preload('group')
       .first()
   }
 }

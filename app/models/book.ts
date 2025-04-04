@@ -1,12 +1,13 @@
 import { DateTime } from 'luxon'
-import { BaseModel, column, hasMany, manyToMany } from '@adonisjs/lucid/orm'
+import { BaseModel, belongsTo, column, hasMany, manyToMany } from '@adonisjs/lucid/orm'
 import Author from '#models/author'
-import type { HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
+import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import Narrator from '#models/narrator'
 import Genre from '#models/genre'
 import Identifier from '#models/identifier'
 import Series from '#models/series'
 import Track from '#models/track'
+import BookGroup from '#models/book_group'
 
 export default class Book extends BaseModel {
   @column({ isPrimary: true })
@@ -55,6 +56,9 @@ export default class Book extends BaseModel {
   declare isAbridged: boolean | null
 
   @column()
+  declare groupId: number | null
+
+  @column()
   declare type: 'book' | 'audiobook' | 'podcast'
 
   @manyToMany(() => Author, {
@@ -82,6 +86,12 @@ export default class Book extends BaseModel {
     foreignKey: 'id',
   })
   declare tracks: HasMany<typeof Track>
+
+  @belongsTo(() => BookGroup, {
+    foreignKey: 'groupId',
+    localKey: 'id',
+  })
+  declare group: BelongsTo<typeof BookGroup>
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
