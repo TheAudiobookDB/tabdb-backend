@@ -4,6 +4,7 @@ import router from '@adonisjs/core/services/router'
 import User from '#models/user'
 import mail from '@adonisjs/mail/services/main'
 import env from '#start/env'
+import { randomUUID } from 'node:crypto'
 
 export default class AuthController {
   /**
@@ -21,6 +22,7 @@ export default class AuthController {
       .builder()
       .prefixUrl(env.get('APP_URL'))
       .params({ email: email })
+      .qs({ uuid: randomUUID() })
       .makeSigned('/login', { expiresIn: '5m', purpose: 'login' })
 
     await mail.send((message) => {
@@ -39,9 +41,10 @@ export default class AuthController {
    * @description Logs in a user when clicking on the link in the email sent
    * @responseHeader 200
    */
-  async create({ request }: HttpContext) {
+  async create({ request, response }: HttpContext) {
     if (request.hasValidSignature('login')) {
       const email = request.param('email')
+      const { uuid } = request.qs()
 
       let user = await User.findBy('email', email)
 
@@ -51,19 +54,24 @@ export default class AuthController {
         await user.save()
       }
 
+      const tokens = await User.accessTokens.all(user)
+
+      if (tokens.find((token) => token.name === uuid)) {
+        return response.badRequest('Token already exists')
+      }
+
       return {
         user,
-        token: await User.accessTokens.create(user, [
-          'rate1:150',
-          'rate2:50',
-          'rate3:10',
-          'server:add',
-        ]),
+        token: await User.accessTokens.create(
+          user,
+          ['rate1:150', 'rate2:50', 'rate3:10', 'server:add'],
+          {
+            name: uuid,
+          }
+        ),
       }
     } else {
-      return {
-        error: 'Invalid or expired signature',
-      }
+      return response.badRequest('Expired or invalid token')
     }
   }
 }
