@@ -3,27 +3,34 @@ import url from 'node:url'
 
 export default {
   path: path.dirname(url.fileURLToPath(import.meta.url)) + '/../',
-  title: 'Foo',
-  version: '1.0.0',
+  title: 'AudiobookDB',
+  version: '1.0.1',
   description: '',
   tagIndex: 2,
   productionEnv: 'production',
-  info: {
-    title: 'title',
-    version: '1.0.0',
-    description: '',
-  },
   snakeCase: true,
   debug: false,
   ignore: ['/swagger', '/docs'],
-  preferredPutPatch: 'PUT', // if PUT/PATCH are provided for the same route, prefer PUT
+  preferredPutPatch: 'PUT',
   common: {
-    parameters: {}, // OpenAPI conform parameters that are commonly used
-    headers: {}, // OpenAPI conform headers that are commonly used
+    parameters: {
+      page: {
+        name: 'page',
+        in: 'query',
+        description: 'Page number',
+        required: false,
+        schema: {
+          type: 'integer',
+          default: 1,
+          example: 3,
+        },
+      },
+    },
+    headers: {},
   },
   securitySchemes: {},
   authMiddlewares: ['auth', 'relaxAuth'],
   defaultSecurityScheme: 'BearerAuth',
   persistAuthorization: true,
-  showFullPath: false,
+  showFullPath: true,
 }

@@ -59,6 +59,7 @@ export default class Book extends BaseModel {
   declare groupId: number | null
 
   @column()
+  // @enum(book, audiobook, podcast)
   declare type: 'book' | 'audiobook' | 'podcast'
 
   @manyToMany(() => Author, {

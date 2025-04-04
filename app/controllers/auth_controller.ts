@@ -11,7 +11,6 @@ export default class AuthController {
    * @index
    * @operationId login
    * @description Logs in a user when clicking on the link in the email sent
-   * @responseHeader 200
    */
   async store({ request }: HttpContext) {
     await storeLoginValidator.validate(request.all())
@@ -39,7 +38,6 @@ export default class AuthController {
    * @create
    * @operationId login
    * @description Logs in a user when clicking on the link in the email sent
-   * @responseHeader 200
    */
   async create({ request, response }: HttpContext) {
     if (request.hasValidSignature('login')) {
