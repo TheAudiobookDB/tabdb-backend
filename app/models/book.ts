@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { BaseModel, belongsTo, column, hasMany, manyToMany } from '@adonisjs/lucid/orm'
+import { afterFind, BaseModel, belongsTo, column, hasMany, manyToMany } from '@adonisjs/lucid/orm'
 import Author from '#models/author'
 import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import Narrator from '#models/narrator'
@@ -59,6 +59,12 @@ export default class Book extends BaseModel {
   declare groupId: number | null
 
   @column()
+  declare enabled: boolean
+
+  @column.dateTime()
+  declare deletedAt: DateTime | null
+
+  @column()
   // @enum(book, audiobook, podcast)
   declare type: 'book' | 'audiobook' | 'podcast'
 
@@ -84,7 +90,7 @@ export default class Book extends BaseModel {
   declare series: ManyToMany<typeof Series>
 
   @hasMany(() => Track, {
-    foreignKey: 'id',
+    foreignKey: 'bookId',
   })
   declare tracks: HasMany<typeof Track>
 
@@ -99,4 +105,24 @@ export default class Book extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+
+  @afterFind()
+  public static async afterFindHook(book: Book) {
+    if (book.narrators) {
+      for (let i = 0; i < book.narrators.length; i++) {
+        const narrator = book.narrators[i]
+        if (narrator.$extras.pivot_role) {
+          book.narrators[i].role = narrator.$extras.pivot_role
+        }
+      }
+    }
+    if (book.series) {
+      for (let i = 0; i < book.series.length; i++) {
+        const series = book.series[i]
+        if (series.$extras.pivot_position) {
+          book.series[i].position = series.$extras.pivot_position
+        }
+      }
+    }
+  }
 }

@@ -16,6 +16,9 @@ export default class Series extends BaseModel {
   @column()
   declare image: string | null
 
+  @column()
+  declare position: number | null
+
   @manyToMany(() => Book, {
     pivotColumns: ['position'],
   })

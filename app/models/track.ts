@@ -16,6 +16,9 @@ export default class Track extends BaseModel {
   @column()
   declare end: number
 
+  @column()
+  declare bookId: number
+
   @belongsTo(() => Book)
   declare book: BelongsTo<typeof Book>
 

@@ -21,6 +21,9 @@ export default class Narrator extends BaseModel {
   })
   declare books: ManyToMany<typeof Book>
 
+  @column()
+  declare role: string | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
