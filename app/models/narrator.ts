@@ -2,6 +2,7 @@ import { DateTime } from 'luxon'
 import { BaseModel, column, manyToMany } from '@adonisjs/lucid/orm'
 import Book from '#models/book'
 import type { ManyToMany } from '@adonisjs/lucid/types/relations'
+import Identifier from '#models/identifier'
 
 export default class Narrator extends BaseModel {
   @column({ isPrimary: true })
@@ -20,6 +21,9 @@ export default class Narrator extends BaseModel {
     pivotColumns: ['role'],
   })
   declare books: ManyToMany<typeof Book>
+
+  @manyToMany(() => Identifier)
+  declare identifiers: ManyToMany<typeof Identifier>
 
   @column()
   declare role: string | null

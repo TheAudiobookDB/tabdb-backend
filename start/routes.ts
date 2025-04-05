@@ -12,6 +12,7 @@ import { emailLimiter, loginLimiter, r1Limiter, r2Limiter, r3Limiter } from '#st
 import { middleware } from '#start/kernel'
 import AutoSwagger from 'adonis-autoswagger'
 import swagger from '#config/swagger'
+const RequestsController = () => import('#controllers/requests_controller')
 const ConfirmsController = () => import('#controllers/confirms_controller')
 const SearchesController = () => import('#controllers/searches_controller')
 const BooksController = () => import('#controllers/books_controller')
@@ -51,3 +52,9 @@ router.get('/search/book', [SearchesController, 'book']).use(middleware.relaxAut
  * Confirm
  */
 router.get('/create/confirm', [ConfirmsController, 'create']).use(middleware.auth())
+
+/**
+ * Request
+ */
+
+router.post('/request', [RequestsController, 'index']).use(middleware.relaxAuth()).use(r1Limiter)

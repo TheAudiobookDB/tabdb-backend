@@ -14,6 +14,13 @@ import Narrator from '#models/narrator'
 import Track from '#models/track'
 import Series from '#models/series'
 import { DateTime } from 'luxon'
+import {
+  authorValidator,
+  genreValidator,
+  identifierValidator,
+  narratorValidator,
+  seriesValidator,
+} from '#validators/provider_validator'
 
 export default class BooksController {
   /**
@@ -44,7 +51,7 @@ export default class BooksController {
     book.publisher = payload.publisher ?? null
     book.language = payload.language ?? null
     book.copyright = payload.copyright ?? null
-    book.pages = payload.pages ?? null
+    book.page = payload.page ?? null
     book.duration = payload.duration ?? null
     book.publishedAt = payload.publishedAt ? DateTime.fromJSDate(payload.publishedAt) : null
     book.releasedAt = payload.releasedAt ? DateTime.fromJSDate(payload.releasedAt) : null
@@ -56,94 +63,15 @@ export default class BooksController {
     await book.save()
 
     // Genres
-    if (payload.genres) {
-      const genres = []
-      for (const genre of payload.genres) {
-        if (genre.id) {
-          const existingGenre = await Genre.find(genre.id)
-          if (existingGenre) {
-            genres.push(existingGenre)
-          }
-        } else {
-          const existingGenre = await Genre.firstOrCreate({ name: genre.name, type: genre.type })
-          if (existingGenre) {
-            genres.push(existingGenre)
-          }
-        }
-      }
-      await book.related('genres').saveMany(genres)
-    }
+    await BooksController.addGenreToBook(book, payload.genres)
 
     // Identifiers
-    if (payload.identifiers) {
-      const identifiers = []
-      for (const identifier of payload.identifiers) {
-        if ('id' in identifier && identifier.id) {
-          const existingIdentifier = await Identifier.find(identifier.id)
-          if (existingIdentifier) {
-            identifiers.push(existingIdentifier)
-          }
-        } else if ('type' in identifier) {
-          const existingIdentifier = await Identifier.firstOrCreate({
-            type: identifier.type,
-            value: identifier.value,
-          })
-          if (existingIdentifier) {
-            identifiers.push(existingIdentifier)
-          }
-        }
-      }
-      await book.related('identifiers').saveMany(identifiers)
-    }
+    await BooksController.addIdentifierToBook(book, payload.identifiers)
 
     // Authors
-    if (payload.authors) {
-      const authors = []
-      for (const author of payload.authors) {
-        if (author.id) {
-          const existingAuthor = await Author.find(author.id)
-          if (existingAuthor) {
-            authors.push(existingAuthor)
-          }
-        } else {
-          const existingAuthor = await Author.firstOrCreate(
-            { name: author.name },
-            {
-              description: author.description,
-            }
-          )
-          if (existingAuthor) {
-            authors.push(existingAuthor)
-          }
-        }
-      }
-      await book.related('authors').saveMany(authors)
-    }
+    await BooksController.addAuthorToBook(book, payload.authors)
 
-    // Narrators
-    if (payload.narrators) {
-      const narrators = []
-      for (const narrator of payload.narrators) {
-        if (narrator.id) {
-          const existingNarrator = await Narrator.find(narrator.id)
-          if (existingNarrator) {
-            narrators.push(existingNarrator)
-          }
-        } else {
-          const existingNarrator = await Narrator.firstOrCreate(
-            { name: narrator.name },
-            {
-              description: narrator.description,
-              role: narrator.role,
-            }
-          )
-          if (existingNarrator) {
-            narrators.push(existingNarrator)
-          }
-        }
-      }
-      await book.related('narrators').saveMany(narrators)
-    }
+    await BooksController.addNarratorToBook(book, payload.narrators)
 
     // Tracks
     if (payload.tracks) {
@@ -171,28 +99,7 @@ export default class BooksController {
     }
 
     // Series
-    if (payload.series) {
-      const series = []
-      for (const serie of payload.series) {
-        if (serie.id) {
-          const existingSeries = await Series.find(serie.id)
-          if (existingSeries) {
-            series.push(existingSeries)
-          }
-        } else {
-          const existingSeries = await Series.firstOrCreate(
-            { name: serie.name },
-            {
-              description: serie.description,
-            }
-          )
-          if (existingSeries) {
-            series.push(existingSeries)
-          }
-        }
-      }
-      await book.related('series').saveMany(series)
-    }
+    await BooksController.addSeriesToBook(book, payload.series)
 
     if (foundBooks && foundBooks.length > 0) {
       const url = router
@@ -215,6 +122,195 @@ export default class BooksController {
     await book.save()
 
     return { book }
+  }
+
+  static async addGenreToBook(book: Book, payloadObject?: object[]) {
+    if (payloadObject) {
+      const genres = []
+      for (const payload of payloadObject) {
+        const genre = await genreValidator.validate(payload)
+        if (genre.id) {
+          const existingGenre = await Genre.find(genre.id)
+          if (existingGenre) {
+            genres.push(existingGenre)
+          }
+        } else {
+          const existingGenre = await Genre.firstOrCreate({ name: genre.name, type: genre.type })
+          if (existingGenre) {
+            genres.push(existingGenre)
+          }
+        }
+      }
+      await book.related('genres').saveMany(genres)
+    }
+  }
+
+  static async addNarratorToBook(book: Book, payloadObject?: object[]) {
+    if (payloadObject) {
+      const narrators = []
+      for (const payload of payloadObject) {
+        const narrator = await narratorValidator.validate(payload)
+        if (narrator.id) {
+          const existingNarrator = await Narrator.find(narrator.id)
+          if (existingNarrator) {
+            narrators.push(existingNarrator)
+          }
+        } else {
+          const existingNarrator = await Narrator.firstOrCreate(
+            { name: narrator.name },
+            {
+              description: narrator.description,
+            }
+          )
+          if (existingNarrator) {
+            narrators.push(existingNarrator)
+          }
+        }
+        if (narrators.length > 0 && narrator.identifiers) {
+          const narratorModel: Narrator = narrators[narrators.length - 1]
+
+          const identifiers: Identifier[] = []
+          for (const identifier of narrator.identifiers) {
+            if ('id' in identifier && identifier.id) {
+              const existingIdentifier = await Identifier.find(identifier.id)
+              if (existingIdentifier) {
+                identifiers.push(existingIdentifier)
+              }
+            } else if ('type' in identifier) {
+              const existingIdentifier = await Identifier.firstOrCreate({
+                type: identifier.type,
+                value: identifier.value,
+              })
+              if (existingIdentifier) {
+                identifiers.push(existingIdentifier)
+              }
+            }
+          }
+          await narratorModel.related('identifiers').saveMany(identifiers)
+        }
+      }
+      await book.related('narrators').saveMany(narrators)
+    }
+  }
+
+  static async addAuthorToBook(book: Book, payloadObject?: object[]) {
+    if (payloadObject) {
+      const authors = []
+      for (const payload of payloadObject) {
+        const author = await authorValidator.validate(payload)
+        if (author.id) {
+          const existingAuthor = await Author.find(author.id)
+          if (existingAuthor) {
+            authors.push(existingAuthor)
+          }
+        } else {
+          const existingAuthor = await Author.firstOrCreate(
+            { name: author.name },
+            {
+              description: author.description,
+            }
+          )
+          if (existingAuthor) {
+            authors.push(existingAuthor)
+          }
+        }
+        if (authors.length > 0 && author.identifiers) {
+          const authorModel: Author = authors[authors.length - 1]
+
+          const identifiers: Identifier[] = []
+          for (const identifier of author.identifiers) {
+            if ('id' in identifier && identifier.id) {
+              const existingIdentifier = await Identifier.find(identifier.id)
+              if (existingIdentifier) {
+                identifiers.push(existingIdentifier)
+              }
+            } else if ('type' in identifier) {
+              const existingIdentifier = await Identifier.firstOrCreate({
+                type: identifier.type,
+                value: identifier.value,
+              })
+              if (existingIdentifier) {
+                identifiers.push(existingIdentifier)
+              }
+            }
+          }
+          await authorModel.related('identifiers').saveMany(identifiers)
+        }
+      }
+      await book.related('authors').saveMany(authors)
+    }
+  }
+
+  static async addIdentifierToBook(book: Book, payloadObject?: object[]) {
+    if (payloadObject) {
+      const identifiers = []
+      for (const payload of payloadObject) {
+        const identifier = await identifierValidator.validate(payload)
+        if ('id' in identifier && identifier.id) {
+          const existingIdentifier = await Identifier.find(identifier.id)
+          if (existingIdentifier) {
+            identifiers.push(existingIdentifier)
+          }
+        } else if ('type' in identifier) {
+          const existingIdentifier = await Identifier.firstOrCreate({
+            type: identifier.type,
+            value: identifier.value,
+          })
+          if (existingIdentifier) {
+            identifiers.push(existingIdentifier)
+          }
+        }
+      }
+      await book.related('identifiers').saveMany(identifiers)
+    }
+  }
+
+  static async addSeriesToBook(book: Book, payloadObject?: object[]) {
+    if (payloadObject) {
+      const series = []
+      for (const payload of payloadObject) {
+        const serie = await seriesValidator.validate(payload)
+        if (serie.id) {
+          const existingSeries = await Series.find(serie.id)
+          if (existingSeries) {
+            series.push(existingSeries)
+          }
+        } else {
+          const existingSeries = await Series.firstOrCreate(
+            { name: serie.name },
+            {
+              description: serie.description,
+            }
+          )
+          if (existingSeries) {
+            series.push(existingSeries)
+          }
+        }
+        if (series.length > 0 && serie.identifiers) {
+          const seriesModel: Series = series[series.length - 1]
+
+          const identifiers: Identifier[] = []
+          for (const identifier of serie.identifiers) {
+            if ('id' in identifier && identifier.id) {
+              const existingIdentifier = await Identifier.find(identifier.id)
+              if (existingIdentifier) {
+                identifiers.push(existingIdentifier)
+              }
+            } else if ('type' in identifier) {
+              const existingIdentifier = await Identifier.firstOrCreate({
+                type: identifier.type,
+                value: identifier.value,
+              })
+              if (existingIdentifier) {
+                identifiers.push(existingIdentifier)
+              }
+            }
+          }
+          await seriesModel.related('identifiers').saveMany(identifiers)
+        }
+      }
+      await book.related('series').saveMany(series)
+    }
   }
 
   /**

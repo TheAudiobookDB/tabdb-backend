@@ -8,14 +8,14 @@ export default class extends BaseSchema {
       table.increments('id')
 
       // Books
-      table.string('title').notNullable()
-      table.string('subtitle').nullable()
-      table.string('summary').nullable()
-      table.string('description').nullable()
-      table.string('publisher').nullable()
+      table.string('title', 1023).notNullable()
+      table.string('subtitle', 1023).nullable()
+      table.text('summary').nullable()
+      table.text('description').nullable()
+      table.string('publisher', 1023).nullable()
       table.string('image').nullable()
       table.string('language', 255).nullable()
-      table.string('copyright').nullable()
+      table.string('copyright', 1023).nullable()
 
       table.integer('page', 6).nullable().defaultTo(null)
       table.integer('duration').nullable()

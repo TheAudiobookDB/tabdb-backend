@@ -1,4 +1,5 @@
 import vine from '@vinejs/vine'
+import { identifierValidation } from '#validators/provider_validator'
 
 /**
  *
@@ -13,7 +14,7 @@ export const createBookValidator = vine.compile(
     publisher: vine.string().maxLength(1023).optional(),
     language: vine.string().maxLength(255).optional(),
     copyright: vine.string().maxLength(255).optional(),
-    pages: vine.number().positive().withoutDecimals().optional(),
+    page: vine.number().positive().withoutDecimals().optional(),
     duration: vine.number().positive().optional(),
     publishedAt: vine.date().optional(),
     releasedAt: vine.date().optional(),
@@ -56,61 +57,7 @@ export const createBookValidator = vine.compile(
         })
       )
       .optional(),
-    identifiers: vine
-      .array(
-        vine
-          .union([
-            vine.union.if(
-              (value) => vine.helpers.isObject(value) && 'id' in value,
-              vine.object({
-                id: vine.number().positive().withoutDecimals(),
-              })
-            ),
-            vine.union.if(
-              (value) =>
-                vine.helpers.isObject(value) &&
-                'value' in value &&
-                'type' in value &&
-                vine.helpers.isString(value.type) &&
-                value.type.includes('asin') &&
-                !('id' in value),
-              vine.object({
-                type: vine.enum(['audible:asin', 'amazon:asin']),
-                value: vine.string().regex(RegExp('^[0-9A-Z]{10}$')),
-              })
-            ),
-            vine.union.if(
-              (value) =>
-                vine.helpers.isObject(value) &&
-                'value' in value &&
-                'type' in value &&
-                vine.helpers.isString(value.type) &&
-                value.type.includes('isbn10') &&
-                !('id' in value),
-              vine.object({
-                type: vine.enum(['isbn10']),
-                value: vine.string().regex(RegExp('^\\d{9}[\\dX]$')),
-              })
-            ),
-            vine.union.if(
-              (value) =>
-                vine.helpers.isObject(value) &&
-                'value' in value &&
-                'type' in value &&
-                vine.helpers.isString(value.type) &&
-                (value.type.includes('isbn13') || value.type.includes('ean')) &&
-                !('id' in value),
-              vine.object({
-                type: vine.enum(['isbn13', 'ean']),
-                value: vine.string().regex(RegExp('^\\d{13}$')),
-              })
-            ),
-          ])
-          .otherwise((_, field) => {
-            field.report('Invalid type or format', 'invalid_identifier', field)
-          })
-      )
-      .optional(),
+    identifiers: vine.array(identifierValidation).optional(),
     series: vine
       .array(
         vine.object({

@@ -38,7 +38,7 @@ export default class Book extends BaseModel {
   declare copyright: string | null
 
   @column()
-  declare pages: number | null
+  declare page: number | null
 
   @column()
   declare duration: number | null

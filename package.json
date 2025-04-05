@@ -61,6 +61,7 @@
     "@adonisjs/redis": "^9.2.0",
     "@vinejs/vine": "^3.0.0",
     "adonis-autoswagger": "^3.71.0",
+    "axios": "^1.8.4",
     "edge.js": "^6.2.1",
     "luxon": "^3.6.1",
     "pg": "^8.14.1",
