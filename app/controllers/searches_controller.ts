@@ -4,12 +4,19 @@ import Book from '#models/book'
 
 export default class SearchesController {
   /**
-   * @summary Returns a list of books based on the search criteria
-   * @tag Search
-   * @description Returns a list of books based on the search criteria
+   * @book
    * @operationId searchBook
-   * @responseBody 200 . <Book[]>
-   * @responseHeader 200 - @use(paginated)
+   * @summary Search for a book
+   * @description Search for a book by multiple criteria and return a paginated list of books.
+   *
+   * TODO: Add request
+   *
+   * @responseHeader 200 - @use(rate)
+   * @responseHeader 200 - @use(requestId)
+   *
+   * @responseBody 200 - <Book[]>.with(relations).paginated()
+   * @responseBody 422 - <ValidationInterface>
+   * @responseBody 429 - <TooManyRequests>
    */
   async book({ request }: HttpContext) {
     await searchBookValidator.validate(request.all())

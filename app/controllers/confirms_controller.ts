@@ -5,11 +5,21 @@ import { HttpContext } from '@adonisjs/core/http'
 
 export default class ConfirmsController {
   /**
-   * @summary Confirm the creation of a book
-   * @tag Book
-   * @description Confirm the creation of a book
-   * @operationId confirmBook
-   * @responseBody 200 - { message: string }
+   * @create
+   * @operationId createDisabledBook
+   * @summary Enables a disabled book
+   * @description If a book was created that already exists or is very similar to an existing book, it will be disabled. This endpoint allows you to enable the book again. This only works with the link you received when creating the book.
+   *
+   * @paramQuery signature - The signature of the request
+   * @paramQuery model - The model type (book) - enum(book)
+   * @paramQuery id - The id of the book
+   *
+   * @responseHeader 200 - @use(rate)
+   * @responseHeader 200 - @use(requestId)
+   *
+   * @responseBody 200 - <Book[]>.with(relations).paginated()
+   * @responseBody 422 - <ValidationInterface>
+   * @responseBody 429 - <TooManyRequests>
    */
   async create({ request }: HttpContext) {
     const { model, id } = request.qs()

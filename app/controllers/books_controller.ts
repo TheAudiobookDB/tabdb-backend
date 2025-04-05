@@ -16,6 +16,20 @@ import Series from '#models/series'
 import { DateTime } from 'luxon'
 
 export default class BooksController {
+  /**
+   * @create
+   * @operationId createBook
+   * @summary Create a new book
+   * @description Creates a new book and (optionally) its relations (authors, narrators, genres, identifiers, series, tracks).
+   *
+   * @requestBody - <createBookValidator>
+   *
+   * @responseHeader 200 - @use(rate)
+   * @responseHeader 200 - @use(requestId)
+   *
+   * @responseBody 422 - <ValidationInterface>
+   * @responseBody 429 - <TooManyRequests>
+   */
   async create({ request }: HttpContext) {
     const payload = await request.validateUsing(createBookValidator)
 
@@ -203,6 +217,21 @@ export default class BooksController {
     return { book }
   }
 
+  /**
+   * @get
+   * @operationId getBook
+   * @summary Get a book by ID
+   * @description Gets a book by ID and preloads its authors, narrators, genres, identifiers, series, tracks, and group.
+   *
+   * @requestBody - <getBookValidator>
+   *
+   * @responseHeader 200 - @use(rate)
+   * @responseHeader 200 - @use(requestId)
+   *
+   * @responseBody 200 - <Book>.with(relations)
+   * @responseBody 422 - <ValidationInterface>
+   * @responseBody 429 - <TooManyRequests>
+   */
   async get({ params }: HttpContext) {
     await getBookValidator.validate(params)
 

@@ -8,9 +8,17 @@ import { randomUUID } from 'node:crypto'
 
 export default class AuthController {
   /**
-   * @index
+   * @store
    * @operationId login
-   * @description Logs in a user when clicking on the link in the email sent
+   * @summary Sends an email to the user with a link to log in
+   * @description Sends an email to the user with a link to log in
+   *
+   * @responseHeader 200 - @use(rate)
+   * @responseHeader 200 - @use(requestId)
+   *
+   * @responseBody 200 - {"message": "Email sent successfully"}
+   * @responseBody 422 - <ValidationInterface>
+   * @responseBody 429 - <TooManyRequests>
    */
   async store({ request }: HttpContext) {
     await storeLoginValidator.validate(request.all())
@@ -31,13 +39,20 @@ export default class AuthController {
         .htmlView('email/login_email', { login_url: url })
     })
 
-    return null
+    return {
+      message: 'Email sent successfully',
+    }
   }
 
   /**
    * @create
-   * @operationId login
-   * @description Logs in a user when clicking on the link in the email sent
+   * @operationId confirmLogin
+   * @summary Confirms the login
+   * @description Creates a new user if it does not exist and creates a new token for the user
+   *
+   * @responseBody 200 - <AccessTokenInterface>
+   * @responseBody 422 - <ValidationInterface>
+   * @responseBody 429 - <TooManyRequests>
    */
   async create({ request, response }: HttpContext) {
     if (request.hasValidSignature('login')) {
@@ -58,16 +73,13 @@ export default class AuthController {
         return response.badRequest('Token already exists')
       }
 
-      return {
+      return await User.accessTokens.create(
         user,
-        token: await User.accessTokens.create(
-          user,
-          ['rate1:150', 'rate2:50', 'rate3:10', 'server:add'],
-          {
-            name: uuid,
-          }
-        ),
-      }
+        ['rate1:150', 'rate2:50', 'rate3:10', 'server:add'],
+        {
+          name: uuid,
+        }
+      )
     } else {
       return response.badRequest('Expired or invalid token')
     }

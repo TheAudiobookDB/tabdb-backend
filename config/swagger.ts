@@ -6,31 +6,34 @@ export default {
   title: 'AudiobookDB',
   version: '1.0.1',
   description: '',
-  tagIndex: 2,
+  tagIndex: 1,
   productionEnv: 'production',
   snakeCase: true,
   debug: false,
   ignore: ['/swagger', '/docs'],
-  preferredPutPatch: 'PUT',
-  common: {
-    parameters: {
-      page: {
-        name: 'page',
-        in: 'query',
-        description: 'Page number',
-        required: false,
-        schema: {
-          type: 'integer',
-          default: 1,
-          example: 3,
-        },
-      },
-    },
-    headers: {},
-  },
-  securitySchemes: {},
   authMiddlewares: ['auth', 'relaxAuth'],
   defaultSecurityScheme: 'BearerAuth',
   persistAuthorization: true,
   showFullPath: true,
+  common: {
+    headers: {
+      rate: {
+        'x-ratelimit-limit': {
+          description: 'Total amount of requests',
+          schema: { type: 'integer', example: 150 },
+        },
+        'x-ratelimit-remaining': {
+          description: 'Remaining amount of requests',
+          schema: { type: 'integer', example: 100 },
+        },
+      },
+      requestId: {
+        'x-request-id': {
+          description: 'Request ID',
+          schema: { type: 'string', example: '1234567890' },
+        },
+      },
+    },
+    parameters: {},
+  },
 }

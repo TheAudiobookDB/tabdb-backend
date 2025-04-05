@@ -17,15 +17,6 @@ const SearchesController = () => import('#controllers/searches_controller')
 const BooksController = () => import('#controllers/books_controller')
 const AuthController = () => import('#controllers/auth_controller')
 
-router
-  .get('/', async () => {
-    return {
-      hello: 'world',
-    }
-  })
-  .use(middleware.relaxAuth())
-  .use(r3Limiter)
-
 /**
  * Swagger
  */
@@ -35,7 +26,7 @@ router.get('/swagger', async () => {
 })
 
 router.get('/docs', async () => {
-  return AutoSwagger.default.ui('/swagger')
+  return AutoSwagger.default.scalar('/swagger')
 })
 
 /**
