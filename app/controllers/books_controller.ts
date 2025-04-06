@@ -8,7 +8,6 @@ import env from '#start/env'
 import { randomUUID } from 'node:crypto'
 import { BooksHelper } from '../helpers/books_helper.js'
 import Genre from '#models/genre'
-import Identifier from '#models/identifier'
 import Author from '#models/author'
 import Narrator from '#models/narrator'
 import Track from '#models/track'
@@ -17,11 +16,11 @@ import { DateTime } from 'luxon'
 import {
   authorValidator,
   genreValidator,
-  identifierValidator,
   narratorValidator,
   seriesValidator,
 } from '#validators/provider_validator'
 import { ModelObject } from '@adonisjs/lucid/types/model'
+import { ModelHelper } from '../helpers/model_helper.js'
 
 export default class BooksController {
   /**
@@ -67,7 +66,7 @@ export default class BooksController {
     await BooksController.addGenreToBook(book, payload.genres)
 
     // Identifiers
-    await BooksController.addIdentifierToBook(book, payload.identifiers)
+    await ModelHelper.addIdentifier(book, payload.identifiers)
 
     // Authors
     await BooksController.addAuthorToBook(book, payload.authors)
@@ -178,27 +177,10 @@ export default class BooksController {
         if (narrators.length > 0 && narrator.identifiers) {
           const narratorModel: Narrator = narrators[narrators.length - 1]
 
-          const identifiers: Identifier[] = []
-          for (const identifier of narrator.identifiers) {
-            if ('id' in identifier && identifier.id) {
-              const existingIdentifier = await Identifier.findBy('public_id', identifier.id)
-              if (existingIdentifier) {
-                identifiers.push(existingIdentifier)
-              }
-            } else if ('type' in identifier) {
-              const existingIdentifier = await Identifier.firstOrCreate({
-                type: identifier.type,
-                value: identifier.value,
-              })
-              if (existingIdentifier) {
-                identifiers.push(existingIdentifier)
-              }
-            }
-          }
-          await narratorModel.related('identifiers').saveMany(identifiers)
+          await ModelHelper.addIdentifier(narratorModel, narrator.identifiers)
         }
       }
-      await book.related('narrators').attach(roles)
+      await book.related('narrators').sync(roles)
     }
   }
 
@@ -226,51 +208,10 @@ export default class BooksController {
         if (authors.length > 0 && author.identifiers) {
           const authorModel: Author = authors[authors.length - 1]
 
-          const identifiers: Identifier[] = []
-          for (const identifier of author.identifiers) {
-            if ('id' in identifier && identifier.id) {
-              const existingIdentifier = await Identifier.findBy('public_id', identifier.id)
-              if (existingIdentifier) {
-                identifiers.push(existingIdentifier)
-              }
-            } else if ('type' in identifier) {
-              const existingIdentifier = await Identifier.firstOrCreate({
-                type: identifier.type,
-                value: identifier.value,
-              })
-              if (existingIdentifier) {
-                identifiers.push(existingIdentifier)
-              }
-            }
-          }
-          await authorModel.related('identifiers').saveMany(identifiers)
+          await ModelHelper.addIdentifier(authorModel, author.identifiers)
         }
       }
       await book.related('authors').saveMany(authors)
-    }
-  }
-
-  static async addIdentifierToBook(book: Book, payloadObject?: object[]) {
-    if (payloadObject) {
-      const identifiers = []
-      for (const payload of payloadObject) {
-        const identifier = await identifierValidator.validate(payload)
-        if ('id' in identifier && identifier.id) {
-          const existingIdentifier = await Identifier.findBy('public_id', identifier.id)
-          if (existingIdentifier) {
-            identifiers.push(existingIdentifier)
-          }
-        } else if ('type' in identifier) {
-          const existingIdentifier = await Identifier.firstOrCreate({
-            type: identifier.type,
-            value: identifier.value,
-          })
-          if (existingIdentifier) {
-            identifiers.push(existingIdentifier)
-          }
-        }
-      }
-      await book.related('identifiers').saveMany(identifiers)
     }
   }
 
@@ -280,22 +221,43 @@ export default class BooksController {
       const positions: Record<string, ModelObject> = {}
       for (const payload of payloadObject) {
         const serie = await seriesValidator.validate(payload)
+        let existingSeries: Series | null = null
         if (serie.id) {
-          const existingSeries = await Series.findBy('public_id', serie.id)
+          existingSeries = await Series.findBy('public_id', serie.id)
           if (existingSeries) {
             series.push(existingSeries)
           }
-        } else {
-          const existingSeries = await Series.firstOrCreate(
+        }
+
+        if (!existingSeries && serie.identifiers) {
+          const identifiers = serie.identifiers
+          for (const identifier of identifiers) {
+            const result = (await ModelHelper.findByIdentifier(
+              Series,
+              undefined,
+              undefined,
+              identifier
+            )) as Series[]
+            if (result && result.length > 0) {
+              series.push(result[0])
+              break
+            }
+          }
+        }
+
+        if (!existingSeries && serie.name) {
+          existingSeries = await Series.firstOrCreate(
             { name: serie.name },
             {
               description: serie.description,
             }
           )
-          if (existingSeries) {
-            series.push(existingSeries)
-          }
         }
+
+        if (existingSeries) {
+          series.push(existingSeries)
+        }
+
         const seriesId = series[series.length - 1].id
         const position = serie.position
         if (position) {
@@ -306,27 +268,10 @@ export default class BooksController {
         if (series.length > 0 && serie.identifiers) {
           const seriesModel: Series = series[series.length - 1]
 
-          const identifiers: Identifier[] = []
-          for (const identifier of serie.identifiers) {
-            if ('id' in identifier && identifier.id) {
-              const existingIdentifier = await Identifier.findBy('public_id', identifier.id)
-              if (existingIdentifier) {
-                identifiers.push(existingIdentifier)
-              }
-            } else if ('type' in identifier) {
-              const existingIdentifier = await Identifier.firstOrCreate({
-                type: identifier.type,
-                value: identifier.value,
-              })
-              if (existingIdentifier) {
-                identifiers.push(existingIdentifier)
-              }
-            }
-          }
-          await seriesModel.related('identifiers').saveMany(identifiers)
+          await ModelHelper.addIdentifier(seriesModel, serie.identifiers)
         }
       }
-      await book.related('series').attach(positions)
+      await book.related('series').sync(positions)
     }
   }
 

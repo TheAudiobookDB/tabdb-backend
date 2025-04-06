@@ -33,20 +33,25 @@ export default class RequestsController {
           case 'book':
             const result = await Audible.fetchBook(payload.identifier, payload.language)
             return {
-              message: `Request for book ${payload.identifier} from provider ${payload.provider} successfull`,
+              message: `Request for book ${payload.identifier} from provider ${payload.provider} successful`,
               id: result.publicId,
             }
           case 'author':
+            const authorResult = await Audible.fetchAuthor(payload.identifier, payload.language)
             return {
-              message: `Request for author ${payload.identifier} from provider ${payload.provider}`,
+              message: `Request for author ${payload.identifier} from provider ${payload.provider} successful`,
+              id: authorResult.publicId,
             }
           case 'tracks':
+            await Audible.fetchTracks(payload.identifier, payload.language)
             return {
-              message: `Request for tracks ${payload.identifier} from provider ${payload.provider}`,
+              message: `Request for tracks ${payload.identifier} from provider ${payload.provider} successful`,
             }
           case 'series':
+            const seriesResult = await Audible.fetchSeries(payload.identifier, payload.language)
             return {
-              message: `Request for series ${payload.identifier} from provider ${payload.provider}`,
+              message: `Request for series ${payload.identifier} from provider ${payload.provider} successful`,
+              id: seriesResult.publicId,
             }
         }
 

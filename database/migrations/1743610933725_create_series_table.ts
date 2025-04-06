@@ -12,7 +12,7 @@ export default class extends BaseSchema {
       table.index('public_id')
 
       table.string('name').notNullable()
-      table.string('description').nullable()
+      table.text('description').nullable()
       table.string('image').nullable()
 
       table.timestamp('created_at')

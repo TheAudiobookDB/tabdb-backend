@@ -63,6 +63,41 @@ export const audiMetaBookValidator = vine.compile(
   })
 )
 
+export const audiMetaAuthorValidator = vine.compile(
+  vine.object({
+    asin: vine.string().minLength(10).maxLength(11),
+    name: vine.string().minLength(3).maxLength(255),
+    description: vine.string().optional(),
+    image: vine.string().url().optional(),
+  })
+)
+
+export const audiMetaTrackValidator = vine.compile(
+  vine.object({
+    brandIntroDurationMs: vine.number().positive().optional(),
+    brandOutroDurationMs: vine.number().positive().optional(),
+    is_accurate: vine.boolean().optional(),
+    runtime_length_ms: vine.number().positive().optional(),
+    runtime_length: vine.string().optional(),
+    chapters: vine.array(
+      vine.object({
+        title: vine.string().minLength(3).maxLength(255),
+        startOffsetMs: vine.number().positive(),
+        startOffsetSec: vine.number().positive().optional(),
+        lengthMs: vine.number().positive(),
+      })
+    ),
+  })
+)
+
+export const audiMetaSeriesValidator = vine.compile(
+  vine.object({
+    asin: vine.string().minLength(10).maxLength(11),
+    title: vine.string().minLength(3).maxLength(255),
+    description: vine.string().optional(),
+  })
+)
+
 export const identifierValidation = vine
   .union([
     vine.union.if(
@@ -117,7 +152,7 @@ export const identifierValidation = vine
 
 export const identifierValidator = vine.compile(identifierValidation)
 
-const narratorValidation = vine.object({
+export const narratorValidation = vine.object({
   id: nanoIdValidation.optional().requiredIfMissing('name'),
   name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
   description: vine.string().optional(),

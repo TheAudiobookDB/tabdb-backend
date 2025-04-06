@@ -1,5 +1,5 @@
 import vine from '@vinejs/vine'
-import { identifierValidation } from '#validators/provider_validator'
+import { identifierValidation, narratorValidation } from '#validators/provider_validator'
 import { nanoIdValidation } from '#config/app'
 
 /**
@@ -42,17 +42,7 @@ export const createBookValidator = vine.compile(
         })
       )
       .optional(),
-    narrators: vine
-      .array(
-        vine.object({
-          id: nanoIdValidation.optional().requiredIfMissing('name'),
-          name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
-          description: vine.string().optional(),
-          image: vine.string().url().optional(),
-          role: vine.string().maxLength(255).optional(),
-        })
-      )
-      .optional(),
+    narrators: vine.array(narratorValidation).optional(),
     identifiers: vine.array(identifierValidation).optional(),
     series: vine
       .array(
