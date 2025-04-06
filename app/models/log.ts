@@ -1,11 +1,15 @@
 import { DateTime } from 'luxon'
-import { BaseModel, belongsTo, column } from '@adonisjs/lucid/orm'
+import { BaseModel, beforeCreate, belongsTo, column } from '@adonisjs/lucid/orm'
 import User from '#models/user'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import { nanoid } from '#config/app'
 
 export default class Log extends BaseModel {
-  @column({ isPrimary: true })
+  @column({ isPrimary: true, serializeAs: null })
   declare id: number
+
+  @column({ serializeAs: 'id' })
+  declare publicId: string
 
   @column()
   declare old_data: string | null
@@ -39,4 +43,11 @@ export default class Log extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
+
+  @beforeCreate()
+  public static ensurePublicId(log: Log) {
+    if (!log.publicId) {
+      log.publicId = nanoid()
+    }
+  }
 }

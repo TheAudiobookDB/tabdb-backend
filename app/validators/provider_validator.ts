@@ -1,4 +1,5 @@
 import vine from '@vinejs/vine'
+import { nanoIdValidation } from '#config/app'
 
 export const audiMetaBookValidator = vine.compile(
   vine.object({
@@ -9,7 +10,7 @@ export const audiMetaBookValidator = vine.compile(
     description: vine.string().optional(),
     summary: vine.string().optional(),
     bookFormat: vine.enum(['abridged', 'unabridged']).optional(),
-    lengthInMinutes: vine.number().positive().withoutDecimals().optional(),
+    lengthMinutes: vine.number().positive().withoutDecimals().optional(),
     imageUrl: vine.string().url().optional(),
     explicit: vine.boolean().optional(),
     isbn: vine.string().minLength(10).maxLength(13).optional(),
@@ -67,7 +68,7 @@ export const identifierValidation = vine
     vine.union.if(
       (value) => vine.helpers.isObject(value) && 'id' in value,
       vine.object({
-        id: vine.number().positive().withoutDecimals(),
+        id: nanoIdValidation,
       })
     ),
     vine.union.if(
@@ -117,7 +118,7 @@ export const identifierValidation = vine
 export const identifierValidator = vine.compile(identifierValidation)
 
 const narratorValidation = vine.object({
-  id: vine.number().positive().withoutDecimals().optional().requiredIfMissing('name'),
+  id: nanoIdValidation.optional().requiredIfMissing('name'),
   name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
   description: vine.string().optional(),
   image: vine.string().url().optional(),
@@ -127,7 +128,7 @@ const narratorValidation = vine.object({
 export const narratorValidator = vine.compile(narratorValidation)
 
 const authorValidation = vine.object({
-  id: vine.number().positive().withoutDecimals().optional().requiredIfMissing('name'),
+  id: nanoIdValidation.optional().requiredIfMissing('name'),
   name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
   description: vine.string().optional(),
   image: vine.string().url().optional(),
@@ -136,24 +137,24 @@ const authorValidation = vine.object({
 export const authorValidator = vine.compile(authorValidation)
 
 export const seriesValidation = vine.object({
-  id: vine.number().positive().withoutDecimals().optional().requiredIfMissing('name'),
+  id: nanoIdValidation.optional().requiredIfMissing('name'),
   name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
   description: vine.string().optional(),
   image: vine.string().url().optional(),
-  position: vine.number().positive().withoutDecimals().optional(),
+  position: vine.string().optional(),
   identifiers: vine.array(identifierValidation).optional(),
 })
 export const seriesValidator = vine.compile(seriesValidation)
 
 const genreValidation = vine.object({
-  id: vine.number().positive().withoutDecimals().optional().requiredIfMissing('name'),
+  id: nanoIdValidation.optional().requiredIfMissing('name'),
   name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
   type: vine.enum(['genre', 'tag']).optional().requiredIfMissing('id'),
 })
 export const genreValidator = vine.compile(genreValidation)
 
 export const trackValidation = vine.object({
-  id: vine.number().positive().withoutDecimals().optional().requiredIfMissing('name'),
+  id: nanoIdValidation.optional().requiredIfMissing('name'),
   name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
   start: vine.number().positive().optional().requiredIfExists('end'),
   end: vine.number().positive().optional().requiredIfExists('start'),

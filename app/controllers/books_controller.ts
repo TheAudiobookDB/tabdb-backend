@@ -21,6 +21,7 @@ import {
   narratorValidator,
   seriesValidator,
 } from '#validators/provider_validator'
+import { ModelObject } from '@adonisjs/lucid/types/model'
 
 export default class BooksController {
   /**
@@ -78,7 +79,7 @@ export default class BooksController {
       const tracks = []
       for (const track of payload.tracks) {
         if (track.id) {
-          const existingTrack = await Track.find(track.id)
+          const existingTrack = await Track.findBy('public_id', track.id)
           if (existingTrack) {
             tracks.push(existingTrack)
           }
@@ -130,7 +131,7 @@ export default class BooksController {
       for (const payload of payloadObject) {
         const genre = await genreValidator.validate(payload)
         if (genre.id) {
-          const existingGenre = await Genre.find(genre.id)
+          const existingGenre = await Genre.findBy('public_id', genre.id)
           if (existingGenre) {
             genres.push(existingGenre)
           }
@@ -148,10 +149,11 @@ export default class BooksController {
   static async addNarratorToBook(book: Book, payloadObject?: object[]) {
     if (payloadObject) {
       const narrators = []
+      const roles: Record<string, ModelObject> = {}
       for (const payload of payloadObject) {
         const narrator = await narratorValidator.validate(payload)
         if (narrator.id) {
-          const existingNarrator = await Narrator.find(narrator.id)
+          const existingNarrator = await Narrator.findBy('public_id', narrator.id)
           if (existingNarrator) {
             narrators.push(existingNarrator)
           }
@@ -166,13 +168,20 @@ export default class BooksController {
             narrators.push(existingNarrator)
           }
         }
+        const narratorId = narrators[narrators.length - 1].id
+        const role = narrator.role
+        if (role) {
+          roles[narratorId] = { role }
+        } else {
+          roles[narratorId] = {}
+        }
         if (narrators.length > 0 && narrator.identifiers) {
           const narratorModel: Narrator = narrators[narrators.length - 1]
 
           const identifiers: Identifier[] = []
           for (const identifier of narrator.identifiers) {
             if ('id' in identifier && identifier.id) {
-              const existingIdentifier = await Identifier.find(identifier.id)
+              const existingIdentifier = await Identifier.findBy('public_id', identifier.id)
               if (existingIdentifier) {
                 identifiers.push(existingIdentifier)
               }
@@ -189,7 +198,7 @@ export default class BooksController {
           await narratorModel.related('identifiers').saveMany(identifiers)
         }
       }
-      await book.related('narrators').saveMany(narrators)
+      await book.related('narrators').attach(roles)
     }
   }
 
@@ -199,7 +208,7 @@ export default class BooksController {
       for (const payload of payloadObject) {
         const author = await authorValidator.validate(payload)
         if (author.id) {
-          const existingAuthor = await Author.find(author.id)
+          const existingAuthor = await Author.findBy('public_id', author.id)
           if (existingAuthor) {
             authors.push(existingAuthor)
           }
@@ -220,7 +229,7 @@ export default class BooksController {
           const identifiers: Identifier[] = []
           for (const identifier of author.identifiers) {
             if ('id' in identifier && identifier.id) {
-              const existingIdentifier = await Identifier.find(identifier.id)
+              const existingIdentifier = await Identifier.findBy('public_id', identifier.id)
               if (existingIdentifier) {
                 identifiers.push(existingIdentifier)
               }
@@ -247,7 +256,7 @@ export default class BooksController {
       for (const payload of payloadObject) {
         const identifier = await identifierValidator.validate(payload)
         if ('id' in identifier && identifier.id) {
-          const existingIdentifier = await Identifier.find(identifier.id)
+          const existingIdentifier = await Identifier.findBy('public_id', identifier.id)
           if (existingIdentifier) {
             identifiers.push(existingIdentifier)
           }
@@ -268,10 +277,11 @@ export default class BooksController {
   static async addSeriesToBook(book: Book, payloadObject?: object[]) {
     if (payloadObject) {
       const series = []
+      const positions: Record<string, ModelObject> = {}
       for (const payload of payloadObject) {
         const serie = await seriesValidator.validate(payload)
         if (serie.id) {
-          const existingSeries = await Series.find(serie.id)
+          const existingSeries = await Series.findBy('public_id', serie.id)
           if (existingSeries) {
             series.push(existingSeries)
           }
@@ -286,13 +296,20 @@ export default class BooksController {
             series.push(existingSeries)
           }
         }
+        const seriesId = series[series.length - 1].id
+        const position = serie.position
+        if (position) {
+          positions[seriesId] = { position }
+        } else {
+          positions[seriesId] = {}
+        }
         if (series.length > 0 && serie.identifiers) {
           const seriesModel: Series = series[series.length - 1]
 
           const identifiers: Identifier[] = []
           for (const identifier of serie.identifiers) {
             if ('id' in identifier && identifier.id) {
-              const existingIdentifier = await Identifier.find(identifier.id)
+              const existingIdentifier = await Identifier.findBy('public_id', identifier.id)
               if (existingIdentifier) {
                 identifiers.push(existingIdentifier)
               }
@@ -309,7 +326,7 @@ export default class BooksController {
           await seriesModel.related('identifiers').saveMany(identifiers)
         }
       }
-      await book.related('series').saveMany(series)
+      await book.related('series').attach(positions)
     }
   }
 
@@ -332,7 +349,7 @@ export default class BooksController {
     await getBookValidator.validate(params)
 
     return await Book.query()
-      .where('id', params.id)
+      .where('public_id', params.id)
       .preload('authors')
       .preload('narrators', (q) => q.pivotColumns(['role']))
       .preload('genres')

@@ -15,6 +15,10 @@ export default class extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
 
+      table.specificType('public_id', 'char(16) DEFAULT nanoid()')
+      table.unique('public_id')
+      table.index('public_id')
+
       table.string('value').notNullable()
       table.enum('type', availableIdentifiers).notNullable()
 

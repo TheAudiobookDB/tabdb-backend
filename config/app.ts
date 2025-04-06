@@ -2,6 +2,8 @@ import env from '#start/env'
 import app from '@adonisjs/core/services/app'
 import { Secret } from '@adonisjs/core/helpers'
 import { defineConfig } from '@adonisjs/core/http'
+import { customAlphabet } from 'nanoid'
+import vine from '@vinejs/vine'
 
 /**
  * The app key is used for encrypting cookies, generating signed URLs,
@@ -38,3 +40,13 @@ export const http = defineConfig({
     sameSite: 'lax',
   },
 })
+
+/**
+ * The configuration for nanoId
+ */
+export const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 16)
+
+export const nanoIdValidation = vine
+  .string()
+  .regex(RegExp('^[a-zA-Z0-9_-]{16}$'))
+  .transform((value) => value.toUpperCase())

@@ -34,7 +34,7 @@ export default class RequestsController {
             const result = await Audible.fetchBook(payload.identifier, payload.language)
             return {
               message: `Request for book ${payload.identifier} from provider ${payload.provider} successfull`,
-              id: result.id,
+              id: result.publicId,
             }
           case 'author':
             return {

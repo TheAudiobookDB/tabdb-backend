@@ -20,9 +20,9 @@ export class Audible {
     book.publisher = payload.publisher ?? null
     book.language = payload.language ?? null
     book.copyright = payload.copyright ?? null
-    book.duration = payload.lengthInMinutes !== undefined ? payload.lengthInMinutes * 60 : null
+    book.duration = payload.lengthMinutes !== undefined ? payload.lengthMinutes * 60 : null
     book.releasedAt = payload.releaseDate ? DateTime.fromISO(payload.releaseDate) : null
-    book.isAbridged = payload.bookFormat === 'abridged' ? true : null
+    book.isAbridged = payload.bookFormat === 'abridged'
     book.isExplicit = payload.explicit ?? false
     book.type = 'audiobook'
     book.groupId = null
@@ -71,6 +71,15 @@ export class Audible {
         type: 'audible:asin',
         value: payload.asin,
       },
+      // If isbn is not null, add it as an identifier
+      ...(payload.isbn
+        ? [
+            {
+              type: 'isbn13',
+              value: payload.isbn,
+            },
+          ]
+        : []),
     ])
 
     fullBook.enabled = true

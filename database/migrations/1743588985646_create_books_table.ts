@@ -7,6 +7,10 @@ export default class extends BaseSchema {
     this.schema.createTable(this.tableName, (table) => {
       table.increments('id')
 
+      table.specificType('public_id', 'char(16) DEFAULT nanoid()')
+      table.unique('public_id')
+      table.index('public_id')
+
       // Books
       table.string('title', 1023).notNullable()
       table.string('subtitle', 1023).nullable()

@@ -1,5 +1,13 @@
 import { DateTime } from 'luxon'
-import { afterFind, BaseModel, belongsTo, column, hasMany, manyToMany } from '@adonisjs/lucid/orm'
+import {
+  afterFind,
+  BaseModel,
+  beforeCreate,
+  belongsTo,
+  column,
+  hasMany,
+  manyToMany,
+} from '@adonisjs/lucid/orm'
 import Author from '#models/author'
 import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import Narrator from '#models/narrator'
@@ -8,10 +16,14 @@ import Identifier from '#models/identifier'
 import Series from '#models/series'
 import Track from '#models/track'
 import BookGroup from '#models/book_group'
+import { nanoid } from '#config/app'
 
 export default class Book extends BaseModel {
-  @column({ isPrimary: true })
+  @column({ isPrimary: true, serializeAs: null })
   declare id: number
+
+  @column({ serializeAs: 'id' })
+  declare publicId: string
 
   @column()
   declare title: string
@@ -61,7 +73,7 @@ export default class Book extends BaseModel {
   @column()
   declare enabled: boolean
 
-  @column.dateTime()
+  @column.dateTime({ serializeAs: null })
   declare deletedAt: DateTime | null
 
   @column()
@@ -123,6 +135,13 @@ export default class Book extends BaseModel {
           book.series[i].position = series.$extras.pivot_position
         }
       }
+    }
+  }
+
+  @beforeCreate()
+  public static ensurePublicId(book: Book) {
+    if (!book.publicId) {
+      book.publicId = nanoid()
     }
   }
 }

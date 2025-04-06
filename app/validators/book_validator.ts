@@ -1,5 +1,6 @@
 import vine from '@vinejs/vine'
 import { identifierValidation } from '#validators/provider_validator'
+import { nanoIdValidation } from '#config/app'
 
 /**
  *
@@ -25,12 +26,7 @@ export const createBookValidator = vine.compile(
     genres: vine
       .array(
         vine.object({
-          id: vine
-            .number()
-            .positive()
-            .withoutDecimals()
-            .optional()
-            .requiredIfAnyMissing(['name', 'type']),
+          id: nanoIdValidation.optional().requiredIfAnyMissing(['name', 'type']),
           name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
           type: vine.enum(['genre', 'tag']).optional().requiredIfMissing('id'),
         })
@@ -39,7 +35,7 @@ export const createBookValidator = vine.compile(
     authors: vine
       .array(
         vine.object({
-          id: vine.number().positive().withoutDecimals().optional().requiredIfMissing('name'),
+          id: nanoIdValidation.optional().requiredIfMissing('name'),
           name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
           description: vine.string().optional(),
           image: vine.string().url().optional(),
@@ -49,7 +45,7 @@ export const createBookValidator = vine.compile(
     narrators: vine
       .array(
         vine.object({
-          id: vine.number().positive().withoutDecimals().optional().requiredIfMissing('name'),
+          id: nanoIdValidation.optional().requiredIfMissing('name'),
           name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
           description: vine.string().optional(),
           image: vine.string().url().optional(),
@@ -61,7 +57,7 @@ export const createBookValidator = vine.compile(
     series: vine
       .array(
         vine.object({
-          id: vine.number().positive().withoutDecimals().optional().requiredIfMissing('name'),
+          id: nanoIdValidation.optional().requiredIfMissing('name'),
           name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
           description: vine.string().optional(),
           image: vine.string().url().optional(),
@@ -72,12 +68,7 @@ export const createBookValidator = vine.compile(
     tracks: vine
       .array(
         vine.object({
-          id: vine
-            .number()
-            .positive()
-            .withoutDecimals()
-            .optional()
-            .requiredIfAnyMissing(['name', 'start', 'end']),
+          id: nanoIdValidation.optional().requiredIfAnyMissing(['name', 'start', 'end']),
           name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
           start: vine
             .number()
@@ -99,6 +90,6 @@ export const createBookValidator = vine.compile(
 
 export const getBookValidator = vine.compile(
   vine.object({
-    id: vine.number().positive().withoutDecimals(),
+    id: nanoIdValidation,
   })
 )
