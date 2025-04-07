@@ -36,6 +36,8 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - REDIS_PASSWORD=dor2hv*dj1dga
+      - MEILISEARCH_HOST=http://meilisearch:7700
+      - MEILISEARCH_API_KEY=dor2hv*dj1dga
       - LIMITER_STORE=redis
       - LOG_LEVEL=info
       - HOST=0.0.0.0
@@ -55,7 +57,7 @@ services:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U adonis"]
-      interval: 10s
+      interval: 60s
       timeout: 5s
       retries: 5
       start_period: 30s
@@ -68,13 +70,29 @@ services:
       - cache:/data
     healthcheck:
       test: ["CMD-SHELL", "redis-cli -h localhost -a dor2hv*dj1dga ping"]
-      interval: 10s
+      interval: 60s
       timeout: 5s
       retries: 5
       start_period: 30s
+
+  meilisearch:
+    image: 'getmeili/meilisearch:latest'
+    environment:
+      MEILI_MASTER_KEY: 'dor2hv*dj1dga'
+    ports:
+      - '7700:7700'
+    volumes:
+      - 'meilisearch:/meili_data'
+    healthcheck:
+      test: set -o pipefail;curl -fsS http://localhost:7700/health | grep -q '{"status":"available"}'
+      interval: 5m
+      retries: 3
+      timeout: 5s
 
 volumes:
   cache:
     driver: local
   pgdata:
+    driver: local
+  meilisearch:
     driver: local
