@@ -211,3 +211,32 @@ export const trackValidation = vine.object({
   end: vine.number().positive().optional().requiredIfExists('start'),
 })
 export const trackValidator = vine.compile(trackValidation)
+
+export const audiobookshelfValidator = vine.compile(
+  vine.object({
+    title: vine.string().minLength(3).maxLength(255),
+    subtitle: vine.string().minLength(3).maxLength(255).optional(),
+    tags: vine.array(vine.string().minLength(3).maxLength(255)).optional(),
+    genres: vine.array(vine.string().minLength(3).maxLength(255)).optional(),
+    authors: vine.array(vine.string().minLength(3).maxLength(255)).optional(),
+    narrators: vine.array(vine.string().minLength(3).maxLength(255)).optional(),
+    series: vine.array(vine.string().minLength(3).maxLength(255)).optional(),
+    chapters: vine
+      .array(
+        vine.object({
+          start: vine.number().positive(),
+          end: vine.number().positive(),
+          title: vine.string().minLength(3).maxLength(255),
+        })
+      )
+      .optional(),
+    publishedYear: vine.string().optional(),
+    publisher: vine.string().optional(),
+    description: vine.string().optional(),
+    isbn: vine.string().optional(),
+    asin: vine.string().optional(),
+    language: vine.string().optional(),
+    explicit: vine.boolean().optional(),
+    abridged: vine.boolean().optional(),
+  })
+)

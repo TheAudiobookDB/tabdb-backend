@@ -151,26 +151,52 @@ export default class Book extends BaseModel {
 
   @afterCreate()
   public static async afterCreateHook(book: Book) {
+    const fetchedBook = (await Book.query()
+      .where('id', book.id)
+      .preload('authors')
+      .preload('narrators')
+      .preload('genres')
+      .preload('series')
+      .first()) as Book
     void bookIndex.addDocuments([
       {
-        id: book.id,
-        title: book.title,
-        subtitle: book.subtitle,
-        description: SearchEngineHelper.removeHtmlTags(book.description),
-        type: book.type,
+        id: fetchedBook.id,
+        title: fetchedBook.title,
+        subtitle: fetchedBook.subtitle,
+        description: SearchEngineHelper.removeHtmlTags(fetchedBook.description),
+        type: fetchedBook.type,
+        authors: fetchedBook.authors.map((author) => author.name),
+        narrators: fetchedBook.narrators.map((narrator) => narrator.name),
+        genres: fetchedBook.genres.map((genre) => genre.name),
+        series: fetchedBook.series.map(
+          (serie) => serie.name + (serie.position ? `${serie.position}` : '')
+        ),
       },
     ])
   }
 
   @afterUpdate()
   public static async afterUpdateHook(book: Book) {
+    const fetchedBook = (await Book.query()
+      .where('id', book.id)
+      .preload('authors')
+      .preload('narrators')
+      .preload('genres')
+      .preload('series')
+      .first()) as Book
     void bookIndex.updateDocuments([
       {
-        id: book.id,
-        title: book.title,
-        subtitle: book.subtitle,
-        description: SearchEngineHelper.removeHtmlTags(book.description),
-        type: book.type,
+        id: fetchedBook.id,
+        title: fetchedBook.title,
+        subtitle: fetchedBook.subtitle,
+        description: SearchEngineHelper.removeHtmlTags(fetchedBook.description),
+        type: fetchedBook.type,
+        authors: fetchedBook.authors.map((author) => author.name),
+        narrators: fetchedBook.narrators.map((narrator) => narrator.name),
+        genres: fetchedBook.genres.map((genre) => genre.name),
+        series: fetchedBook.series.map(
+          (serie) => serie.name + (serie.position ? `${serie.position}` : '')
+        ),
       },
     ])
   }

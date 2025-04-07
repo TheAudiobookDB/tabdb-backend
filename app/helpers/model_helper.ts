@@ -77,4 +77,22 @@ export class ModelHelper {
     }
     return null
   }
+
+  static async findDuplicateBook(
+    model: typeof Book | typeof Author | typeof Narrator | typeof Series,
+    query: object
+  ) {
+    const filteredQuery = Object.fromEntries(
+      Object.entries(query).filter(([_, value]) => value !== null && value !== undefined)
+    )
+
+    return model
+      .query()
+      .where((builder) => {
+        for (const [key, value] of Object.entries(filteredQuery)) {
+          builder.where(key, value)
+        }
+      })
+      .first()
+  }
 }

@@ -18,9 +18,11 @@ import {
   genreValidator,
   narratorValidator,
   seriesValidator,
+  trackValidator,
 } from '#validators/provider_validator'
 import { ModelObject } from '@adonisjs/lucid/types/model'
 import { ModelHelper } from '../helpers/model_helper.js'
+import { Audiobookshelf } from '../provider/audiobookshelf.js'
 
 export default class BooksController {
   /**
@@ -74,29 +76,7 @@ export default class BooksController {
     await BooksController.addNarratorToBook(book, payload.narrators)
 
     // Tracks
-    if (payload.tracks) {
-      const tracks = []
-      for (const track of payload.tracks) {
-        if (track.id) {
-          const existingTrack = await Track.findBy('public_id', track.id)
-          if (existingTrack) {
-            tracks.push(existingTrack)
-          }
-        } else {
-          const existingTrack = await Track.firstOrCreate(
-            { name: track.name, bookId: book.id },
-            {
-              start: track.start,
-              end: track.end,
-            }
-          )
-          if (existingTrack) {
-            tracks.push(existingTrack)
-          }
-        }
-      }
-      await book.related('tracks').saveMany(tracks)
-    }
+    await BooksController.addTrackToBook(book, payload.tracks)
 
     // Series
     await BooksController.addSeriesToBook(book, payload.series)
@@ -273,6 +253,54 @@ export default class BooksController {
       }
       await book.related('series').sync(positions)
     }
+  }
+
+  static async addTrackToBook(book: Book, payloadObject?: object[]) {
+    if (payloadObject) {
+      const tracks = []
+      for (const payload of payloadObject) {
+        const track = await trackValidator.validate(payload)
+        if (track.id) {
+          const existingTrack = await Track.findBy('public_id', track.id)
+          if (existingTrack) {
+            tracks.push(existingTrack)
+          }
+        } else {
+          const existingTrack = await Track.firstOrCreate(
+            { name: track.name, bookId: book.id },
+            {
+              start: track.start,
+              end: track.end,
+            }
+          )
+          if (existingTrack) {
+            tracks.push(existingTrack)
+          }
+        }
+      }
+      await book.related('tracks').saveMany(tracks)
+    }
+  }
+
+  /**
+   * @abs
+   * @operationId createBookABS
+   * @summary Create a new book from ABS
+   * @description Creates a new book that supports the Audiobookshelf `metadata.json` format.
+   *
+   * @requestBody - <audiobookshelfValidator>
+   *
+   * @responseHeader 200 - @use(rate)
+   * @responseHeader 200 - @use(requestId)
+   *
+   * @responseBody 200 - <Book>
+   * @responseBody 422 - <ValidationInterface>
+   * @responseBody 429 - <TooManyRequests>
+   */
+  async abs({ request }: HttpContext) {
+    const absBook = Audiobookshelf.fetchBook(request.body())
+
+    return absBook
   }
 
   /**
