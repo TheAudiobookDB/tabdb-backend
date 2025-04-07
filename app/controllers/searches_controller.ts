@@ -1,6 +1,7 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import { searchBookValidator } from '#validators/search_validator'
 import Book from '#models/book'
+import { bookIndex } from '#config/meilisearch'
 
 export default class SearchesController {
   /**
@@ -19,10 +20,19 @@ export default class SearchesController {
    * @responseBody 429 - <TooManyRequests>
    */
   async book({ request }: HttpContext) {
-    await searchBookValidator.validate(request.all())
+    const payload = await searchBookValidator.validate(request.all())
 
-    const books = await Book.query()
-      .where('title', 'like', `%${request.input('title')}%`)
+    const books = await bookIndex.search(payload.title)
+    if (!books || !books.hits || books.hits.length <= 0) {
+      return {
+        message: 'Books not found',
+      }
+    }
+
+    const bookIds = books.hits.map((book) => book.id)
+
+    const bookResults = await Book.query()
+      .whereIn('id', bookIds)
       .preload('authors')
       .preload('narrators')
       .preload('genres')
@@ -32,6 +42,6 @@ export default class SearchesController {
       .preload('group')
       .paginate(request.input('page', 1), 10)
 
-    return books.serialize({})
+    return bookResults.serialize({})
   }
 }

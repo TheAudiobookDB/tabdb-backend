@@ -5,6 +5,6 @@ export const indexRequestValidator = vine.compile(
     provider: vine.enum(['audible']),
     type: vine.enum(['book', 'author', 'tracks', 'series']),
     identifier: vine.string().trim().minLength(3).maxLength(20),
-    language: vine.enum(['de', 'en']),
+    language: vine.enum(['de', 'us']),
   })
 )

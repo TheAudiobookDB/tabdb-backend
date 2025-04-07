@@ -31,8 +31,8 @@ export class Audible {
 
     book.title = payload.title
     book.subtitle = payload.subtitle ?? null
-    book.description = payload.description ?? null
-    book.summary = payload.summary ?? null
+    book.description = payload.summary ?? null
+    book.summary = payload.description ?? null
     book.publisher = payload.publisher ?? null
     book.language = payload.language ?? null
     book.copyright = payload.copyright ?? null
@@ -50,12 +50,14 @@ export class Audible {
       for (const author of payload.authors) {
         authors.push({
           name: author.name,
-          identifiers: [
-            {
-              type: 'audible:asin',
-              value: author.asin,
-            },
-          ],
+          identifiers: author.asin
+            ? [
+                {
+                  type: 'audible:asin',
+                  value: author.asin,
+                },
+              ]
+            : undefined,
         })
       }
 

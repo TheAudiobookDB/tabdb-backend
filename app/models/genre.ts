@@ -1,8 +1,16 @@
 import { DateTime } from 'luxon'
-import { BaseModel, beforeCreate, column, manyToMany } from '@adonisjs/lucid/orm'
+import {
+  afterCreate,
+  afterUpdate,
+  BaseModel,
+  beforeCreate,
+  column,
+  manyToMany,
+} from '@adonisjs/lucid/orm'
 import Book from '#models/book'
 import type { ManyToMany } from '@adonisjs/lucid/types/relations'
 import { nanoid } from '#config/app'
+import { genreIndex } from '#config/meilisearch'
 
 export default class Genre extends BaseModel {
   @column({ isPrimary: true, serializeAs: null })
@@ -31,5 +39,27 @@ export default class Genre extends BaseModel {
     if (!genre.publicId) {
       genre.publicId = nanoid()
     }
+  }
+
+  @afterCreate()
+  public static async afterCreateHook(genre: Genre) {
+    void genreIndex.addDocuments([
+      {
+        id: genre.publicId,
+        name: genre.name,
+        type: genre.type,
+      },
+    ])
+  }
+
+  @afterUpdate()
+  public static async afterUpdateHook(genre: Genre) {
+    void genreIndex.updateDocuments([
+      {
+        id: genre.publicId,
+        name: genre.name,
+        type: genre.type,
+      },
+    ])
   }
 }

@@ -1,15 +1,20 @@
 import vine from '@vinejs/vine'
 import { nanoIdValidation } from '#config/app'
 
+export const asinValidation = vine
+  .string()
+  .regex(RegExp('^[0-9a-zA-Z]{10}$|^[0-9]{11,12}$'))
+  .transform((value) => value.toUpperCase())
+
 export const audiMetaBookValidator = vine.compile(
   vine.object({
-    asin: vine.string().minLength(10).maxLength(10),
+    asin: vine.string().minLength(10).maxLength(11),
     title: vine.string().maxLength(1023),
     subtitle: vine.string().maxLength(1023).optional(),
     copyright: vine.string().maxLength(1023).optional(),
     description: vine.string().optional(),
     summary: vine.string().optional(),
-    bookFormat: vine.enum(['abridged', 'unabridged']).optional(),
+    bookFormat: vine.enum(['abridged', 'unabridged', 'original_recording']).optional(),
     lengthMinutes: vine.number().positive().withoutDecimals().optional(),
     imageUrl: vine.string().url().optional(),
     explicit: vine.boolean().optional(),
@@ -20,16 +25,24 @@ export const audiMetaBookValidator = vine.compile(
     series: vine
       .array(
         vine.object({
-          asin: vine.string().minLength(10).maxLength(10),
+          asin: asinValidation,
           name: vine.string().minLength(3).maxLength(255),
-          position: vine.string().minLength(1).maxLength(255).optional(),
+          position: vine.string().maxLength(255).optional(),
         })
       )
       .optional(),
     authors: vine
       .array(
         vine.object({
-          asin: vine.string().minLength(10).maxLength(10),
+          asin: vine.any().transform((value) => {
+            if (
+              typeof value === 'string' &&
+              RegExp('^[0-9a-zA-Z]{10}$|^[0-9]{11,12}$').test(value)
+            ) {
+              return value
+            }
+            return null
+          }),
           name: vine.string().minLength(3).maxLength(255),
         })
       )
@@ -44,7 +57,7 @@ export const audiMetaBookValidator = vine.compile(
     genres: vine
       .array(
         vine.object({
-          asin: vine.string().minLength(10).maxLength(11),
+          asin: asinValidation,
           name: vine.string().minLength(3).maxLength(255),
           type: vine
             .enum(['Genres', 'Tags'])
@@ -65,7 +78,7 @@ export const audiMetaBookValidator = vine.compile(
 
 export const audiMetaAuthorValidator = vine.compile(
   vine.object({
-    asin: vine.string().minLength(10).maxLength(11),
+    asin: asinValidation,
     name: vine.string().minLength(3).maxLength(255),
     description: vine.string().optional(),
     image: vine.string().url().optional(),
@@ -92,7 +105,7 @@ export const audiMetaTrackValidator = vine.compile(
 
 export const audiMetaSeriesValidator = vine.compile(
   vine.object({
-    asin: vine.string().minLength(10).maxLength(11),
+    asin: asinValidation,
     title: vine.string().minLength(3).maxLength(255),
     description: vine.string().optional(),
   })
@@ -113,10 +126,11 @@ export const identifierValidation = vine
         'type' in value &&
         vine.helpers.isString(value.type) &&
         value.type.includes('asin') &&
+        value.value &&
         !('id' in value),
       vine.object({
         type: vine.enum(['audible:asin', 'amazon:asin']),
-        value: vine.string().regex(RegExp('^[0-9A-Z]{10,11}$')),
+        value: asinValidation,
       })
     ),
     vine.union.if(
@@ -126,6 +140,7 @@ export const identifierValidation = vine
         'type' in value &&
         vine.helpers.isString(value.type) &&
         value.type.includes('isbn10') &&
+        value.value &&
         !('id' in value),
       vine.object({
         type: vine.enum(['isbn10']),
@@ -139,6 +154,7 @@ export const identifierValidation = vine
         'type' in value &&
         vine.helpers.isString(value.type) &&
         (value.type.includes('isbn13') || value.type.includes('ean')) &&
+        value.value &&
         !('id' in value),
       vine.object({
         type: vine.enum(['isbn13', 'ean']),

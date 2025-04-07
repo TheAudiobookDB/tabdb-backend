@@ -50,4 +50,7 @@ export default await Env.create(new URL('../', import.meta.url), {
   REDIS_PASSWORD: Env.schema.string.optional(),
 
   RESEND_API_KEY: Env.schema.string(),
+
+  MEILISEARCH_HOST: Env.schema.string(),
+  MEILISEARCH_API_KEY: Env.schema.string(),
 })

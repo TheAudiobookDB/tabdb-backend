@@ -1,6 +1,8 @@
 import { DateTime } from 'luxon'
 import {
+  afterCreate,
   afterFind,
+  afterUpdate,
   BaseModel,
   beforeCreate,
   belongsTo,
@@ -17,6 +19,8 @@ import Series from '#models/series'
 import Track from '#models/track'
 import BookGroup from '#models/book_group'
 import { nanoid } from '#config/app'
+import { bookIndex } from '#config/meilisearch'
+import { SearchEngineHelper } from '../helpers/search_engine.js'
 
 export default class Book extends BaseModel {
   @column({ isPrimary: true, serializeAs: null })
@@ -143,5 +147,31 @@ export default class Book extends BaseModel {
     if (!book.publicId) {
       book.publicId = nanoid()
     }
+  }
+
+  @afterCreate()
+  public static async afterCreateHook(book: Book) {
+    void bookIndex.addDocuments([
+      {
+        id: book.id,
+        title: book.title,
+        subtitle: book.subtitle,
+        description: SearchEngineHelper.removeHtmlTags(book.description),
+        type: book.type,
+      },
+    ])
+  }
+
+  @afterUpdate()
+  public static async afterUpdateHook(book: Book) {
+    void bookIndex.updateDocuments([
+      {
+        id: book.id,
+        title: book.title,
+        subtitle: book.subtitle,
+        description: SearchEngineHelper.removeHtmlTags(book.description),
+        type: book.type,
+      },
+    ])
   }
 }

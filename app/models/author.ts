@@ -1,9 +1,18 @@
 import { DateTime } from 'luxon'
-import { BaseModel, beforeCreate, column, manyToMany } from '@adonisjs/lucid/orm'
+import {
+  afterCreate,
+  afterUpdate,
+  BaseModel,
+  beforeCreate,
+  column,
+  manyToMany,
+} from '@adonisjs/lucid/orm'
 import Book from '#models/book'
 import type { ManyToMany } from '@adonisjs/lucid/types/relations'
 import Identifier from '#models/identifier'
 import { nanoid } from '#config/app'
+import { authorIndex } from '#config/meilisearch'
+import { SearchEngineHelper } from '../helpers/search_engine.js'
 
 export default class Author extends BaseModel {
   @column({ isPrimary: true, serializeAs: null })
@@ -40,5 +49,27 @@ export default class Author extends BaseModel {
     if (!author.publicId) {
       author.publicId = nanoid()
     }
+  }
+
+  @afterCreate()
+  public static async afterCreateHook(author: Author) {
+    void authorIndex.addDocuments([
+      {
+        id: author.id,
+        name: author.name,
+        description: SearchEngineHelper.removeHtmlTags(author.description),
+      },
+    ])
+  }
+
+  @afterUpdate()
+  public static async afterUpdateHook(author: Author) {
+    void authorIndex.updateDocuments([
+      {
+        id: author.id,
+        name: author.name,
+        description: SearchEngineHelper.removeHtmlTags(author.description),
+      },
+    ])
   }
 }
