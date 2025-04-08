@@ -1,5 +1,6 @@
 import vine from '@vinejs/vine'
-import { languageValidation, nanoIdValidation } from '#config/app'
+import { nanoIdValidation } from '#config/app'
+import { isLanguageRule } from '#start/rules/language'
 
 export const asinValidation = vine
   .string()
@@ -19,7 +20,7 @@ export const audiMetaBookValidator = vine.compile(
     imageUrl: vine.string().url().optional(),
     explicit: vine.boolean().optional(),
     isbn: vine.string().minLength(10).maxLength(13).optional(),
-    language: languageValidation.optional(),
+    language: vine.string().use(isLanguageRule({})).optional(),
     publisher: vine.string().maxLength(1023).optional(),
     releaseDate: vine.string().optional(),
     series: vine

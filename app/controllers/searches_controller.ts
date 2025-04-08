@@ -34,6 +34,7 @@ export default class SearchesController {
    * @paramQuery releasedBefore - The date before which the book was released. Note: This filter is applied *after* the search query is executed. If no results are returned, it means that no books matching both the search criteria and the releasedBefore filter were found on that page. It does *not* imply that no such books exist at all. - @type(date)
    *
    * @paramQuery page - The page number to return. - @type(number) @default(1)
+   * @paramQuery threshold - The threshold for the ranking score. - @type(number) @default(0.35)
    *
    * @responseHeader 200 - @use(rate)
    * @responseHeader 200 - @use(requestId)
@@ -72,7 +73,6 @@ export default class SearchesController {
         limit: 1,
       })
     }
-    console.log(payload.series)
     if (payload.series) {
       queries.push({
         indexUid: seriesIndex.uid,
@@ -150,14 +150,25 @@ export default class SearchesController {
       filterExpression += filterExpression.length > 0 ? ' AND ' : ''
       filterExpression += `type = "${payload.type}"`
     }
-
-    console.log('Filter expression:', filterExpression)
+    if (payload.language) {
+      const [language, code] = payload.language.split('-')
+      if (language && code) {
+        filterExpression += filterExpression.length > 0 ? ' AND ' : ''
+        filterExpression += `(language.language = "${language}" AND language.code = "${code}")`
+      }
+      if (language && !code) {
+        filterExpression += filterExpression.length > 0 ? ' AND ' : ''
+        filterExpression += `(language.language = "${language}")`
+      }
+    }
 
     const books = await bookIndex.search(payload.title || payload.keywords, {
       attributesToSearchOn: payload.keywords ? undefined : ['title', 'subtitle'],
       limit: limit,
       page: page,
       filter: filterExpression,
+      showRankingScore: true,
+      rankingScoreThreshold: payload.threshold || 0.35,
     })
     if (!books || !books.hits || books.hits.length <= 0) {
       return {
@@ -168,7 +179,6 @@ export default class SearchesController {
     const bookIds = books.hits.map((book) => book.id)
 
     const bookResults = await Book.query()
-      .whereIn('id', bookIds)
       .preload('authors')
       .preload('narrators')
       .preload('genres')
@@ -177,11 +187,11 @@ export default class SearchesController {
       .preload('tracks')
       .preload('group')
       .where((builder) => {
+        if (bookIds && bookIds.length > 0) {
+          builder.whereIn('id', bookIds)
+        }
         if (payload.publisher) {
           builder.where('publisher', payload.publisher)
-        }
-        if (payload.language) {
-          builder.where('language', payload.language)
         }
         if (payload.isExplicit) {
           builder.where('is_explicit', payload.isExplicit)

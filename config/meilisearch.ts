@@ -13,7 +13,14 @@ const genreIndex = client.index('genres')
 const seriesIndex = client.index('series')
 
 await bookIndex.updateSettings({
-  filterableAttributes: ['authors', 'narrators', 'genres', 'series.name'],
+  filterableAttributes: [
+    'authors',
+    'narrators',
+    'genres',
+    'series.name',
+    'language.language',
+    'language.code',
+  ],
 })
 
 export { client, bookIndex, authorIndex, narratorIndex, genreIndex, seriesIndex }

@@ -21,7 +21,7 @@ export const createBookValidator = vine.compile(
     isExplicit: vine.boolean().optional(),
     isAbridged: vine.boolean().optional(),
     groupId: vine.number().positive().withoutDecimals().optional(),
-    type: vine.enum(['book', 'audiobook', 'podcast']).optional(),
+    type: vine.enum(['book', 'audiobook', 'podcast', 'e-book']).optional(),
     genres: vine
       .array(
         vine.object({

@@ -80,7 +80,7 @@ export default class Book extends BaseModel {
 
   @column()
   // @enum(book, audiobook, podcast)
-  declare type: 'book' | 'audiobook' | 'podcast'
+  declare type: 'book' | 'audiobook' | 'podcast' | 'e-book'
 
   @manyToMany(() => Author, {
     pivotTable: 'book_author',
@@ -170,6 +170,12 @@ export default class Book extends BaseModel {
             authors: fetchedBook.authors.map((author) => author.name),
             narrators: fetchedBook.narrators.map((narrator) => narrator.name),
             genres: fetchedBook.genres.map((genre) => genre.name),
+            language: fetchedBook.language
+              ? {
+                  language: fetchedBook.language.split('-')[0],
+                  code: fetchedBook.language.split('-')[1],
+                }
+              : null,
             series:
               fetchedBook.series.length > 0
                 ? fetchedBook.series.map((serie) => {
@@ -207,6 +213,12 @@ export default class Book extends BaseModel {
             authors: fetchedBook.authors.map((author) => author.name),
             narrators: fetchedBook.narrators.map((narrator) => narrator.name),
             genres: fetchedBook.genres.map((genre) => genre.name),
+            language: fetchedBook.language
+              ? {
+                  language: fetchedBook.language.split('-')[0],
+                  code: fetchedBook.language.split('-')[1],
+                }
+              : null,
             series:
               fetchedBook.series.length > 0
                 ? fetchedBook.series.map((serie) => {

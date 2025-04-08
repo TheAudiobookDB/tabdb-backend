@@ -4,6 +4,7 @@ import { Secret } from '@adonisjs/core/helpers'
 import { defineConfig } from '@adonisjs/core/http'
 import { customAlphabet } from 'nanoid'
 import vine from '@vinejs/vine'
+import { isLanguageRule } from '#start/rules/language'
 
 /**
  * The app key is used for encrypting cookies, generating signed URLs,
@@ -51,7 +52,4 @@ export const nanoIdValidation = vine
   .regex(RegExp('^[a-zA-Z0-9_-]{16}$'))
   .transform((value) => value.toUpperCase())
 
-export const languageValidation = vine
-  .string()
-  .regex(RegExp('^[a-z]{2}(-[A-Z]{2})?$'))
-  .transform((value) => value.toLowerCase())
+export const languageValidation = vine.string().use(isLanguageRule({}))

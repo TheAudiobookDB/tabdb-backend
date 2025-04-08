@@ -18,7 +18,8 @@ export const searchBookValidator = vine.compile(
     publishedBefore: vine.date().optional(),
     isExplicit: vine.boolean().optional(),
     isAbridged: vine.boolean().optional(),
-    type: vine.enum(['book', 'audiobook', 'podcast']).optional(),
+    type: vine.enum(['book', 'audiobook', 'podcast', 'e-book']).optional(),
     page: vine.number().withoutDecimals().min(1).optional(),
+    threshold: vine.number().min(0.25).max(1).optional(),
   })
 )
