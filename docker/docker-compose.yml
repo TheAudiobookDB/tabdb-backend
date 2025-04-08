@@ -1,8 +1,8 @@
 services:
   app:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: ../Dockerfile
 
     ports:
       - "3333:3333"
@@ -17,12 +17,6 @@ services:
 
       # Either RESEND or SMTP
       - RESEND_API_KEY=
-
-
-      - SMTP_HOST=
-      - SMTP_PORT=
-      - SMTP_USERNAME=
-      - SMTP_PASSWORD=
 
       # These are the default values and are optional
       - TZ=UTC

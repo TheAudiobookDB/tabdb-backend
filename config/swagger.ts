@@ -3,7 +3,7 @@ import url from 'node:url'
 
 export default {
   path: path.dirname(url.fileURLToPath(import.meta.url)) + '/../',
-  title: 'AudiobookDB',
+  title: 'The Audiobook Database',
   version: '1.0.1',
   description: '',
   tagIndex: 1,

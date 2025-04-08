@@ -12,20 +12,10 @@ const mailConfig = defineConfig({
 
   from: {
     address: 'Acme <onboarding@resend.dev>',
-    name: 'AudiobookDB',
+    name: 'The Audiobook Database',
   },
 
   mailers: {
-    smtp: transports.smtp({
-      host: env.get('SMTP_HOST'),
-      port: env.get('SMTP_PORT'),
-      auth: {
-        type: 'login',
-        user: env.get('SMTP_USERNAME') ?? '',
-        pass: env.get('SMTP_PASSWORD') ?? '',
-      },
-    }),
-
     resend: transports.resend({
       key: env.get('RESEND_API_KEY'),
       baseUrl: 'https://api.resend.com',
