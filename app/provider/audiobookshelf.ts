@@ -38,7 +38,7 @@ export class Audiobookshelf {
     book.title = payload.title
     book.subtitle = payload.subtitle ?? null
     book.description = payload.description ?? null
-    book.publishedAt = payload.publishedYear
+    book.releasedAt = payload.publishedYear
       ? DateTime.fromObject({ year: Number.parseInt(payload.publishedYear) })
       : null
     book.language = payload.language ?? null

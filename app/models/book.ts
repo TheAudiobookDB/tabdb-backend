@@ -1,6 +1,7 @@
 import { DateTime } from 'luxon'
 import {
   afterCreate,
+  afterDelete,
   afterFind,
   afterUpdate,
   BaseModel,
@@ -60,9 +61,6 @@ export default class Book extends BaseModel {
   declare duration: number | null
 
   @column.dateTime()
-  declare publishedAt: DateTime | null
-
-  @column.dateTime()
   declare releasedAt: DateTime | null
 
   @column()
@@ -82,7 +80,7 @@ export default class Book extends BaseModel {
 
   @column()
   // @enum(book, audiobook, podcast)
-  declare type: 'book' | 'audiobook' | 'podcast'
+  declare type: 'book' | 'audiobook' | 'podcast' | 'e-book'
 
   @manyToMany(() => Author, {
     pivotTable: 'book_author',
@@ -151,53 +149,92 @@ export default class Book extends BaseModel {
 
   @afterCreate()
   public static async afterCreateHook(book: Book) {
-    const fetchedBook = (await Book.query()
+    Book.query()
       .where('id', book.id)
       .preload('authors')
       .preload('narrators')
       .preload('genres')
       .preload('series')
-      .first()) as Book
-    void bookIndex.addDocuments([
-      {
-        id: fetchedBook.id,
-        title: fetchedBook.title,
-        subtitle: fetchedBook.subtitle,
-        description: SearchEngineHelper.removeHtmlTags(fetchedBook.description),
-        type: fetchedBook.type,
-        authors: fetchedBook.authors.map((author) => author.name),
-        narrators: fetchedBook.narrators.map((narrator) => narrator.name),
-        genres: fetchedBook.genres.map((genre) => genre.name),
-        series: fetchedBook.series.map(
-          (serie) => serie.name + (serie.position ? `${serie.position}` : '')
-        ),
-      },
-    ])
+      .first()
+      .then((fetchedBook) => {
+        if (!fetchedBook) {
+          return
+        }
+        void bookIndex.addDocuments([
+          {
+            id: fetchedBook.id,
+            title: fetchedBook.title,
+            subtitle: fetchedBook.subtitle,
+            description: SearchEngineHelper.removeHtmlTags(fetchedBook.description),
+            type: fetchedBook.type,
+            authors: fetchedBook.authors.map((author) => author.name),
+            narrators: fetchedBook.narrators.map((narrator) => narrator.name),
+            genres: fetchedBook.genres.map((genre) => genre.name),
+            language: fetchedBook.language
+              ? {
+                  language: fetchedBook.language.split('-')[0],
+                  code: fetchedBook.language.split('-')[1],
+                }
+              : null,
+            series:
+              fetchedBook.series.length > 0
+                ? fetchedBook.series.map((serie) => {
+                    return {
+                      name: serie.name,
+                      position: serie.position,
+                    }
+                  })
+                : null,
+          },
+        ])
+      })
   }
 
   @afterUpdate()
   public static async afterUpdateHook(book: Book) {
-    const fetchedBook = (await Book.query()
+    Book.query()
       .where('id', book.id)
       .preload('authors')
       .preload('narrators')
       .preload('genres')
       .preload('series')
-      .first()) as Book
-    void bookIndex.updateDocuments([
-      {
-        id: fetchedBook.id,
-        title: fetchedBook.title,
-        subtitle: fetchedBook.subtitle,
-        description: SearchEngineHelper.removeHtmlTags(fetchedBook.description),
-        type: fetchedBook.type,
-        authors: fetchedBook.authors.map((author) => author.name),
-        narrators: fetchedBook.narrators.map((narrator) => narrator.name),
-        genres: fetchedBook.genres.map((genre) => genre.name),
-        series: fetchedBook.series.map(
-          (serie) => serie.name + (serie.position ? `${serie.position}` : '')
-        ),
-      },
-    ])
+      .first()
+      .then((fetchedBook) => {
+        if (!fetchedBook) {
+          return
+        }
+        void bookIndex.updateDocuments([
+          {
+            id: fetchedBook.id,
+            title: fetchedBook.title,
+            subtitle: fetchedBook.subtitle,
+            description: SearchEngineHelper.removeHtmlTags(fetchedBook.description),
+            type: fetchedBook.type,
+            authors: fetchedBook.authors.map((author) => author.name),
+            narrators: fetchedBook.narrators.map((narrator) => narrator.name),
+            genres: fetchedBook.genres.map((genre) => genre.name),
+            language: fetchedBook.language
+              ? {
+                  language: fetchedBook.language.split('-')[0],
+                  code: fetchedBook.language.split('-')[1],
+                }
+              : null,
+            series:
+              fetchedBook.series.length > 0
+                ? fetchedBook.series.map((serie) => {
+                    return {
+                      name: serie.name,
+                      position: serie.position,
+                    }
+                  })
+                : null,
+          },
+        ])
+      })
+  }
+
+  @afterDelete()
+  public static async afterDeleteHook(book: Book) {
+    void bookIndex.deleteDocument(book.id)
   }
 }

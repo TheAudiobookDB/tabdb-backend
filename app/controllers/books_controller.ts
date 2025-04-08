@@ -55,7 +55,6 @@ export default class BooksController {
     book.copyright = payload.copyright ?? null
     book.page = payload.page ?? null
     book.duration = payload.duration ?? null
-    book.publishedAt = payload.publishedAt ? DateTime.fromJSDate(payload.publishedAt) : null
     book.releasedAt = payload.releasedAt ? DateTime.fromJSDate(payload.releasedAt) : null
     book.isExplicit = payload.isExplicit ?? false
     book.isAbridged = payload.isAbridged ?? null
