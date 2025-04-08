@@ -140,8 +140,6 @@ export class Audible {
     console.log(`https://audimeta.de/chapters/${identifier}?region=${language}`)
     const result = await axios.get(`https://audimeta.de/chapters/${identifier}?region=${language}`)
 
-    console.log(result)
-
     const response = result.data
 
     const payload = await audiMetaTrackValidator.validate(response)

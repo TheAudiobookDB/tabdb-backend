@@ -1,6 +1,6 @@
 import vine from '@vinejs/vine'
 import { identifierValidation, narratorValidation } from '#validators/provider_validator'
-import { nanoIdValidation } from '#config/app'
+import { languageValidation, nanoIdValidation } from '#config/app'
 
 /**
  *
@@ -13,11 +13,10 @@ export const createBookValidator = vine.compile(
     description: vine.string().optional(),
     summary: vine.string().optional(),
     publisher: vine.string().maxLength(1023).optional(),
-    language: vine.string().maxLength(255).optional(),
+    language: languageValidation.optional(),
     copyright: vine.string().maxLength(255).optional(),
     page: vine.number().positive().withoutDecimals().optional(),
     duration: vine.number().positive().optional(),
-    publishedAt: vine.date().optional(),
     releasedAt: vine.date().optional(),
     isExplicit: vine.boolean().optional(),
     isAbridged: vine.boolean().optional(),

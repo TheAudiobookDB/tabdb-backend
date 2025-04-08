@@ -50,3 +50,8 @@ export const nanoIdValidation = vine
   .string()
   .regex(RegExp('^[a-zA-Z0-9_-]{16}$'))
   .transform((value) => value.toUpperCase())
+
+export const languageValidation = vine
+  .string()
+  .regex(RegExp('^[a-z]{2}(-[A-Z]{2})?$'))
+  .transform((value) => value.toLowerCase())
