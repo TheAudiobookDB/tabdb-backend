@@ -90,6 +90,7 @@ export class Audible {
         value: payload.asin,
       },
       // If isbn is not null, add it as an identifier
+      // @ts-ignore
       ...(payload.isbn
         ? [
             {
@@ -155,21 +156,20 @@ export class Audible {
 
     const book: Book = books[0]
 
-    const tracks: Track[] = []
-    for (const chapter of payload.chapters) {
-      const track = new Track()
-      track.name = chapter.title
-      track.start = chapter.startOffsetMs
-      track.end = chapter.startOffsetMs + chapter.lengthMs
-      track.bookId = book.id
-      tracks.push(track)
+    const tracksData = payload.chapters.map((chapter) => {
+      return {
+        name: chapter.title,
+        start: chapter.startOffsetMs,
+        end: chapter.startOffsetMs + chapter.lengthMs,
+        bookId: book.id,
+      }
+    })
+
+    if (tracksData.length > 0) {
+      await Track.createMany(tracksData)
     }
-    // await a Promis of track.save() for each track
-    await Promise.all(
-      tracks.map(async (track) => {
-        await track.save()
-      })
-    )
+
+    return book
   }
 
   static async fetchSeries(identifier: string, language: string): Promise<Series> {

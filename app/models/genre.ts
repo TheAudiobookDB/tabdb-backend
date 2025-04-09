@@ -77,7 +77,7 @@ export default class Genre extends BaseModel {
         return existingGenre
       }
     }
-    if ('genre' in genre && genre.name && 'type' in genre && genre.type) {
+    if ('name' in genre && genre.name && 'type' in genre && genre.type) {
       const existingGenre = await Genre.firstOrCreate({
         name: genre.name,
         type: genre.type,
