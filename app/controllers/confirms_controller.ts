@@ -29,12 +29,11 @@ export default class ConfirmsController {
     }
 
     if (model === 'book') {
-      const book = await Book.query().where('id', id).firstOrFail()
+      const book = await Book.query().where('publicId', id).firstOrFail()
       if (book.enabled) {
         return { message: 'Book already enabled' }
       }
-      book.enabled = true
-      await book.save()
+      await Book.enableBookAndRelations(book.id)
 
       return { message: 'Book created successfully', book }
     }

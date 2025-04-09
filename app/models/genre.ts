@@ -25,6 +25,9 @@ export default class Genre extends BaseModel {
   @column()
   declare type: 'genre' | 'tag'
 
+  @column()
+  declare enabled: boolean
+
   @manyToMany(() => Book)
   declare books: ManyToMany<typeof Book>
 
@@ -43,6 +46,7 @@ export default class Genre extends BaseModel {
 
   @afterCreate()
   public static async afterCreateHook(genre: Genre) {
+    if (!genre.enabled) return
     void genreIndex.addDocuments([
       {
         id: genre.publicId,
@@ -54,6 +58,7 @@ export default class Genre extends BaseModel {
 
   @afterUpdate()
   public static async afterUpdateHook(genre: Genre) {
+    if (!genre.enabled) return
     void genreIndex.updateDocuments([
       {
         id: genre.publicId,

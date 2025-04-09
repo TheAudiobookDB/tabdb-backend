@@ -30,6 +30,9 @@ export default class Author extends BaseModel {
   @column()
   declare image: string | null
 
+  @column()
+  declare enabled: boolean
+
   @manyToMany(() => Book, {
     pivotTable: 'book_author',
   })
@@ -53,6 +56,7 @@ export default class Author extends BaseModel {
 
   @afterCreate()
   public static async afterCreateHook(author: Author) {
+    if (!author.enabled) return
     void authorIndex.addDocuments([
       {
         id: author.id,
@@ -64,6 +68,7 @@ export default class Author extends BaseModel {
 
   @afterUpdate()
   public static async afterUpdateHook(author: Author) {
+    if (!author.enabled) return
     void authorIndex.updateDocuments([
       {
         id: author.id,

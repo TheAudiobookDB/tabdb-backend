@@ -1,7 +1,7 @@
 import Author from '#models/author'
 import Narrator from '#models/narrator'
 import Series from '#models/series'
-import { identifierValidator } from '#validators/provider_validator'
+import { identifierValidation, identifierValidator } from '#validators/provider_validator'
 import Identifier from '#models/identifier'
 import Book from '#models/book'
 
@@ -73,6 +73,36 @@ export class ModelHelper {
         .preload('identifiers')
         .whereHas('identifiers', (query) => {
           query.where('identifiers.id', identifierModel.id)
+        })
+    }
+    return null
+  }
+
+  static async findByIdentifiers(
+    model: typeof Book | typeof Author | typeof Narrator | typeof Series,
+    identifiers: (typeof identifierValidation)[]
+  ): Promise<(Book | Author | Narrator | Series)[] | null> {
+    if (identifiers.length > 0) {
+      return model
+        .query()
+        .preload('identifiers')
+        .whereHas('identifiers', (query) => {
+          for (const identifier of identifiers) {
+            if ('id' in identifier && identifier.id && typeof identifier.id === 'string') {
+              query.orWhere('identifiers.id', identifier.id)
+            } else if (
+              'type' in identifier &&
+              'value' in identifier &&
+              identifier.type &&
+              identifier.value &&
+              typeof identifier.type === 'string' &&
+              typeof identifier.value === 'string'
+            ) {
+              query
+                .orWhere('identifiers.type', identifier.type)
+                .where('identifiers.value', identifier.value)
+            }
+          }
         })
     }
     return null

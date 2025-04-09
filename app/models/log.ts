@@ -3,6 +3,7 @@ import { BaseModel, beforeCreate, belongsTo, column } from '@adonisjs/lucid/orm'
 import User from '#models/user'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import { nanoid } from '#config/app'
+import { LogAction, LogModel, LogState } from '../enum/log_enum.js'
 
 export default class Log extends BaseModel {
   @column({ isPrimary: true, serializeAs: null })
@@ -12,28 +13,22 @@ export default class Log extends BaseModel {
   declare publicId: string
 
   @column()
-  declare old_data: string | null
+  declare action: LogAction
 
   @column()
-  declare new_data: string | null
+  declare model: LogModel
 
   @column()
-  declare action: 'create' | 'update' | 'delete'
+  declare modelId: string | undefined
 
   @column()
-  declare entity:
-    | 'book'
-    | 'book_identifier'
-    | 'book_genre'
-    | 'book_narrator'
-    | 'book_series'
-    | 'genre'
-    | 'identifier'
-    | 'narrator'
-    | 'series'
+  declare data: object | object[] | undefined
 
   @column()
-  declare entity_id: number
+  declare userId: number
+
+  @column()
+  declare state: LogState | undefined
 
   @belongsTo(() => User)
   declare user: BelongsTo<typeof User>
@@ -49,5 +44,24 @@ export default class Log extends BaseModel {
     if (!log.publicId) {
       log.publicId = nanoid()
     }
+  }
+
+  public static async createLog(
+    action: LogAction,
+    model: LogModel,
+    userId: number,
+    data?: object | object[] | undefined,
+    state?: LogState,
+    modelId?: string
+  ) {
+    const log = new Log()
+    log.action = action
+    log.model = model
+    log.modelId = modelId
+    log.data = data
+    log.userId = userId
+    log.state = state
+
+    return await log.save()
   }
 }

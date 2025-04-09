@@ -55,7 +55,7 @@ export default class Book extends BaseModel {
   declare copyright: string | null
 
   @column()
-  declare page: number | null
+  declare pages: number | null
 
   @column()
   declare duration: number | null
@@ -79,7 +79,7 @@ export default class Book extends BaseModel {
   declare deletedAt: DateTime | null
 
   @column()
-  // @enum(book, audiobook, podcast)
+  // @enum(book, audiobook, podcast, e-book)
   declare type: 'book' | 'audiobook' | 'podcast' | 'e-book'
 
   @manyToMany(() => Author, {
@@ -147,94 +147,89 @@ export default class Book extends BaseModel {
     }
   }
 
-  @afterCreate()
-  public static async afterCreateHook(book: Book) {
-    Book.query()
-      .where('id', book.id)
+  private static buildSearchDocument(book: Book) {
+    return {
+      id: book.id,
+      title: book.title,
+      subtitle: book.subtitle,
+      description: SearchEngineHelper.removeHtmlTags(book.description),
+      type: book.type,
+      authors: book.authors.map((author) => author.name),
+      narrators: book.narrators.map((narrator) => narrator.name),
+      genres: book.genres.map((genre) => genre.name),
+      series: book.series.map((serie) => serie.name + (serie.position ? `${serie.position}` : '')),
+    }
+  }
+
+  private static async fetchBookWithRelations(bookId: number): Promise<Book> {
+    return (await Book.query()
+      .where('id', bookId)
       .preload('authors')
       .preload('narrators')
       .preload('genres')
       .preload('series')
-      .first()
-      .then((fetchedBook) => {
-        if (!fetchedBook) {
-          return
-        }
-        void bookIndex.addDocuments([
-          {
-            id: fetchedBook.id,
-            title: fetchedBook.title,
-            subtitle: fetchedBook.subtitle,
-            description: SearchEngineHelper.removeHtmlTags(fetchedBook.description),
-            type: fetchedBook.type,
-            authors: fetchedBook.authors.map((author) => author.name),
-            narrators: fetchedBook.narrators.map((narrator) => narrator.name),
-            genres: fetchedBook.genres.map((genre) => genre.name),
-            language: fetchedBook.language
-              ? {
-                  language: fetchedBook.language.split('-')[0],
-                  code: fetchedBook.language.split('-')[1],
-                }
-              : null,
-            series:
-              fetchedBook.series.length > 0
-                ? fetchedBook.series.map((serie) => {
-                    return {
-                      name: serie.name,
-                      position: serie.position,
-                    }
-                  })
-                : null,
-          },
-        ])
-      })
+      .first()) as Book
+  }
+
+  private static async processSearchIndex(book: Book, action: 'add' | 'update'): Promise<void> {
+    if (book.enabled) {
+      const fetchedBook = await this.fetchBookWithRelations(book.id)
+      const doc = this.buildSearchDocument(fetchedBook)
+
+      if (action === 'add') {
+        void bookIndex.addDocuments([doc])
+      } else {
+        void bookIndex.updateDocuments([doc])
+      }
+    }
+  }
+
+  @afterCreate()
+  public static async afterCreateHook(book: Book) {
+    void this.processSearchIndex(book, 'add')
   }
 
   @afterUpdate()
   public static async afterUpdateHook(book: Book) {
-    Book.query()
-      .where('id', book.id)
-      .preload('authors')
-      .preload('narrators')
-      .preload('genres')
-      .preload('series')
-      .first()
-      .then((fetchedBook) => {
-        if (!fetchedBook) {
-          return
-        }
-        void bookIndex.updateDocuments([
-          {
-            id: fetchedBook.id,
-            title: fetchedBook.title,
-            subtitle: fetchedBook.subtitle,
-            description: SearchEngineHelper.removeHtmlTags(fetchedBook.description),
-            type: fetchedBook.type,
-            authors: fetchedBook.authors.map((author) => author.name),
-            narrators: fetchedBook.narrators.map((narrator) => narrator.name),
-            genres: fetchedBook.genres.map((genre) => genre.name),
-            language: fetchedBook.language
-              ? {
-                  language: fetchedBook.language.split('-')[0],
-                  code: fetchedBook.language.split('-')[1],
-                }
-              : null,
-            series:
-              fetchedBook.series.length > 0
-                ? fetchedBook.series.map((serie) => {
-                    return {
-                      name: serie.name,
-                      position: serie.position,
-                    }
-                  })
-                : null,
-          },
-        ])
-      })
+    void this.processSearchIndex(book, 'update')
   }
 
   @afterDelete()
   public static async afterDeleteHook(book: Book) {
     void bookIndex.deleteDocument(book.id)
+  }
+
+  // Function to enable book and disabled relations
+  public static async enableBookAndRelations(bookId: number): Promise<void> {
+    const book = await Book.findOrFail(bookId)
+    book.enabled = true
+    await book.save()
+
+    const fetchedBook = await this.fetchBookWithRelations(book.id)
+
+    for (const author of fetchedBook.authors) {
+      if (!author.enabled) {
+        author.enabled = true
+        await author.save()
+      }
+    }
+    for (const narrator of fetchedBook.narrators) {
+      if (!narrator.enabled) {
+        narrator.enabled = true
+        await narrator.save()
+      }
+    }
+    for (const genre of fetchedBook.genres) {
+      if (!genre.enabled) {
+        genre.enabled = true
+        await genre.save()
+      }
+    }
+    for (const serie of fetchedBook.series) {
+      if (!serie.enabled) {
+        serie.enabled = true
+        await serie.save()
+      }
+    }
   }
 }

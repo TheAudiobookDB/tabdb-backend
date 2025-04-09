@@ -30,6 +30,9 @@ export default class Narrator extends BaseModel {
   @column()
   declare image: string | null
 
+  @column()
+  declare enabled: boolean
+
   @manyToMany(() => Book, {
     pivotColumns: ['role'],
   })
@@ -56,6 +59,7 @@ export default class Narrator extends BaseModel {
 
   @afterCreate()
   public static async afterCreateHook(narrator: Narrator) {
+    if (!narrator.enabled) return
     void narratorIndex.addDocuments([
       {
         id: narrator.id,
@@ -67,6 +71,7 @@ export default class Narrator extends BaseModel {
 
   @afterUpdate()
   public static async afterUpdateHook(narrator: Narrator) {
+    if (!narrator.enabled) return
     void narratorIndex.updateDocuments([
       {
         id: narrator.id,

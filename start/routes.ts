@@ -41,7 +41,7 @@ router.post('/login', [AuthController, 'store']).use(loginLimiter).use(emailLimi
  * Book
  */
 router.get('/book/:id', [BooksController, 'get']).use(middleware.relaxAuth()).use(r1Limiter)
-router.post('/books', [BooksController, 'create']).use(middleware.auth()).use(r3Limiter)
+router.post('/books', [BooksController, 'create']).use(middleware.relaxAuth()).use(r3Limiter)
 router.post('/books/abs', [BooksController, 'abs']).use(middleware.auth()).use(r3Limiter)
 
 /**

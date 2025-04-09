@@ -3,10 +3,6 @@
 import { HttpContext } from '@adonisjs/core/http'
 import { createBookValidator, getBookValidator } from '#validators/book_validator'
 import Book from '#models/book'
-import router from '@adonisjs/core/services/router'
-import env from '#start/env'
-import { randomUUID } from 'node:crypto'
-import { BooksHelper } from '../helpers/books_helper.js'
 import Genre from '#models/genre'
 import Author from '#models/author'
 import Narrator from '#models/narrator'
@@ -23,6 +19,11 @@ import {
 import { ModelObject } from '@adonisjs/lucid/types/model'
 import { ModelHelper } from '../helpers/model_helper.js'
 import { Audiobookshelf } from '../provider/audiobookshelf.js'
+import { LogAction, LogModel, LogState } from '../enum/log_enum.js'
+import Log from '#models/log'
+import { bookIndex } from '#config/meilisearch'
+import router from '@adonisjs/core/services/router'
+import env from '#start/env'
 
 export default class BooksController {
   /**
@@ -39,10 +40,47 @@ export default class BooksController {
    * @responseBody 422 - <ValidationInterface>
    * @responseBody 429 - <TooManyRequests>
    */
-  async create({ request }: HttpContext) {
-    const payload = await request.validateUsing(createBookValidator)
+  async create(context: HttpContext) {
+    const payload = await context.request.validateUsing(createBookValidator)
 
-    const foundBooks = await BooksHelper.findBooks(request, 3, true)
+    if (payload.identifiers && payload.identifiers.length > 0) {
+      const exactDuplicates = await Book.query()
+        .where((builder) => {
+          builder.where('title', payload.title)
+          if (payload.subtitle) {
+            builder.where('subtitle', payload.subtitle)
+          }
+          if (payload.language) {
+            builder.where('language', payload.language)
+          }
+        })
+        .first()
+
+      if (exactDuplicates) {
+        return context.response.status(422).send({
+          message: 'A book with the same title, subtitle and language already exists.',
+        })
+      }
+
+      // @ts-ignore
+      const existingBooks = (await ModelHelper.findByIdentifiers(Book, payload.identifiers)) as
+        | Book[]
+        | null
+
+      if (existingBooks && existingBooks.length > 0) {
+        return context.response.status(422).send({
+          message: 'A book with at least one identifier already exists.',
+        })
+      }
+    }
+
+    const searchTitle = payload.title + (payload.subtitle ? ` ${payload.subtitle}` : '')
+    const result = await bookIndex.search(searchTitle, {
+      attributesToSearchOn: ['title', 'subtitle'],
+      attributesToRetrieve: ['id'],
+      limit: 3,
+      rankingScoreThreshold: 0.8,
+    })
 
     const book = new Book()
 
@@ -53,7 +91,7 @@ export default class BooksController {
     book.publisher = payload.publisher ?? null
     book.language = payload.language ?? null
     book.copyright = payload.copyright ?? null
-    book.page = payload.page ?? null
+    book.pages = payload.pages ?? null
     book.duration = payload.duration ?? null
     book.releasedAt = payload.releasedAt ? DateTime.fromJSDate(payload.releasedAt) : null
     book.isExplicit = payload.isExplicit ?? false
@@ -63,44 +101,41 @@ export default class BooksController {
 
     await book.save()
 
-    // Genres
+    await Log.createLog(
+      LogAction.CREATE,
+      LogModel.BOOK,
+      context.auth.getUserOrFail().id,
+      undefined,
+      result.hits.length > 0 ? LogState.DUPLICATE_FOUND : LogState.PENDING,
+      book.publicId
+    )
+
     await BooksController.addGenreToBook(book, payload.genres)
-
-    // Identifiers
     await ModelHelper.addIdentifier(book, payload.identifiers)
-
-    // Authors
     await BooksController.addAuthorToBook(book, payload.authors)
-
     await BooksController.addNarratorToBook(book, payload.narrators)
-
-    // Tracks
     await BooksController.addTrackToBook(book, payload.tracks)
-
-    // Series
     await BooksController.addSeriesToBook(book, payload.series)
 
-    if (foundBooks && foundBooks.length > 0) {
+    await book.save()
+
+    if (result.hits.length > 0) {
       const url = router
         .builder()
         .prefixUrl(env.get('APP_URL'))
-        .qs({ uuid: randomUUID(), model: 'book', id: book.id })
+        .qs({ model: 'book', id: book.publicId })
         .disableRouteLookup()
         .makeSigned('/create/confirm', { expiresIn: '24h', purpose: 'login' })
 
       return {
-        message:
-          'There has been at least one book that looks the same. Please verify the books to see if they are the same.',
-        books: foundBooks.all(),
-        url,
+        message: 'Book created, but a duplicate was found.',
+        book,
+        confirmation: url,
+        available: true,
       }
     }
 
-    book.enabled = true
-
-    await book.save()
-
-    return { book }
+    return { book, message: 'Book created successfully.', available: false }
   }
 
   static async addGenreToBook(book: Book, payloadObject?: object[]) {

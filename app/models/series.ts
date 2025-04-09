@@ -33,6 +33,9 @@ export default class Series extends BaseModel {
   @column()
   declare position: number | null
 
+  @column()
+  declare enabled: boolean
+
   @manyToMany(() => Identifier)
   declare identifiers: ManyToMany<typeof Identifier>
 
@@ -56,6 +59,7 @@ export default class Series extends BaseModel {
 
   @afterCreate()
   public static async afterCreateHook(series: Series) {
+    if (!series.enabled) return
     void seriesIndex.addDocuments([
       {
         id: series.id,
@@ -67,6 +71,7 @@ export default class Series extends BaseModel {
 
   @afterUpdate()
   public static async afterUpdateHook(series: Series) {
+    if (!series.enabled) return
     void seriesIndex.updateDocuments([
       {
         id: series.id,
