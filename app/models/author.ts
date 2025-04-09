@@ -13,6 +13,9 @@ import Identifier from '#models/identifier'
 import { nanoid } from '#config/app'
 import { authorIndex } from '#config/meilisearch'
 import { SearchEngineHelper } from '../helpers/search_engine.js'
+import { Infer } from '@vinejs/vine/types'
+import { authorValidator } from '#validators/provider_validator'
+import { ModelHelper } from '../helpers/model_helper.js'
 
 export default class Author extends BaseModel {
   @column({ isPrimary: true, serializeAs: null })
@@ -76,5 +79,29 @@ export default class Author extends BaseModel {
         description: SearchEngineHelper.removeHtmlTags(author.description),
       },
     ])
+  }
+
+  public static async findByModelOrCreate(author: Infer<typeof authorValidator>) {
+    let currentAuthor: Author | null = null
+    if (author.id) {
+      currentAuthor = await Author.findBy('public_id', author.id)
+    }
+    if (!currentAuthor && author.identifiers && author.identifiers.length > 0) {
+      const tmp = (await ModelHelper.findByIdentifiers(Author, author.identifiers)) as
+        | Author[]
+        | null
+      if (tmp && tmp.length > 0) currentAuthor = tmp[0]
+    }
+    if (!currentAuthor) {
+      currentAuthor = await Author.firstOrCreate(
+        { name: author.name },
+        {
+          description: author.description,
+        }
+      )
+      await ModelHelper.addIdentifier(currentAuthor, author.identifiers)
+    }
+
+    return currentAuthor
   }
 }

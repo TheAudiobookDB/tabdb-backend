@@ -1,16 +1,19 @@
 import Author from '#models/author'
 import Narrator from '#models/narrator'
 import Series from '#models/series'
-import { identifierValidation, identifierValidator } from '#validators/provider_validator'
+import { identifierValidation } from '#validators/provider_validator'
 import Identifier from '#models/identifier'
 import Book from '#models/book'
+import { Infer } from '@vinejs/vine/types'
 
 export class ModelHelper {
-  static async addIdentifier(model: Book | Author | Narrator | Series, payloadObject?: object[]) {
+  static async addIdentifier(
+    model: Book | Author | Narrator | Series,
+    payloadObject?: Infer<typeof identifierValidation>[]
+  ) {
     if (payloadObject) {
       const identifiers = []
-      for (const payload of payloadObject) {
-        const identifier = await identifierValidator.validate(payload)
+      for (const identifier of payloadObject) {
         if ('id' in identifier && identifier.id) {
           const existingIdentifier = await Identifier.findBy('public_id', identifier.id)
           if (existingIdentifier) {
@@ -80,7 +83,7 @@ export class ModelHelper {
 
   static async findByIdentifiers(
     model: typeof Book | typeof Author | typeof Narrator | typeof Series,
-    identifiers: (typeof identifierValidation)[]
+    identifiers: Infer<typeof identifierValidation>[]
   ): Promise<(Book | Author | Narrator | Series)[] | null> {
     if (identifiers.length > 0) {
       return model

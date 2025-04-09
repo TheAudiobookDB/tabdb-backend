@@ -13,5 +13,6 @@ export enum LogState {
   APPROVED = 1,
   REJECTED = 2,
   ERROR = 3,
+  PENDING_DUPLICATE = 19,
   DUPLICATE_FOUND = 20,
 }

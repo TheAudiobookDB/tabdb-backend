@@ -24,6 +24,7 @@ import Log from '#models/log'
 import { bookIndex } from '#config/meilisearch'
 import router from '@adonisjs/core/services/router'
 import env from '#start/env'
+import { Infer } from '@vinejs/vine/types'
 
 export default class BooksController {
   /**
@@ -138,178 +139,68 @@ export default class BooksController {
     return { book, message: 'Book created successfully.', available: false }
   }
 
-  static async addGenreToBook(book: Book, payloadObject?: object[]) {
+  static async addGenreToBook(book: Book, payloadObject?: Infer<typeof genreValidator>[]) {
     if (payloadObject) {
       const genres = []
-      for (const payload of payloadObject) {
-        const genre = await genreValidator.validate(payload)
-        if (genre.id) {
-          const existingGenre = await Genre.findBy('public_id', genre.id)
-          if (existingGenre) {
-            genres.push(existingGenre)
-          }
-        } else {
-          const existingGenre = await Genre.firstOrCreate({ name: genre.name, type: genre.type })
-          if (existingGenre) {
-            genres.push(existingGenre)
-          }
-        }
+      for (const genre of payloadObject) {
+        const genreModel = await Genre.findByModelOrCreate(genre)
+        if (genreModel) genres.push(genreModel)
       }
       await book.related('genres').saveMany(genres)
     }
   }
 
-  static async addNarratorToBook(book: Book, payloadObject?: object[]) {
+  static async addNarratorToBook(book: Book, payloadObject?: Infer<typeof narratorValidator>[]) {
     if (payloadObject) {
-      const narrators = []
       const roles: Record<string, ModelObject> = {}
-      for (const payload of payloadObject) {
-        const narrator = await narratorValidator.validate(payload)
-        if (narrator.id) {
-          const existingNarrator = await Narrator.findBy('public_id', narrator.id)
-          if (existingNarrator) {
-            narrators.push(existingNarrator)
-          }
-        } else {
-          const existingNarrator = await Narrator.firstOrCreate(
-            { name: narrator.name },
-            {
-              description: narrator.description,
-            }
-          )
-          if (existingNarrator) {
-            narrators.push(existingNarrator)
-          }
-        }
-        const narratorId = narrators[narrators.length - 1].id
+      for (const narrator of payloadObject) {
+        const narratorModel = await Narrator.findByModelOrCreate(narrator)
         const role = narrator.role
         if (role) {
-          roles[narratorId] = { role }
+          roles[narratorModel.id] = { role }
         } else {
-          roles[narratorId] = {}
-        }
-        if (narrators.length > 0 && narrator.identifiers) {
-          const narratorModel: Narrator = narrators[narrators.length - 1]
-
-          await ModelHelper.addIdentifier(narratorModel, narrator.identifiers)
+          roles[narratorModel.id] = {}
         }
       }
       await book.related('narrators').sync(roles)
     }
   }
 
-  static async addAuthorToBook(book: Book, payloadObject?: object[]) {
+  static async addAuthorToBook(book: Book, payloadObject?: Infer<typeof authorValidator>[]) {
     if (payloadObject) {
       const authors = []
-      for (const payload of payloadObject) {
-        const author = await authorValidator.validate(payload)
-        if (author.id) {
-          const existingAuthor = await Author.findBy('public_id', author.id)
-          if (existingAuthor) {
-            authors.push(existingAuthor)
-          }
-        } else {
-          const existingAuthor = await Author.firstOrCreate(
-            { name: author.name },
-            {
-              description: author.description,
-            }
-          )
-          if (existingAuthor) {
-            authors.push(existingAuthor)
-          }
-        }
-        if (authors.length > 0 && author.identifiers) {
-          const authorModel: Author = authors[authors.length - 1]
-
-          await ModelHelper.addIdentifier(authorModel, author.identifiers)
-        }
+      for (const author of payloadObject) {
+        const authorModel = await Author.findByModelOrCreate(author)
+        if (authorModel) authors.push(authorModel)
       }
       await book.related('authors').saveMany(authors)
     }
   }
 
-  static async addSeriesToBook(book: Book, payloadObject?: object[]) {
+  static async addSeriesToBook(book: Book, payloadObject?: Infer<typeof seriesValidator>[]) {
     if (payloadObject) {
-      const series = []
       const positions: Record<string, ModelObject> = {}
-      for (const payload of payloadObject) {
-        const serie = await seriesValidator.validate(payload)
-        let existingSeries: Series | null = null
-        if (serie.id) {
-          existingSeries = await Series.findBy('public_id', serie.id)
-          if (existingSeries) {
-            series.push(existingSeries)
-          }
-        }
+      for (const serie of payloadObject) {
+        const serieModel = await Series.findByModelOrCreate(serie)
 
-        if (!existingSeries && serie.identifiers) {
-          const identifiers = serie.identifiers
-          for (const identifier of identifiers) {
-            const result = (await ModelHelper.findByIdentifier(
-              Series,
-              undefined,
-              undefined,
-              identifier
-            )) as Series[]
-            if (result && result.length > 0) {
-              series.push(result[0])
-              break
-            }
-          }
-        }
-
-        if (!existingSeries && serie.name) {
-          existingSeries = await Series.firstOrCreate(
-            { name: serie.name },
-            {
-              description: serie.description,
-            }
-          )
-        }
-
-        if (existingSeries) {
-          series.push(existingSeries)
-        }
-
-        const seriesId = series[series.length - 1].id
         const position = serie.position
         if (position) {
-          positions[seriesId] = { position }
+          positions[serieModel.id] = { position }
         } else {
-          positions[seriesId] = {}
-        }
-        if (series.length > 0 && serie.identifiers) {
-          const seriesModel: Series = series[series.length - 1]
-
-          await ModelHelper.addIdentifier(seriesModel, serie.identifiers)
+          positions[serieModel.id] = {}
         }
       }
       await book.related('series').sync(positions)
     }
   }
 
-  static async addTrackToBook(book: Book, payloadObject?: object[]) {
+  static async addTrackToBook(book: Book, payloadObject?: Infer<typeof trackValidator>[]) {
     if (payloadObject) {
       const tracks = []
-      for (const payload of payloadObject) {
-        const track = await trackValidator.validate(payload)
-        if (track.id) {
-          const existingTrack = await Track.findBy('public_id', track.id)
-          if (existingTrack) {
-            tracks.push(existingTrack)
-          }
-        } else {
-          const existingTrack = await Track.firstOrCreate(
-            { name: track.name, bookId: book.id },
-            {
-              start: track.start,
-              end: track.end,
-            }
-          )
-          if (existingTrack) {
-            tracks.push(existingTrack)
-          }
+      for (const track of payloadObject) {
+        const trackModel = await Track.findByModelOrCreate(track, book)
+        if (trackModel) {
+          tracks.push(trackModel)
         }
       }
       await book.related('tracks').saveMany(tracks)

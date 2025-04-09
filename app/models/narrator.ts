@@ -13,6 +13,9 @@ import Identifier from '#models/identifier'
 import { nanoid } from '#config/app'
 import { narratorIndex } from '#config/meilisearch'
 import { SearchEngineHelper } from '../helpers/search_engine.js'
+import { Infer } from '@vinejs/vine/types'
+import { narratorValidator } from '#validators/provider_validator'
+import { ModelHelper } from '../helpers/model_helper.js'
 
 export default class Narrator extends BaseModel {
   @column({ isPrimary: true, serializeAs: null })
@@ -79,5 +82,29 @@ export default class Narrator extends BaseModel {
         description: SearchEngineHelper.removeHtmlTags(narrator.description),
       },
     ])
+  }
+
+  public static async findByModelOrCreate(narrator: Infer<typeof narratorValidator>) {
+    let currentNarrator: Narrator | null = null
+    if (narrator.id) {
+      currentNarrator = await Narrator.findBy('public_id', narrator.id)
+    }
+    if (!currentNarrator && narrator.identifiers && narrator.identifiers.length > 0) {
+      const tmp = (await ModelHelper.findByIdentifiers(Narrator, narrator.identifiers)) as
+        | Narrator[]
+        | null
+      if (tmp && tmp.length > 0) currentNarrator = tmp[0]
+    }
+    if (!currentNarrator) {
+      currentNarrator = await Narrator.firstOrCreate(
+        { name: narrator.name },
+        {
+          description: narrator.description,
+        }
+      )
+      await ModelHelper.addIdentifier(currentNarrator, narrator.identifiers)
+    }
+
+    return currentNarrator
   }
 }

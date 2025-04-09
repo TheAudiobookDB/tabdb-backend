@@ -13,6 +13,9 @@ import Identifier from '#models/identifier'
 import { nanoid } from '#config/app'
 import { seriesIndex } from '#config/meilisearch'
 import { SearchEngineHelper } from '../helpers/search_engine.js'
+import { Infer } from '@vinejs/vine/types'
+import { seriesValidator } from '#validators/provider_validator'
+import { ModelHelper } from '../helpers/model_helper.js'
 
 export default class Series extends BaseModel {
   @column({ isPrimary: true, serializeAs: null })
@@ -79,5 +82,29 @@ export default class Series extends BaseModel {
         description: SearchEngineHelper.removeHtmlTags(series.description),
       },
     ])
+  }
+
+  public static async findByModelOrCreate(series: Infer<typeof seriesValidator>) {
+    let currentSeries: Series | null = null
+    if (series.id) {
+      currentSeries = await Series.findBy('public_id', series.id)
+    }
+    if (!currentSeries && series.identifiers && series.identifiers.length > 0) {
+      const tmp = (await ModelHelper.findByIdentifiers(Series, series.identifiers)) as
+        | Series[]
+        | null
+      if (tmp && tmp.length > 0) currentSeries = tmp[0]
+    }
+    if (!currentSeries) {
+      currentSeries = await Series.firstOrCreate(
+        { name: series.name },
+        {
+          description: series.description,
+        }
+      )
+      await ModelHelper.addIdentifier(currentSeries, series.identifiers)
+    }
+
+    return currentSeries
   }
 }
