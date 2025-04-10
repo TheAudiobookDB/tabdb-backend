@@ -27,7 +27,7 @@ export default class Genre extends BaseModel {
   @column()
   declare type: 'genre' | 'tag'
 
-  @column()
+  @column({ serializeAs: null })
   declare enabled: boolean
 
   @manyToMany(() => Book)

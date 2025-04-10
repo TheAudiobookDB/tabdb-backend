@@ -33,7 +33,7 @@ export default class Author extends BaseModel {
   @column()
   declare image: string | null
 
-  @column()
+  @column({ serializeAs: null })
   declare enabled: boolean
 
   @manyToMany(() => Book, {

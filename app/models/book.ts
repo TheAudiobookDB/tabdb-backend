@@ -2,7 +2,6 @@ import { DateTime } from 'luxon'
 import {
   afterCreate,
   afterDelete,
-  afterFind,
   afterUpdate,
   BaseModel,
   beforeCreate,
@@ -72,7 +71,7 @@ export default class Book extends BaseModel {
   @column()
   declare groupId: number | null
 
-  @column()
+  @column({ serializeAs: null })
   declare enabled: boolean
 
   @column.dateTime({ serializeAs: null })
@@ -119,26 +118,6 @@ export default class Book extends BaseModel {
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
-
-  @afterFind()
-  public static async afterFindHook(book: Book) {
-    if (book.narrators) {
-      for (let i = 0; i < book.narrators.length; i++) {
-        const narrator = book.narrators[i]
-        if (narrator.$extras.pivot_role) {
-          book.narrators[i].role = narrator.$extras.pivot_role
-        }
-      }
-    }
-    if (book.series) {
-      for (let i = 0; i < book.series.length; i++) {
-        const series = book.series[i]
-        if (series.$extras.pivot_position) {
-          book.series[i].position = series.$extras.pivot_position
-        }
-      }
-    }
-  }
 
   @beforeCreate()
   public static ensurePublicId(book: Book) {

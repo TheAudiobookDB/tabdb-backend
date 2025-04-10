@@ -1,5 +1,5 @@
 import vine from '@vinejs/vine'
-import { nanoIdValidation } from '#config/app'
+import { limitValidation, nanoIdValidation, pageValidation } from '#config/app'
 import { isLanguageRule } from '#start/rules/language'
 
 export const asinValidation = vine
@@ -243,3 +243,17 @@ export const audiobookshelfValidator = vine.compile(
 )
 
 export const typeValidation = vine.enum(['book', 'audiobook', 'podcast', 'e-book'])
+
+export const getIdValidator = vine.compile(
+  vine.object({
+    id: nanoIdValidation,
+  })
+)
+
+export const getIdPaginationValidator = vine.compile(
+  vine.object({
+    id: nanoIdValidation,
+    page: pageValidation,
+    limit: limitValidation,
+  })
+)

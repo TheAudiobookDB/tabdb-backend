@@ -33,10 +33,7 @@ export default class Series extends BaseModel {
   @column()
   declare image: string | null
 
-  @column()
-  declare position: number | null
-
-  @column()
+  @column({ serializeAs: null })
   declare enabled: boolean
 
   @manyToMany(() => Identifier)
@@ -107,4 +104,12 @@ export default class Series extends BaseModel {
 
     return currentSeries
   }
+
+  serializeExtras() {
+    return {
+      position: this.$extras.pivot_position,
+    }
+  }
+
+  declare position: number | null
 }

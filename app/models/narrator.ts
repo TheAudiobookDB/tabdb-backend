@@ -33,7 +33,7 @@ export default class Narrator extends BaseModel {
   @column()
   declare image: string | null
 
-  @column()
+  @column({ serializeAs: null })
   declare enabled: boolean
 
   @manyToMany(() => Book, {
@@ -43,9 +43,6 @@ export default class Narrator extends BaseModel {
 
   @manyToMany(() => Identifier)
   declare identifiers: ManyToMany<typeof Identifier>
-
-  @column()
-  declare role: string | null
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -107,4 +104,12 @@ export default class Narrator extends BaseModel {
 
     return currentNarrator
   }
+
+  serializeExtras() {
+    return {
+      role: this.$extras.pivot_role,
+    }
+  }
+
+  declare role: string | null
 }
