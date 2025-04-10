@@ -17,6 +17,7 @@ import {
 } from '#config/meilisearch'
 import Author from '#models/author'
 import Narrator from '#models/narrator'
+import Series from '#models/series'
 
 export default class SearchesController {
   /**
@@ -422,6 +423,42 @@ export default class SearchesController {
    * @responseBody 429 - <TooManyRequests>
    */
   async series({ request }: HttpContext) {
-    // TODO: Implement series search
+    const payload = await searchSeriesValidator.validate(request.all())
+    const page = payload.page ?? 1
+    const limit = 10
+
+    const series = await seriesIndex.search(payload.name || payload.keywords, {
+      attributesToSearchOn: payload.keywords ? ['*'] : ['name'],
+      limit: limit,
+      page: page,
+      showRankingScore: true,
+      rankingScoreThreshold: payload.threshold || 0.35,
+    })
+
+    if (!series || !series.hits || series.hits.length <= 0) {
+      return { message: 'Narrators not found' }
+    }
+
+    const narratorIds = series.hits.map((serie) => serie.id)
+
+    const seriesResults = await Series.query()
+      .preload('identifiers')
+      .whereIn('id', narratorIds)
+      .orderByRaw(
+        `CASE id ${narratorIds.map((id, index) => `WHEN ${id} THEN ${index}`).join(' ')} END`
+      )
+      .paginate(1, limit)
+
+    const result = seriesResults.serialize({})
+
+    result.meta.total = series.totalHits
+    result.meta.lastPage = Math.ceil(series.totalHits / limit)
+    result.meta.page = page
+    result.meta.lastPageUrl = `/?page=${result.meta.lastPage}`
+    result.meta.nextPageUrl = page + 1 <= result.meta.lastPage ? `/?page=${page + 1}` : null
+    result.meta.previousPageUrl = page - 1 >= 1 ? `/?page=${page - 1}` : null
+    result.meta.currentPage = page
+
+    return result
   }
 }
