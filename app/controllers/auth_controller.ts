@@ -36,6 +36,7 @@ export default class AuthController {
       message
         .to(email)
         .subject('Login to AudiobookDB')
+        .header('X-PM-Message-Stream', 'outbound')
         .htmlView('email/login_email', { login_url: url })
     })
 
