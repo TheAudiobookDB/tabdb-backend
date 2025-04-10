@@ -16,6 +16,7 @@ import {
   seriesIndex,
 } from '#config/meilisearch'
 import Author from '#models/author'
+import Narrator from '#models/narrator'
 
 export default class SearchesController {
   /**
@@ -333,7 +334,7 @@ export default class SearchesController {
 
     const narratorIds = narrators.hits.map((narrator) => narrator.id)
 
-    const narratorResults = await Author.query()
+    const narratorResults = await Narrator.query()
       .preload('identifiers')
       .whereIn('id', narratorIds)
       .orderByRaw(
@@ -421,34 +422,6 @@ export default class SearchesController {
    * @responseBody 429 - <TooManyRequests>
    */
   async series({ request }: HttpContext) {
-    const payload = await searchSeriesValidator.validate(request.all())
-    const page = payload.page ?? 1
-    const limit = 10
-
-    const seriesResult = await seriesIndex.search(payload.name || payload.keywords, {
-      attributesToSearchOn: payload.keywords ? ['*'] : ['name'],
-      limit: limit,
-      page: page,
-      showRankingScore: true,
-      rankingScoreThreshold: payload.threshold || 0.35,
-    })
-
-    if (!seriesResult || !seriesResult.hits || seriesResult.hits.length <= 0) {
-      return { message: 'Series not found' }
-    }
-
-    return {
-      hits: seriesResult.hits,
-      meta: {
-        total: seriesResult.totalHits,
-        lastPage: Math.ceil(seriesResult.totalHits / limit),
-        page: page,
-        lastPageUrl: `/?page=${Math.ceil(seriesResult.totalHits / limit)}`,
-        nextPageUrl:
-          page + 1 <= Math.ceil(seriesResult.totalHits / limit) ? `/?page=${page + 1}` : null,
-        previousPageUrl: page - 1 >= 1 ? `/?page=${page - 1}` : null,
-        currentPage: page,
-      },
-    }
+    // TODO: Implement series search
   }
 }
