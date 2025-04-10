@@ -1,8 +1,13 @@
-import { audiobookshelfValidator } from '#validators/provider_validator'
+import {
+  audiobookshelfValidator,
+  genreValidator,
+  identifierValidator,
+} from '#validators/provider_validator'
 import { ModelHelper } from '../helpers/model_helper.js'
 import Book from '#models/book'
 import { DateTime } from 'luxon'
 import BooksController from '#controllers/books_controller'
+import { Infer } from '@vinejs/vine/types'
 
 export class Audiobookshelf {
   static async fetchBook(payloadObj: object): Promise<Book> {
@@ -48,7 +53,7 @@ export class Audiobookshelf {
 
     await book.save()
 
-    const genresTags = []
+    const genresTags: Infer<typeof genreValidator>[] = []
     for (const tag of payload.tags ?? []) {
       genresTags.push({ name: tag, type: 'tag' })
     }
@@ -84,7 +89,7 @@ export class Audiobookshelf {
 
     await BooksController.addTrackToBook(book, chapters)
 
-    const identifiers = []
+    const identifiers: Infer<typeof identifierValidator>[] = []
     if (payload.asin) {
       identifiers.push({ type: 'audible:asin', value: payload.asin })
     }

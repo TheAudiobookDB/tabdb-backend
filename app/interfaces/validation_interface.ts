@@ -7,3 +7,11 @@ export interface ValidationError {
   rule: string
   message: string
 }
+
+/**
+ * @description Validation error response
+ */
+export interface RequestResponse {
+  message: string
+  id: string
+}

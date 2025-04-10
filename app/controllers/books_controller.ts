@@ -25,6 +25,8 @@ import { bookIndex } from '#config/meilisearch'
 import router from '@adonisjs/core/services/router'
 import env from '#start/env'
 import { Infer } from '@vinejs/vine/types'
+import app from '@adonisjs/core/services/app'
+import { cuid } from '@adonisjs/core/helpers'
 
 export default class BooksController {
   /**
@@ -44,25 +46,25 @@ export default class BooksController {
   async create(context: HttpContext) {
     const payload = await context.request.validateUsing(createBookValidator)
 
+    const exactDuplicates = await Book.query()
+      .where((builder) => {
+        builder.where('title', payload.title)
+        if (payload.subtitle) {
+          builder.where('subtitle', payload.subtitle)
+        }
+        if (payload.language) {
+          builder.where('language', payload.language)
+        }
+      })
+      .first()
+
+    if (exactDuplicates) {
+      return context.response.status(422).send({
+        message: 'A book with the same title, subtitle and language already exists.',
+      })
+    }
+
     if (payload.identifiers && payload.identifiers.length > 0) {
-      const exactDuplicates = await Book.query()
-        .where((builder) => {
-          builder.where('title', payload.title)
-          if (payload.subtitle) {
-            builder.where('subtitle', payload.subtitle)
-          }
-          if (payload.language) {
-            builder.where('language', payload.language)
-          }
-        })
-        .first()
-
-      if (exactDuplicates) {
-        return context.response.status(422).send({
-          message: 'A book with the same title, subtitle and language already exists.',
-        })
-      }
-
       // @ts-ignore
       const existingBooks = (await ModelHelper.findByIdentifiers(Book, payload.identifiers)) as
         | Book[]
@@ -99,6 +101,13 @@ export default class BooksController {
     book.isAbridged = payload.isAbridged ?? null
     book.type = payload.type ?? 'audiobook'
     book.groupId = payload.groupId ?? null
+
+    let image = context.request.file('image')
+    if (image) {
+      await image.move(app.makePath('storage/uploads'), {
+        name: `${cuid()}.${image.extname}`,
+      })
+    }
 
     await book.save()
 

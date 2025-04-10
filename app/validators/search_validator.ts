@@ -23,3 +23,28 @@ export const searchBookValidation = vine.object({
 })
 
 export const searchBookValidator = vine.compile(searchBookValidation)
+
+const createSearchValidator = vine.object({
+  name: vine.string().trim().minLength(3).maxLength(1023).optional().requiredIfMissing('keywords'),
+  keywords: vine.string().trim().minLength(3).maxLength(1023).optional().requiredIfMissing('name'),
+  page: vine.number().withoutDecimals().min(1).optional(),
+  threshold: vine
+    .number()
+    .min(0.25)
+    .max(1)
+    .optional()
+    .transform((val) => val ?? 0.35),
+})
+
+export const searchAuthorValidator = vine.compile(createSearchValidator)
+export const searchNarratorValidator = vine.compile(createSearchValidator)
+export const searchSeriesValidator = vine.compile(createSearchValidator)
+
+export const searchGenreValidator = vine.compile(
+  vine.object({
+    name: vine.string().trim().minLength(3).maxLength(1023),
+    type: vine.enum(['genre', 'tag']).optional(),
+    page: vine.number().withoutDecimals().min(1).optional(),
+    threshold: vine.number().min(0.25).max(1).optional(),
+  })
+)

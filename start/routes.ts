@@ -48,6 +48,22 @@ router.post('/books/abs', [BooksController, 'abs']).use(middleware.auth()).use(r
  * Search
  */
 router.get('/search/book', [SearchesController, 'book']).use(middleware.relaxAuth()).use(r2Limiter)
+router
+  .get('/search/author', [SearchesController, 'author'])
+  .use(middleware.relaxAuth())
+  .use(r2Limiter)
+router
+  .get('/search/narrator', [SearchesController, 'narrator'])
+  .use(middleware.relaxAuth())
+  .use(r2Limiter)
+router
+  .get('/search/genre', [SearchesController, 'genre'])
+  .use(middleware.relaxAuth())
+  .use(r2Limiter)
+router
+  .get('/search/series', [SearchesController, 'series'])
+  .use(middleware.relaxAuth())
+  .use(r2Limiter)
 
 /**
  * Confirm

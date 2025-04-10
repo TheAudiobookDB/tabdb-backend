@@ -14,6 +14,7 @@ export default class RequestsController {
    * @responseHeader 200 - @use(rate)
    * @responseHeader 200 - @use(requestId)
    *
+   * @responseBody 200 - <RequestResponse>
    * @responseBody 422 - <ValidationInterface>
    * @responseBody 429 - <TooManyRequests>
    */

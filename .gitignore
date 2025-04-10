@@ -26,3 +26,4 @@ yarn-error.log
 swagger.json
 swagger.yml
 !/docker/swagger.yml
+storage

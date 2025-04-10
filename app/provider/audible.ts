@@ -36,6 +36,12 @@ export class Audible {
     book.publisher = payload.publisher ?? null
     book.language = payload.language ?? null
     book.copyright = payload.copyright ?? null
+
+    const audibleCopyright = 'Certain parts of this item are copyrighted by Audible, Inc.'
+    if (!book.copyright || !book.copyright?.includes('audibleCopyright')) {
+      if (!book.copyright) book.copyright = audibleCopyright
+      else book.copyright += `, ${audibleCopyright}`
+    }
     book.duration = payload.lengthMinutes !== undefined ? payload.lengthMinutes * 60 : null
     book.releasedAt = payload.releaseDate ? DateTime.fromISO(payload.releaseDate) : null
     book.isAbridged = payload.bookFormat === 'abridged'
@@ -101,8 +107,7 @@ export class Audible {
         : []),
     ])
 
-    fullBook.enabled = true
-    await fullBook.save()
+    await Book.enableBookAndRelations(fullBook.id)
 
     return fullBook
   }
@@ -124,6 +129,7 @@ export class Audible {
 
     author.name = payload.name
     author.description = payload.description ?? null
+    author.enabled = true
 
     await author.save()
 
@@ -193,6 +199,7 @@ export class Audible {
 
     series.name = payload.title
     series.description = payload.description ?? null
+    series.enabled = true
 
     await ModelHelper.addIdentifier(series, [
       {

@@ -29,6 +29,12 @@ export const createBookValidator = vine.compile(
     isExplicit: vine.boolean().optional(),
     isAbridged: vine.boolean().optional(),
     groupId: vine.number().positive().withoutDecimals().optional(),
+    image: vine
+      .file({
+        size: '1mb',
+        extnames: ['jpg', 'jpeg', 'png', 'webp'],
+      })
+      .optional(),
     type: typeValidation.optional(),
     genres: vine.array(genreValidation).maxLength(30).optional(),
     authors: vine.array(authorValidation).maxLength(20).optional(),
