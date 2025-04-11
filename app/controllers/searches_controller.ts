@@ -172,7 +172,9 @@ export default class SearchesController {
     }
 
     const books = await bookIndex.search(payload.title || payload.keywords, {
-      attributesToSearchOn: payload.keywords ? undefined : ['title', 'subtitle'],
+      attributesToSearchOn: payload.keywords
+        ? undefined
+        : ['title', 'subtitle', 'series.name', 'series.position'],
       limit: limit,
       page: page,
       filter: filterExpression,

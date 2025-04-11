@@ -39,7 +39,7 @@ router.get('/docs', async () => {
  * Auth
  */
 
-router.get('/login/:email', [AuthController, 'create']).as('/login')
+router.post('/login/:email', [AuthController, 'create']).as('/login')
 router.post('/login', [AuthController, 'store']).use(loginLimiter).use(emailLimiter)
 
 /**
