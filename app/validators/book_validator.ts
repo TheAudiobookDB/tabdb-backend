@@ -1,6 +1,14 @@
 import vine from '@vinejs/vine'
-import { identifierValidation, narratorValidation } from '#validators/provider_validator'
-import { languageValidation, nanoIdValidation } from '#config/app'
+import {
+  authorValidation,
+  genreValidation,
+  identifierValidation,
+  narratorValidation,
+  seriesValidation,
+  trackValidation,
+  typeValidation,
+} from '#validators/provider_validator'
+import { nanoIdValidation, languageValidation } from '#config/app'
 
 /**
  *
@@ -15,65 +23,25 @@ export const createBookValidator = vine.compile(
     publisher: vine.string().maxLength(1023).optional(),
     language: languageValidation.optional(),
     copyright: vine.string().maxLength(255).optional(),
-    page: vine.number().positive().withoutDecimals().optional(),
+    pages: vine.number().positive().withoutDecimals().optional(),
     duration: vine.number().positive().optional(),
     releasedAt: vine.date().optional(),
     isExplicit: vine.boolean().optional(),
     isAbridged: vine.boolean().optional(),
     groupId: vine.number().positive().withoutDecimals().optional(),
-    type: vine.enum(['book', 'audiobook', 'podcast', 'e-book']).optional(),
-    genres: vine
-      .array(
-        vine.object({
-          id: nanoIdValidation.optional().requiredIfAnyMissing(['name', 'type']),
-          name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
-          type: vine.enum(['genre', 'tag']).optional().requiredIfMissing('id'),
-        })
-      )
+    image: vine
+      .file({
+        size: '1mb',
+        extnames: ['jpg', 'jpeg', 'png', 'webp'],
+      })
       .optional(),
-    authors: vine
-      .array(
-        vine.object({
-          id: nanoIdValidation.optional().requiredIfMissing('name'),
-          name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
-          description: vine.string().optional(),
-          image: vine.string().url().optional(),
-        })
-      )
-      .optional(),
-    narrators: vine.array(narratorValidation).optional(),
-    identifiers: vine.array(identifierValidation).optional(),
-    series: vine
-      .array(
-        vine.object({
-          id: nanoIdValidation.optional().requiredIfMissing('name'),
-          name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
-          description: vine.string().optional(),
-          image: vine.string().url().optional(),
-          position: vine.string().optional(),
-        })
-      )
-      .optional(),
-    tracks: vine
-      .array(
-        vine.object({
-          id: nanoIdValidation.optional().requiredIfAnyMissing(['name', 'start', 'end']),
-          name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
-          start: vine
-            .number()
-            .positive()
-            .optional()
-            .requiredIfExists('end')
-            .requiredIfMissing('id'),
-          end: vine
-            .number()
-            .positive()
-            .optional()
-            .requiredIfExists('start')
-            .requiredIfMissing('id'),
-        })
-      )
-      .optional(),
+    type: typeValidation.optional(),
+    genres: vine.array(genreValidation).maxLength(30).optional(),
+    authors: vine.array(authorValidation).maxLength(20).optional(),
+    narrators: vine.array(narratorValidation).maxLength(50).optional(),
+    identifiers: vine.array(identifierValidation).maxLength(5).optional(),
+    series: vine.array(seriesValidation).maxLength(5).optional(),
+    tracks: vine.array(trackValidation).maxLength(2047).optional(),
   })
 )
 

@@ -36,6 +36,12 @@ export class Audible {
     book.publisher = payload.publisher ?? null
     book.language = payload.language ?? null
     book.copyright = payload.copyright ?? null
+
+    const audibleCopyright = 'Certain parts of this item are copyrighted by Audible, Inc.'
+    if (!book.copyright || !book.copyright?.includes('audibleCopyright')) {
+      if (!book.copyright) book.copyright = audibleCopyright
+      else book.copyright += `, ${audibleCopyright}`
+    }
     book.duration = payload.lengthMinutes !== undefined ? payload.lengthMinutes * 60 : null
     book.releasedAt = payload.releaseDate ? DateTime.fromISO(payload.releaseDate) : null
     book.isAbridged = payload.bookFormat === 'abridged'
@@ -90,6 +96,7 @@ export class Audible {
         value: payload.asin,
       },
       // If isbn is not null, add it as an identifier
+      // @ts-ignore
       ...(payload.isbn
         ? [
             {
@@ -100,8 +107,7 @@ export class Audible {
         : []),
     ])
 
-    fullBook.enabled = true
-    await fullBook.save()
+    await Book.enableBookAndRelations(fullBook.id)
 
     return fullBook
   }
@@ -123,6 +129,7 @@ export class Audible {
 
     author.name = payload.name
     author.description = payload.description ?? null
+    author.enabled = true
 
     await author.save()
 
@@ -155,21 +162,20 @@ export class Audible {
 
     const book: Book = books[0]
 
-    const tracks: Track[] = []
-    for (const chapter of payload.chapters) {
-      const track = new Track()
-      track.name = chapter.title
-      track.start = chapter.startOffsetMs
-      track.end = chapter.startOffsetMs + chapter.lengthMs
-      track.bookId = book.id
-      tracks.push(track)
+    const tracksData = payload.chapters.map((chapter) => {
+      return {
+        name: chapter.title,
+        start: chapter.startOffsetMs,
+        end: chapter.startOffsetMs + chapter.lengthMs,
+        bookId: book.id,
+      }
+    })
+
+    if (tracksData.length > 0) {
+      await Track.createMany(tracksData)
     }
-    // await a Promis of track.save() for each track
-    await Promise.all(
-      tracks.map(async (track) => {
-        await track.save()
-      })
-    )
+
+    return book
   }
 
   static async fetchSeries(identifier: string, language: string): Promise<Series> {
@@ -193,6 +199,7 @@ export class Audible {
 
     series.name = payload.title
     series.description = payload.description ?? null
+    series.enabled = true
 
     await ModelHelper.addIdentifier(series, [
       {

@@ -13,6 +13,9 @@ import Identifier from '#models/identifier'
 import { nanoid } from '#config/app'
 import { seriesIndex } from '#config/meilisearch'
 import { SearchEngineHelper } from '../helpers/search_engine.js'
+import { Infer } from '@vinejs/vine/types'
+import { seriesValidator } from '#validators/provider_validator'
+import { ModelHelper } from '../helpers/model_helper.js'
 
 export default class Series extends BaseModel {
   @column({ isPrimary: true, serializeAs: null })
@@ -30,8 +33,8 @@ export default class Series extends BaseModel {
   @column()
   declare image: string | null
 
-  @column()
-  declare position: number | null
+  @column({ serializeAs: null })
+  declare enabled: boolean
 
   @manyToMany(() => Identifier)
   declare identifiers: ManyToMany<typeof Identifier>
@@ -56,6 +59,7 @@ export default class Series extends BaseModel {
 
   @afterCreate()
   public static async afterCreateHook(series: Series) {
+    if (!series.enabled) return
     void seriesIndex.addDocuments([
       {
         id: series.id,
@@ -67,6 +71,7 @@ export default class Series extends BaseModel {
 
   @afterUpdate()
   public static async afterUpdateHook(series: Series) {
+    if (!series.enabled) return
     void seriesIndex.updateDocuments([
       {
         id: series.id,
@@ -75,4 +80,36 @@ export default class Series extends BaseModel {
       },
     ])
   }
+
+  public static async findByModelOrCreate(series: Infer<typeof seriesValidator>) {
+    let currentSeries: Series | null = null
+    if (series.id) {
+      currentSeries = await Series.findBy('public_id', series.id)
+    }
+    if (!currentSeries && series.identifiers && series.identifiers.length > 0) {
+      const tmp = (await ModelHelper.findByIdentifiers(Series, series.identifiers)) as
+        | Series[]
+        | null
+      if (tmp && tmp.length > 0) currentSeries = tmp[0]
+    }
+    if (!currentSeries) {
+      currentSeries = await Series.firstOrCreate(
+        { name: series.name },
+        {
+          description: series.description,
+        }
+      )
+      await ModelHelper.addIdentifier(currentSeries, series.identifiers)
+    }
+
+    return currentSeries
+  }
+
+  serializeExtras() {
+    return {
+      position: this.$extras.pivot_position,
+    }
+  }
+
+  declare position: number | null
 }

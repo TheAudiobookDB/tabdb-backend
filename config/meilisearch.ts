@@ -23,4 +23,8 @@ await bookIndex.updateSettings({
   ],
 })
 
+await genreIndex.updateSettings({
+  filterableAttributes: ['type'],
+})
+
 export { client, bookIndex, authorIndex, narratorIndex, genreIndex, seriesIndex }

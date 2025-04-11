@@ -2,7 +2,7 @@ import env from '#start/env'
 import { defineConfig, transports } from '@adonisjs/mail'
 
 const mailConfig = defineConfig({
-  default: 'resend',
+  default: 'smtp',
 
   /**
    * The mailers object can be used to configure multiple mailers
@@ -11,14 +11,20 @@ const mailConfig = defineConfig({
    */
 
   from: {
-    address: 'Acme <onboarding@resend.dev>',
-    name: 'The Audiobook Database',
+    address: env.get('SMTP_FROM', ''),
+    name: 'The Audiobook DB',
   },
 
   mailers: {
-    resend: transports.resend({
-      key: env.get('RESEND_API_KEY'),
-      baseUrl: 'https://api.resend.com',
+    smtp: transports.smtp({
+      host: env.get('SMTP_HOST'),
+      port: env.get('SMTP_PORT'),
+      requireTLS: true,
+      auth: {
+        type: 'login',
+        user: env.get('SMTP_USER', ''),
+        pass: env.get('SMTP_PASS', ''),
+      },
     }),
   },
 })

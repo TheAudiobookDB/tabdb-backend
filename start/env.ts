@@ -41,8 +41,17 @@ export default await Env.create(new URL('../', import.meta.url), {
   REDIS_PORT: Env.schema.number(),
   REDIS_PASSWORD: Env.schema.string(),
 
-  RESEND_API_KEY: Env.schema.string(),
-
   MEILISEARCH_HOST: Env.schema.string(),
   MEILISEARCH_API_KEY: Env.schema.string(),
+
+  /*
+  |----------------------------------------------------------
+  | Variables for configuring the mail package
+  |----------------------------------------------------------
+  */
+  SMTP_HOST: Env.schema.string(),
+  SMTP_PORT: Env.schema.string(),
+  SMTP_FROM: Env.schema.string(),
+  SMTP_USER: Env.schema.string(),
+  SMTP_PASS: Env.schema.string(),
 })

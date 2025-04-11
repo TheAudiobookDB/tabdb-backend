@@ -3,6 +3,8 @@ import { BaseModel, beforeCreate, belongsTo, column, computed } from '@adonisjs/
 import Book from '#models/book'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import { nanoid } from '#config/app'
+import { Infer } from '@vinejs/vine/types'
+import { trackValidator } from '#validators/provider_validator'
 
 export default class Track extends BaseModel {
   @column({ isPrimary: true, serializeAs: null })
@@ -31,10 +33,10 @@ export default class Track extends BaseModel {
   @belongsTo(() => Book)
   declare book: BelongsTo<typeof Book>
 
-  @column.dateTime({ autoCreate: true })
+  @column.dateTime({ autoCreate: true, serializeAs: null })
   declare createdAt: DateTime
 
-  @column.dateTime({ autoCreate: true, autoUpdate: true })
+  @column.dateTime({ autoCreate: true, autoUpdate: true, serializeAs: null })
   declare updatedAt: DateTime
 
   @beforeCreate()
@@ -42,5 +44,22 @@ export default class Track extends BaseModel {
     if (!track.publicId) {
       track.publicId = nanoid()
     }
+  }
+
+  public static async findByModelOrCreate(track: Infer<typeof trackValidator>, book: Book) {
+    let currentTrack = null
+    if (track.id) {
+      currentTrack = await Track.findBy('public_id', track.id)
+    }
+    if (!currentTrack && track.name && book.id) {
+      currentTrack = await Track.firstOrCreate(
+        { name: track.name, bookId: book.id },
+        {
+          start: track.start,
+          end: track.end,
+        }
+      )
+    }
+    return currentTrack
   }
 }

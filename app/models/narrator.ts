@@ -13,6 +13,9 @@ import Identifier from '#models/identifier'
 import { nanoid } from '#config/app'
 import { narratorIndex } from '#config/meilisearch'
 import { SearchEngineHelper } from '../helpers/search_engine.js'
+import { Infer } from '@vinejs/vine/types'
+import { narratorValidator } from '#validators/provider_validator'
+import { ModelHelper } from '../helpers/model_helper.js'
 
 export default class Narrator extends BaseModel {
   @column({ isPrimary: true, serializeAs: null })
@@ -30,6 +33,9 @@ export default class Narrator extends BaseModel {
   @column()
   declare image: string | null
 
+  @column({ serializeAs: null })
+  declare enabled: boolean
+
   @manyToMany(() => Book, {
     pivotColumns: ['role'],
   })
@@ -37,9 +43,6 @@ export default class Narrator extends BaseModel {
 
   @manyToMany(() => Identifier)
   declare identifiers: ManyToMany<typeof Identifier>
-
-  @column()
-  declare role: string | null
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -56,6 +59,7 @@ export default class Narrator extends BaseModel {
 
   @afterCreate()
   public static async afterCreateHook(narrator: Narrator) {
+    if (!narrator.enabled) return
     void narratorIndex.addDocuments([
       {
         id: narrator.id,
@@ -67,6 +71,7 @@ export default class Narrator extends BaseModel {
 
   @afterUpdate()
   public static async afterUpdateHook(narrator: Narrator) {
+    if (!narrator.enabled) return
     void narratorIndex.updateDocuments([
       {
         id: narrator.id,
@@ -75,4 +80,36 @@ export default class Narrator extends BaseModel {
       },
     ])
   }
+
+  public static async findByModelOrCreate(narrator: Infer<typeof narratorValidator>) {
+    let currentNarrator: Narrator | null = null
+    if (narrator.id) {
+      currentNarrator = await Narrator.findBy('public_id', narrator.id)
+    }
+    if (!currentNarrator && narrator.identifiers && narrator.identifiers.length > 0) {
+      const tmp = (await ModelHelper.findByIdentifiers(Narrator, narrator.identifiers)) as
+        | Narrator[]
+        | null
+      if (tmp && tmp.length > 0) currentNarrator = tmp[0]
+    }
+    if (!currentNarrator) {
+      currentNarrator = await Narrator.firstOrCreate(
+        { name: narrator.name },
+        {
+          description: narrator.description,
+        }
+      )
+      await ModelHelper.addIdentifier(currentNarrator, narrator.identifiers)
+    }
+
+    return currentNarrator
+  }
+
+  serializeExtras() {
+    return {
+      role: this.$extras.pivot_role,
+    }
+  }
+
+  declare role: string | null
 }

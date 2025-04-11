@@ -1,5 +1,5 @@
 import vine from '@vinejs/vine'
-import { nanoIdValidation } from '#config/app'
+import { limitValidation, nanoIdValidation, pageValidation } from '#config/app'
 import { isLanguageRule } from '#start/rules/language'
 
 export const asinValidation = vine
@@ -175,16 +175,16 @@ export const narratorValidation = vine.object({
   description: vine.string().optional(),
   image: vine.string().url().optional(),
   role: vine.string().maxLength(255).optional(),
-  identifiers: vine.array(identifierValidation).optional(),
+  identifiers: vine.array(identifierValidation).maxLength(5).optional(),
 })
 export const narratorValidator = vine.compile(narratorValidation)
 
-const authorValidation = vine.object({
+export const authorValidation = vine.object({
   id: nanoIdValidation.optional().requiredIfMissing('name'),
   name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
   description: vine.string().optional(),
   image: vine.string().url().optional(),
-  identifiers: vine.array(identifierValidation).optional(),
+  identifiers: vine.array(identifierValidation).maxLength(5).optional(),
 })
 export const authorValidator = vine.compile(authorValidation)
 
@@ -194,22 +194,22 @@ export const seriesValidation = vine.object({
   description: vine.string().optional(),
   image: vine.string().url().optional(),
   position: vine.string().optional(),
-  identifiers: vine.array(identifierValidation).optional(),
+  identifiers: vine.array(identifierValidation).maxLength(5).optional(),
 })
 export const seriesValidator = vine.compile(seriesValidation)
 
-const genreValidation = vine.object({
-  id: nanoIdValidation.optional().requiredIfMissing('name'),
+export const genreValidation = vine.object({
+  id: nanoIdValidation.optional().requiredIfAnyMissing(['name', 'type']),
   name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
   type: vine.enum(['genre', 'tag']).optional().requiredIfMissing('id'),
 })
 export const genreValidator = vine.compile(genreValidation)
 
 export const trackValidation = vine.object({
-  id: nanoIdValidation.optional().requiredIfMissing('name'),
+  id: nanoIdValidation.optional().requiredIfAnyMissing(['name', 'start', 'end']),
   name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
-  start: vine.number().positive().optional().requiredIfExists('end'),
-  end: vine.number().positive().optional().requiredIfExists('start'),
+  start: vine.number().positive().optional().requiredIfExists('end').requiredIfMissing('id'),
+  end: vine.number().positive().optional().requiredIfExists('start').requiredIfMissing('id'),
 })
 export const trackValidator = vine.compile(trackValidation)
 
@@ -239,5 +239,21 @@ export const audiobookshelfValidator = vine.compile(
     language: vine.string().optional(),
     explicit: vine.boolean().optional(),
     abridged: vine.boolean().optional(),
+  })
+)
+
+export const typeValidation = vine.enum(['book', 'audiobook', 'podcast', 'e-book'])
+
+export const getIdValidator = vine.compile(
+  vine.object({
+    id: nanoIdValidation,
+  })
+)
+
+export const getIdPaginationValidator = vine.compile(
+  vine.object({
+    id: nanoIdValidation,
+    page: pageValidation,
+    limit: limitValidation,
   })
 )

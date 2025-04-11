@@ -11,6 +11,8 @@ import Book from '#models/book'
 import type { ManyToMany } from '@adonisjs/lucid/types/relations'
 import { nanoid } from '#config/app'
 import { genreIndex } from '#config/meilisearch'
+import { Infer } from '@vinejs/vine/types'
+import { genreValidator } from '#validators/provider_validator'
 
 export default class Genre extends BaseModel {
   @column({ isPrimary: true, serializeAs: null })
@@ -24,6 +26,9 @@ export default class Genre extends BaseModel {
 
   @column()
   declare type: 'genre' | 'tag'
+
+  @column({ serializeAs: null })
+  declare enabled: boolean
 
   @manyToMany(() => Book)
   declare books: ManyToMany<typeof Book>
@@ -43,6 +48,7 @@ export default class Genre extends BaseModel {
 
   @afterCreate()
   public static async afterCreateHook(genre: Genre) {
+    if (!genre.enabled) return
     void genreIndex.addDocuments([
       {
         id: genre.publicId,
@@ -54,6 +60,7 @@ export default class Genre extends BaseModel {
 
   @afterUpdate()
   public static async afterUpdateHook(genre: Genre) {
+    if (!genre.enabled) return
     void genreIndex.updateDocuments([
       {
         id: genre.publicId,
@@ -61,5 +68,24 @@ export default class Genre extends BaseModel {
         type: genre.type,
       },
     ])
+  }
+
+  public static async findByModelOrCreate(genre: Infer<typeof genreValidator>) {
+    if ('id' in genre && genre.id) {
+      const existingGenre = await Genre.findBy('public_id', genre.id)
+      if (existingGenre) {
+        return existingGenre
+      }
+    }
+    if ('name' in genre && genre.name && 'type' in genre && genre.type) {
+      const existingGenre = await Genre.firstOrCreate({
+        name: genre.name,
+        type: genre.type,
+      })
+      if (existingGenre) {
+        return existingGenre
+      }
+    }
+    return undefined
   }
 }

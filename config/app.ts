@@ -53,3 +53,20 @@ export const nanoIdValidation = vine
   .transform((value) => value.toUpperCase())
 
 export const languageValidation = vine.string().use(isLanguageRule({}))
+
+export const pageValidation = vine
+  .number()
+  .positive()
+  .withoutDecimals()
+  .max(20)
+  .min(1)
+  .optional()
+  .transform((v) => v || 1)
+export const limitValidation = vine
+  .number()
+  .positive()
+  .withoutDecimals()
+  .max(50)
+  .min(1)
+  .optional()
+  .transform((v) => v || 10)
