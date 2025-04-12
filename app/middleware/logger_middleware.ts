@@ -19,27 +19,31 @@ export default class LoggerMiddleware {
       'limit',
     ]
 
-    void logger.debug({
-      method: request.method(),
-      url: request.url(),
-      ip: request.ip(),
-      headers: {
-        'x-request-id': request.header('x-request-id'),
-        'user-agent': request.header('user-agent'),
-      },
-      query: (() => {
-        const ps = request.qs()
-        const fp: Record<string, unknown> = {}
-        for (let i = 0, len = queryWhitelist.length; i < len; i++) {
-          const key = queryWhitelist[i]
-          if (ps[key] !== undefined) {
-            fp[key] = ps[key]
-          }
-        }
-        return fp
-      })(),
-    })
+    const startTime = Date.now()
 
-    return next()
+    return next().then(() => {
+      void logger.debug({
+        method: request.method(),
+        url: request.url(),
+        ip: request.header('CF-Connecting-IP') || request.header('x-real-ip') || request.ip(),
+        headers: {
+          'x-request-id': request.header('x-request-id'),
+          'user-agent': request.header('user-agent'),
+        },
+        status: request.response.statusCode,
+        duration: Date.now() - startTime,
+        query: (() => {
+          const ps = request.qs()
+          const fp: Record<string, unknown> = {}
+          for (let i = 0, len = queryWhitelist.length; i < len; i++) {
+            const key = queryWhitelist[i]
+            if (ps[key] !== undefined) {
+              fp[key] = ps[key]
+            }
+          }
+          return fp
+        })(),
+      })
+    })
   }
 }
