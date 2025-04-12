@@ -1,16 +1,16 @@
-FROM node:20.12.2-alpine3.18 AS base
+FROM node:22-alpine AS base
 
 # All deps stage
 FROM base AS deps
 WORKDIR /app
 ADD package.json package-lock.json ./
-RUN npm ci
+RUN npm install
 
 # Production only deps stage
 FROM base AS production-deps
 WORKDIR /app
 ADD package.json package-lock.json ./
-RUN npm ci --omit=dev
+RUN npm install
 
 # Build stage
 FROM base AS build
