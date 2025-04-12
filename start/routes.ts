@@ -39,7 +39,7 @@ router.get('/docs', async () => {
  * Auth
  */
 
-router.post('/login/:email', [AuthController, 'create']).as('/login')
+router.post('/login/:email', [AuthController, 'create']).as('/login').use(r1Limiter)
 router.post('/login', [AuthController, 'store']).use(loginLimiter).use(emailLimiter)
 
 /**
@@ -118,7 +118,7 @@ router
 /**
  * Confirm
  */
-router.get('/create/confirm', [ConfirmsController, 'create']).use(middleware.auth())
+router.get('/create/confirm', [ConfirmsController, 'create']).use(middleware.auth()).use(r1Limiter)
 
 /**
  * Request
