@@ -13,12 +13,25 @@ const loggerConfig = defineConfig({
     app: {
       enabled: true,
       name: env.get('APP_NAME'),
-      level: env.get('LOG_LEVEL'),
+      level: 'debug',
       transport: {
-        targets: targets()
-          .pushIf(!app.inProduction, targets.pretty())
-          .pushIf(app.inProduction, targets.file({ destination: 1 }))
-          .toArray(),
+        targets: [
+          ...targets()
+            .pushIf(!app.inProduction, targets.pretty({}, env.get('LOG_LEVEL')))
+            .pushIf(app.inProduction, targets.file({ destination: 1 }, env.get('LOG_LEVEL')))
+            .toArray(),
+          ...(env.get('AXIOM_DATASET') && env.get('AXIOM_TOKEN')
+            ? [
+                {
+                  target: '@axiomhq/pino',
+                  options: {
+                    dataset: env.get('AXIOM_DATASET'),
+                    token: env.get('AXIOM_TOKEN'),
+                  },
+                },
+              ]
+            : []),
+        ],
       },
     },
   },
