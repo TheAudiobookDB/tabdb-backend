@@ -54,4 +54,7 @@ export default await Env.create(new URL('../', import.meta.url), {
   SMTP_FROM: Env.schema.string(),
   SMTP_USER: Env.schema.string(),
   SMTP_PASS: Env.schema.string(),
+
+  AXIOM_DATASET: Env.schema.string.optional(),
+  AXIOM_TOKEN: Env.schema.string.optional(),
 })

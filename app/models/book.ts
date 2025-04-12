@@ -133,10 +133,18 @@ export default class Book extends BaseModel {
       subtitle: book.subtitle,
       description: SearchEngineHelper.removeHtmlTags(book.description),
       type: book.type,
-      authors: book.authors.map((author) => author.name),
-      narrators: book.narrators.map((narrator) => narrator.name),
-      genres: book.genres.map((genre) => genre.name),
-      series: book.series.map((serie) => serie.name + (serie.position ? `${serie.position}` : '')),
+      authors: book.authors ? book.authors.map((author) => author.name) : null,
+      narrators: book.narrators ? book.narrators.map((narrator) => narrator.name) : null,
+      genres: book.genres ? book.genres.map((genre) => genre.name) : null,
+      series: book.series
+        ? book.series.map((serie) => serie.name + (serie.position ? `${serie.position}` : ''))
+        : null,
+      language: book.language
+        ? {
+            language: book.language.split('-')[0],
+            code: book.language.includes('-') ? book.language.split('-')[1] : null,
+          }
+        : null,
     }
   }
 
