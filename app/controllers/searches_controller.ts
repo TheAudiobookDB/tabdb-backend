@@ -56,7 +56,7 @@ export default class SearchesController {
     const payload = await searchBookValidator.validate(request.all())
     const queries = []
     const page = Number.parseInt(request.input('page', 1))
-    const limit = 10
+    const limit = payload.limit ?? 10
 
     if (payload.author) {
       queries.push({
@@ -175,7 +175,7 @@ export default class SearchesController {
       attributesToSearchOn: payload.keywords
         ? undefined
         : ['title', 'subtitle', 'series.name', 'series.position'],
-      limit: limit,
+      hitsPerPage: limit,
       page: page,
       filter: filterExpression,
       showRankingScore: true,
@@ -249,18 +249,18 @@ export default class SearchesController {
    * @responseHeader 200 - @use(rate)
    * @responseHeader 200 - @use(requestId)
    *
-   * @responseBody 200 - <Book[]>.with(relations).paginated()
+   * @responseBody 200 - <Author[]>.with(relations).exclude(books).paginated()
    * @responseBody 422 - <ValidationInterface>
    * @responseBody 429 - <TooManyRequests>
    */
   async author({ request }: HttpContext) {
     const payload = await searchAuthorValidator.validate(request.all())
     const page = payload.page ?? 1
-    const limit = 10
+    const limit = payload.limit ?? 10
 
     const authors = await authorIndex.search(payload.name || payload.keywords, {
       attributesToSearchOn: payload.keywords ? ['*'] : ['name'],
-      limit: limit,
+      hitsPerPage: limit,
       page: page,
       showRankingScore: true,
       rankingScoreThreshold: payload.threshold,
@@ -314,18 +314,18 @@ export default class SearchesController {
    * @responseHeader 200 - @use(rate)
    * @responseHeader 200 - @use(requestId)
    *
-   * @responseBody 200 - <Narrator[]>.with(identifiers).paginated()
+   * @responseBody 200 - <Narrator[]>.with(identifiers).exclude(books).paginated()
    * @responseBody 422 - <ValidationInterface>
    * @responseBody 429 - <TooManyRequests>
    */
   async narrator({ request }: HttpContext) {
     const payload = await searchNarratorValidator.validate(request.all())
     const page = payload.page ?? 1
-    const limit = 10
+    const limit = payload.limit ?? 10
 
     const narrators = await narratorIndex.search(payload.name || payload.keywords, {
       attributesToSearchOn: payload.keywords ? ['*'] : ['name'],
-      limit: limit,
+      hitsPerPage: limit,
       page: page,
       showRankingScore: true,
       rankingScoreThreshold: payload.threshold || 0.35,
@@ -373,18 +373,18 @@ export default class SearchesController {
    * @responseHeader 200 - @use(rate)
    * @responseHeader 200 - @use(requestId)
    *
-   * @responseBody 200 - <Genre[]>.paginated()
+   * @responseBody 200 - <Genre[]>.exclude(books).paginated()
    * @responseBody 422 - <ValidationInterface>
    * @responseBody 429 - <TooManyRequests>
    */
   async genre({ request }: HttpContext) {
     const payload = await searchGenreValidator.validate(request.all())
     const page = payload.page ?? 1
-    const limit = 10
+    const limit = payload.limit ?? 10
 
     const genres = await genreIndex.search(payload.name, {
       attributesToSearchOn: ['name'],
-      limit: limit,
+      hitsPerPage: limit,
       page: page,
       filter: payload.type ? `type = "${payload.type}"` : undefined,
       showRankingScore: true,
@@ -420,18 +420,18 @@ export default class SearchesController {
    * @responseHeader 200 - @use(rate)
    * @responseHeader 200 - @use(requestId)
    *
-   * @responseBody 200 - <Series[]>.with(identifiers).paginated()
+   * @responseBody 200 - <Series[]>.with(identifiers).exclude(books).paginated()
    * @responseBody 422 - <ValidationInterface>
    * @responseBody 429 - <TooManyRequests>
    */
   async series({ request }: HttpContext) {
     const payload = await searchSeriesValidator.validate(request.all())
     const page = payload.page ?? 1
-    const limit = 10
+    const limit = payload.limit ?? 10
 
     const series = await seriesIndex.search(payload.name || payload.keywords, {
       attributesToSearchOn: payload.keywords ? ['*'] : ['name'],
-      limit: limit,
+      hitsPerPage: limit,
       page: page,
       showRankingScore: true,
       rankingScoreThreshold: payload.threshold || 0.35,

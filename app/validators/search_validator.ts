@@ -1,5 +1,5 @@
 import vine from '@vinejs/vine'
-import { languageValidation, pageValidation } from '#config/app'
+import { languageValidation, limitValidation, pageValidation } from '#config/app'
 
 export const searchBookValidation = vine.object({
   title: vine.string().trim().minLength(3).maxLength(1023).optional(),
@@ -19,6 +19,7 @@ export const searchBookValidation = vine.object({
   isAbridged: vine.boolean().optional(),
   type: vine.enum(['book', 'audiobook', 'podcast', 'e-book']).optional(),
   page: pageValidation,
+  limit: limitValidation,
   threshold: vine.number().min(0.25).max(1).optional(),
 })
 
@@ -28,6 +29,7 @@ const createSearchValidator = vine.object({
   name: vine.string().trim().minLength(3).maxLength(1023).optional().requiredIfMissing('keywords'),
   keywords: vine.string().trim().minLength(3).maxLength(1023).optional().requiredIfMissing('name'),
   page: pageValidation,
+  limit: limitValidation,
   threshold: vine
     .number()
     .min(0.25)
@@ -45,6 +47,7 @@ export const searchGenreValidator = vine.compile(
     name: vine.string().trim().minLength(3).maxLength(1023),
     type: vine.enum(['genre', 'tag']).optional(),
     page: pageValidation,
+    limit: limitValidation,
     threshold: vine.number().min(0.25).max(1).optional(),
   })
 )

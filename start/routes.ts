@@ -34,6 +34,9 @@ router.get('/swagger', async () => {
 router.get('/docs', async () => {
   return AutoSwagger.default.scalar('/swagger')
 })
+router.get('/', async () => {
+  return AutoSwagger.default.scalar('/swagger')
+})
 
 /**
  * Auth

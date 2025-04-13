@@ -20,7 +20,7 @@ export default {
   productionEnv: 'production',
   snakeCase: true,
   debug: false,
-  ignore: ['/swagger', '/docs'],
+  ignore: ['/swagger', '/docs', '/'],
   authMiddlewares: ['auth', 'relaxAuth'],
   defaultSecurityScheme: 'BearerAuth',
   persistAuthorization: true,
