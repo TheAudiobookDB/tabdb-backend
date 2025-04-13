@@ -76,6 +76,7 @@ export class Audible {
         series.push({
           name: serie.name,
           position: serie.position,
+          language: book.language,
           identifiers: [
             {
               type: 'audible:asin',

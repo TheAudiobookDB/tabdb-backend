@@ -1,5 +1,5 @@
 import vine from '@vinejs/vine'
-import { limitValidation, nanoIdValidation, pageValidation } from '#config/app'
+import { languageValidation, limitValidation, nanoIdValidation, pageValidation } from '#config/app'
 import { isLanguageRule } from '#start/rules/language'
 
 export const asinValidation = vine
@@ -194,6 +194,7 @@ export const seriesValidation = vine.object({
   description: vine.string().optional(),
   image: vine.string().url().optional(),
   position: vine.string().optional(),
+  language: languageValidation.optional(),
   identifiers: vine.array(identifierValidation).maxLength(5).optional(),
 })
 export const seriesValidator = vine.compile(seriesValidation)
