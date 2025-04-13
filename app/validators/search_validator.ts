@@ -38,8 +38,7 @@ const createSearchValidator = vine.object({
     .transform((val) => val ?? 0.35),
 })
 
-export const searchAuthorValidator = vine.compile(createSearchValidator)
-export const searchNarratorValidator = vine.compile(createSearchValidator)
+export const searchContributorValidator = vine.compile(createSearchValidator)
 export const searchSeriesValidator = vine.compile(createSearchValidator)
 
 export const searchGenreValidator = vine.compile(

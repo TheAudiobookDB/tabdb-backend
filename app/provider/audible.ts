@@ -5,13 +5,16 @@ import {
   audiMetaBookValidator,
   audiMetaSeriesValidator,
   audiMetaTrackValidator,
+  contributorValidator,
 } from '#validators/provider_validator'
 import { DateTime } from 'luxon'
 import BooksController from '#controllers/books_controller'
-import Author from '#models/author'
 import { ModelHelper } from '../helpers/model_helper.js'
 import Track from '#models/track'
 import Series from '#models/series'
+import { Infer } from '@vinejs/vine/types'
+import { ContributorType } from '../enum/contributor_enum.js'
+import Contributor from '#models/contributor'
 
 export class Audible {
   static async fetchBook(identifier: string, language: string): Promise<Book> {
@@ -51,10 +54,11 @@ export class Audible {
 
     const fullBook: Book = await book.save()
 
+    const contributors: Infer<typeof contributorValidator>[] = []
+
     if (payload.authors) {
-      const authors: object[] = []
       for (const author of payload.authors) {
-        authors.push({
+        contributors.push({
           name: author.name,
           identifiers: author.asin
             ? [
@@ -64,11 +68,20 @@ export class Audible {
                 },
               ]
             : undefined,
+          type: ContributorType.AUTHOR,
         })
       }
-
-      await BooksController.addAuthorToBook(fullBook, authors)
     }
+    if (payload.narrators) {
+      for (const narrator of payload.narrators) {
+        contributors.push({
+          name: narrator.name,
+          type: ContributorType.NARRATOR,
+        })
+      }
+    }
+
+    await BooksController.addContributorToBook(book, contributors)
 
     if (payload.series) {
       const series: object[] = []
@@ -89,7 +102,6 @@ export class Audible {
       await BooksController.addSeriesToBook(fullBook, series)
     }
 
-    await BooksController.addNarratorToBook(fullBook, payload.narrators)
     await BooksController.addGenreToBook(fullBook, payload.genres)
     await ModelHelper.addIdentifier(fullBook, [
       {
@@ -113,19 +125,23 @@ export class Audible {
     return fullBook
   }
 
-  static async fetchAuthor(identifier: string, language: string): Promise<Author> {
+  static async fetchAuthor(identifier: string, language: string): Promise<Contributor> {
     const result = await axios.get(`https://audimeta.de/author/${identifier}?region=${language}`)
     const response = result.data
 
     const payload = await audiMetaAuthorValidator.validate(response)
 
-    let author: Author
-    const foundAuthors = await ModelHelper.findByIdentifier(Author, payload.asin, 'audible:asin')
+    let author: Contributor
+    const foundAuthors = await ModelHelper.findByIdentifier(
+      Contributor,
+      payload.asin,
+      'audible:asin'
+    )
     if (foundAuthors && foundAuthors.length > 0) {
-      author = foundAuthors[0] as Author
+      author = foundAuthors[0] as Contributor
       console.log('Found an author with the same ASIN, updating it')
     } else {
-      author = new Author()
+      author = new Contributor()
     }
 
     author.name = payload.name

@@ -1,5 +1,4 @@
-import Author from '#models/author'
-import Narrator from '#models/narrator'
+import Contributor from '#models/contributor'
 import Series from '#models/series'
 import { identifierValidation } from '#validators/provider_validator'
 import Identifier from '#models/identifier'
@@ -8,7 +7,7 @@ import { Infer } from '@vinejs/vine/types'
 
 export class ModelHelper {
   static async addIdentifier(
-    model: Book | Author | Narrator | Series,
+    model: Book | Contributor | Series,
     payloadObject?: Infer<typeof identifierValidation>[]
   ) {
     if (payloadObject) {
@@ -35,7 +34,7 @@ export class ModelHelper {
   }
 
   static async findByIdentifier(
-    model: typeof Book | typeof Author | typeof Narrator | typeof Series,
+    model: typeof Book | typeof Contributor | typeof Series,
     identifier?: string,
     type?: string,
     identifierObj?:
@@ -54,7 +53,7 @@ export class ModelHelper {
           type: 'isbn13' | 'ean'
           value: string
         }
-  ): Promise<(Book | Author | Narrator | Series)[] | null> {
+  ): Promise<(Book | Contributor | Series)[] | null> {
     const identifierModel = await Identifier.query()
       .where((builder) => {
         if (!identifierObj) {
@@ -82,9 +81,9 @@ export class ModelHelper {
   }
 
   static async findByIdentifiers(
-    model: typeof Book | typeof Author | typeof Narrator | typeof Series,
+    model: typeof Book | typeof Contributor | typeof Series,
     identifiers: Infer<typeof identifierValidation>[]
-  ): Promise<(Book | Author | Narrator | Series)[] | null> {
+  ): Promise<(Book | Contributor | Series)[] | null> {
     if (identifiers.length > 0) {
       return model
         .query()
@@ -112,7 +111,7 @@ export class ModelHelper {
   }
 
   static async findDuplicateBook(
-    model: typeof Book | typeof Author | typeof Narrator | typeof Series,
+    model: typeof Book | typeof Contributor | typeof Series,
     query: object
   ) {
     const filteredQuery = Object.fromEntries(

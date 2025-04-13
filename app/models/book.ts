@@ -10,9 +10,8 @@ import {
   hasMany,
   manyToMany,
 } from '@adonisjs/lucid/orm'
-import Author from '#models/author'
 import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
-import Narrator from '#models/narrator'
+import Contributor from '#models/contributor'
 import Genre from '#models/genre'
 import Identifier from '#models/identifier'
 import Series from '#models/series'
@@ -81,15 +80,10 @@ export default class Book extends BaseModel {
   // @enum(book, audiobook, podcast, e-book)
   declare type: 'book' | 'audiobook' | 'podcast' | 'e-book'
 
-  @manyToMany(() => Author, {
-    pivotTable: 'book_author',
-  })
-  declare authors: ManyToMany<typeof Author>
-
-  @manyToMany(() => Narrator, {
+  @manyToMany(() => Contributor, {
     pivotColumns: ['role'],
   })
-  declare narrators: ManyToMany<typeof Narrator>
+  declare contributors: ManyToMany<typeof Contributor>
 
   @manyToMany(() => Genre)
   declare genres: ManyToMany<typeof Genre>
@@ -133,8 +127,12 @@ export default class Book extends BaseModel {
       subtitle: book.subtitle,
       description: SearchEngineHelper.removeHtmlTags(book.description),
       type: book.type,
-      authors: book.authors ? book.authors.map((author) => author.name) : null,
-      narrators: book.narrators ? book.narrators.map((narrator) => narrator.name) : null,
+      contributors: book.contributors
+        ? book.contributors.map((contributor) => ({
+            name: contributor.name,
+            type: contributor.$extras.pivot_type,
+          }))
+        : null,
       genres: book.genres ? book.genres.map((genre) => genre.name) : null,
       series: book.series
         ? book.series.map((serie) => serie.name + (serie.position ? `${serie.position}` : ''))
@@ -151,8 +149,7 @@ export default class Book extends BaseModel {
   private static async fetchBookWithRelations(bookId: number): Promise<Book> {
     return (await Book.query()
       .where('id', bookId)
-      .preload('authors')
-      .preload('narrators')
+      .preload('contributors', (q) => q.pivotColumns(['role', 'type']))
       .preload('genres')
       .preload('series')
       .first()) as Book
@@ -194,16 +191,10 @@ export default class Book extends BaseModel {
 
     const fetchedBook = await this.fetchBookWithRelations(book.id)
 
-    for (const author of fetchedBook.authors) {
-      if (!author.enabled) {
-        author.enabled = true
-        await author.save()
-      }
-    }
-    for (const narrator of fetchedBook.narrators) {
-      if (!narrator.enabled) {
-        narrator.enabled = true
-        await narrator.save()
+    for (const contributor of fetchedBook.contributors) {
+      if (!contributor.enabled) {
+        contributor.enabled = true
+        await contributor.save()
       }
     }
     for (const genre of fetchedBook.genres) {

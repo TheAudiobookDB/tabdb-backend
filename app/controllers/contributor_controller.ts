@@ -2,7 +2,7 @@
 
 import { HttpContext } from '@adonisjs/core/http'
 import { getIdPaginationValidator, getIdValidator } from '#validators/provider_validator'
-import Narrator from '#models/narrator'
+import Contributor from '#models/contributor'
 import Book from '#models/book'
 
 export default class NarratorsController {
@@ -22,7 +22,10 @@ export default class NarratorsController {
    */
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
-    return await Narrator.query().where('publicId', payload.id).preload('identifiers').firstOrFail()
+    return await Contributor.query()
+      .where('publicId', payload.id)
+      .preload('identifiers')
+      .firstOrFail()
   }
 
   /**
@@ -42,13 +45,12 @@ export default class NarratorsController {
   async books({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
     return Book.query()
-      .preload('authors')
-      .preload('narrators')
+      .preload('contributors', (q) => q.pivotColumns(['role', 'type']))
       .preload('series')
       .preload('identifiers')
       .preload('genres')
       .preload('tracks')
-      .whereHas('narrators', (q) => {
+      .whereHas('contributors', (q) => {
         q.where('public_id', payload.id)
       })
       .paginate(payload.page, payload.limit)

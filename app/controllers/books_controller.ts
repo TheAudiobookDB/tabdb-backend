@@ -4,15 +4,13 @@ import { HttpContext } from '@adonisjs/core/http'
 import { createBookValidator, getBookValidator } from '#validators/book_validator'
 import Book from '#models/book'
 import Genre from '#models/genre'
-import Author from '#models/author'
-import Narrator from '#models/narrator'
+import Contributor from '#models/contributor'
 import Track from '#models/track'
 import Series from '#models/series'
 import { DateTime } from 'luxon'
 import {
-  authorValidator,
+  contributorValidator,
   genreValidator,
-  narratorValidator,
   seriesValidator,
   trackValidator,
 } from '#validators/provider_validator'
@@ -122,8 +120,7 @@ export default class BooksController {
 
     await BooksController.addGenreToBook(book, payload.genres)
     await ModelHelper.addIdentifier(book, payload.identifiers)
-    await BooksController.addAuthorToBook(book, payload.authors)
-    await BooksController.addNarratorToBook(book, payload.narrators)
+    await BooksController.addContributorToBook(book, payload.contributors)
     await BooksController.addTrackToBook(book, payload.tracks)
     await BooksController.addSeriesToBook(book, payload.series)
 
@@ -159,30 +156,23 @@ export default class BooksController {
     }
   }
 
-  static async addNarratorToBook(book: Book, payloadObject?: Infer<typeof narratorValidator>[]) {
+  static async addContributorToBook(
+    book: Book,
+    payloadObject?: Infer<typeof contributorValidator>[]
+  ) {
     if (payloadObject) {
       const roles: Record<string, ModelObject> = {}
       for (const narrator of payloadObject) {
-        const narratorModel = await Narrator.findByModelOrCreate(narrator)
+        const narratorModel = await Contributor.findByModelOrCreate(narrator)
         const role = narrator.role
+        const type = narrator.type
         if (role) {
-          roles[narratorModel.id] = { role }
+          roles[narratorModel.id] = { role, type }
         } else {
-          roles[narratorModel.id] = {}
+          roles[narratorModel.id] = { type }
         }
       }
-      await book.related('narrators').sync(roles)
-    }
-  }
-
-  static async addAuthorToBook(book: Book, payloadObject?: Infer<typeof authorValidator>[]) {
-    if (payloadObject) {
-      const authors = []
-      for (const author of payloadObject) {
-        const authorModel = await Author.findByModelOrCreate(author)
-        if (authorModel) authors.push(authorModel)
-      }
-      await book.related('authors').saveMany(authors)
+      await book.related('contributors').sync(roles)
     }
   }
 
@@ -257,8 +247,7 @@ export default class BooksController {
 
     return await Book.query()
       .where('public_id', params.id)
-      .preload('authors')
-      .preload('narrators', (q) => q.pivotColumns(['role']))
+      .preload('contributors', (q) => q.pivotColumns(['role', 'type']))
       .preload('genres')
       .preload('identifiers')
       .preload('series', (q) => q.pivotColumns(['position']))

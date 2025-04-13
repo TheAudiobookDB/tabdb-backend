@@ -169,24 +169,16 @@ export const identifierValidation = vine
 
 export const identifierValidator = vine.compile(identifierValidation)
 
-export const narratorValidation = vine.object({
+export const contributorValidation = vine.object({
   id: nanoIdValidation.optional().requiredIfMissing('name'),
   name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
   description: vine.string().optional(),
   image: vine.string().url().optional(),
   role: vine.string().maxLength(255).optional(),
+  type: vine.number().min(1).max(7).withoutDecimals(),
   identifiers: vine.array(identifierValidation).maxLength(5).optional(),
 })
-export const narratorValidator = vine.compile(narratorValidation)
-
-export const authorValidation = vine.object({
-  id: nanoIdValidation.optional().requiredIfMissing('name'),
-  name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
-  description: vine.string().optional(),
-  image: vine.string().url().optional(),
-  identifiers: vine.array(identifierValidation).maxLength(5).optional(),
-})
-export const authorValidator = vine.compile(authorValidation)
+export const contributorValidator = vine.compile(contributorValidation)
 
 export const seriesValidation = vine.object({
   id: nanoIdValidation.optional().requiredIfMissing('name'),
