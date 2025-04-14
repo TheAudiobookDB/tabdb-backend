@@ -18,8 +18,7 @@ export class BooksHelper {
 
     // Start building the query
     const query = Book.query()
-      .preload('authors')
-      .preload('narrators')
+      .preload('contributors', (q) => q.pivotColumns(['role', 'type']))
       .preload('genres')
       .preload('identifiers')
       .preload('series')
