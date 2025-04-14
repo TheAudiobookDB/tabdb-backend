@@ -106,3 +106,14 @@ export const r3Limiter = limiter.define('rate3', (ctx) => {
     .usingKey(`rate3_${ctx.request.ip()}`)
     .blockFor('1 minute')
 })
+
+export const apiKeyLimiter = limiter.define('apiKey', (ctx) => {
+  const user = ctx.auth.user
+
+  // This is never the case
+  if (!user) {
+    return limiter.allowRequests(0)
+  }
+
+  return limiter.allowRequests(1).every('1 day').usingKey(`apiKey_${user.id}`)
+})

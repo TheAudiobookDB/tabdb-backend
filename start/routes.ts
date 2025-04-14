@@ -8,7 +8,14 @@
 */
 
 import router from '@adonisjs/core/services/router'
-import { emailLimiter, loginLimiter, r1Limiter, r2Limiter, r3Limiter } from '#start/limiter'
+import {
+  apiKeyLimiter,
+  emailLimiter,
+  loginLimiter,
+  r1Limiter,
+  r2Limiter,
+  r3Limiter,
+} from '#start/limiter'
 import { middleware } from '#start/kernel'
 import AutoSwagger from 'adonis-autoswagger'
 import swagger from '#config/swagger'
@@ -22,6 +29,7 @@ const SeriesController = () => import('#controllers/series_controller')
 const GenresController = () => import('#controllers/genres_controller')
 const TracksController = () => import('#controllers/tracks_controller')
 const PublishersController = () => import('#controllers/publishers_controller')
+const UsersController = () => import('#controllers/users_controller')
 
 /**
  * Swagger
@@ -42,8 +50,22 @@ router.get('/', async () => {
  * Auth
  */
 
-router.post('/login/:email', [AuthController, 'create']).as('/login').use(r1Limiter)
-router.post('/login', [AuthController, 'store']).use(loginLimiter).use(emailLimiter)
+router.post('/auth/login/:email', [AuthController, 'create']).as('/auth/login').use(r1Limiter)
+router.post('/auth/login', [AuthController, 'store']).use(loginLimiter).use(emailLimiter)
+router.post('/auth/logout', [AuthController, 'logout']).use(middleware.auth())
+router.post('/auth/apiKey', [AuthController, 'apiKey']).use(middleware.auth()).use(apiKeyLimiter)
+
+/**
+ * User
+ */
+router.get('/user', [UsersController, 'getMe']).use(middleware.auth()).use(r1Limiter)
+router.get('/user/:id', [UsersController, 'get']).use(middleware.auth()).use(r1Limiter)
+router
+  .get('/user/:id/edit-history', [UsersController, 'editHistory'])
+  .use(middleware.auth())
+  .use(r1Limiter)
+
+router.patch('/user', [UsersController, 'update']).use(middleware.auth()).use(r1Limiter)
 
 /**
  * Book
