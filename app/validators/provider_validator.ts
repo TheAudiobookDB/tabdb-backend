@@ -1,6 +1,8 @@
 import vine from '@vinejs/vine'
-import { limitValidation, nanoIdValidation, pageValidation } from '#config/app'
+import { languageValidation, limitValidation, nanoIdValidation, pageValidation } from '#config/app'
 import { isLanguageRule } from '#start/rules/language'
+import { ContributorType } from '../enum/contributor_enum.js'
+import type { FieldContext } from '@vinejs/vine/types'
 
 export const asinValidation = vine
   .string()
@@ -169,24 +171,34 @@ export const identifierValidation = vine
 
 export const identifierValidator = vine.compile(identifierValidation)
 
-export const narratorValidation = vine.object({
+export const contributorValidation = vine.object({
   id: nanoIdValidation.optional().requiredIfMissing('name'),
   name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
   description: vine.string().optional(),
   image: vine.string().url().optional(),
   role: vine.string().maxLength(255).optional(),
-  identifiers: vine.array(identifierValidation).maxLength(5).optional(),
+  type: vine
+    .number()
+    .parse((value, field: Pick<FieldContext, 'data' | 'parent' | 'meta'>) => {
+      if (typeof value === 'number') {
+        if (value in ContributorType) {
+          return value
+        }
+      }
+      const allowedTypes = Object.values(ContributorType).map((type) => type.toString())
+      const fieldContext = field as FieldContext
+      fieldContext.report(
+        'Invalid type. Allowed types are: ' + allowedTypes.join(', '),
+        'invalid_type',
+        fieldContext
+      )
+    })
+    .min(1)
+    .max(99)
+    .withoutDecimals(),
+  identifiers: vine.array(identifierValidation).maxLength(10).optional(),
 })
-export const narratorValidator = vine.compile(narratorValidation)
-
-export const authorValidation = vine.object({
-  id: nanoIdValidation.optional().requiredIfMissing('name'),
-  name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
-  description: vine.string().optional(),
-  image: vine.string().url().optional(),
-  identifiers: vine.array(identifierValidation).maxLength(5).optional(),
-})
-export const authorValidator = vine.compile(authorValidation)
+export const contributorValidator = vine.compile(contributorValidation)
 
 export const seriesValidation = vine.object({
   id: nanoIdValidation.optional().requiredIfMissing('name'),
@@ -194,6 +206,7 @@ export const seriesValidation = vine.object({
   description: vine.string().optional(),
   image: vine.string().url().optional(),
   position: vine.string().optional(),
+  language: languageValidation.optional(),
   identifiers: vine.array(identifierValidation).maxLength(5).optional(),
 })
 export const seriesValidator = vine.compile(seriesValidation)

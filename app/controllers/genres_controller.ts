@@ -43,7 +43,7 @@ export default class GenresController {
     const payload = await getIdPaginationValidator.validate(params)
     return Book.query()
       .preload('genres')
-      .preload('narrators')
+      .preload('contributors', (q) => q.pivotColumns(['role', 'type']))
       .preload('series')
       .preload('identifiers')
       .preload('genres')

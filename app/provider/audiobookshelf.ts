@@ -1,5 +1,6 @@
 import {
   audiobookshelfValidator,
+  contributorValidator,
   genreValidator,
   identifierValidator,
 } from '#validators/provider_validator'
@@ -8,6 +9,7 @@ import Book from '#models/book'
 import { DateTime } from 'luxon'
 import BooksController from '#controllers/books_controller'
 import { Infer } from '@vinejs/vine/types'
+import { ContributorType } from '../enum/contributor_enum.js'
 
 export class Audiobookshelf {
   static async fetchBook(payloadObj: object): Promise<Book> {
@@ -62,17 +64,14 @@ export class Audiobookshelf {
     }
     await BooksController.addGenreToBook(book, genresTags)
 
-    const authors = []
+    const contributors: Infer<typeof contributorValidator>[] = []
     for (const author of payload.authors ?? []) {
-      authors.push({ name: author })
+      contributors.push({ name: author, type: ContributorType.AUTHOR })
     }
-    await BooksController.addAuthorToBook(book, authors)
-
-    const narrators = []
     for (const narrator of payload.narrators ?? []) {
-      narrators.push({ name: narrator })
+      contributors.push({ name: narrator, type: ContributorType.NARRATOR })
     }
-    await BooksController.addNarratorToBook(book, narrators)
+    await BooksController.addContributorToBook(book, contributors)
 
     const series = []
     for (const serie of payload.series ?? []) {

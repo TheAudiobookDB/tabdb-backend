@@ -42,8 +42,7 @@ export default class SeriesController {
   async books({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
     return Book.query()
-      .preload('authors')
-      .preload('authors')
+      .preload('contributors', (q) => q.pivotColumns(['role', 'type']))
       .preload('series')
       .preload('identifiers')
       .preload('genres')

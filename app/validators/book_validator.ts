@@ -1,9 +1,8 @@
 import vine from '@vinejs/vine'
 import {
-  authorValidation,
+  contributorValidation,
   genreValidation,
   identifierValidation,
-  narratorValidation,
   seriesValidation,
   trackValidation,
   typeValidation,
@@ -37,8 +36,7 @@ export const createBookValidator = vine.compile(
       .optional(),
     type: typeValidation.optional(),
     genres: vine.array(genreValidation).maxLength(30).optional(),
-    authors: vine.array(authorValidation).maxLength(20).optional(),
-    narrators: vine.array(narratorValidation).maxLength(50).optional(),
+    contributors: vine.array(contributorValidation).maxLength(50).optional(),
     identifiers: vine.array(identifierValidation).maxLength(5).optional(),
     series: vine.array(seriesValidation).maxLength(5).optional(),
     tracks: vine.array(trackValidation).maxLength(2047).optional(),

@@ -17,8 +17,7 @@ const ConfirmsController = () => import('#controllers/confirms_controller')
 const SearchesController = () => import('#controllers/searches_controller')
 const BooksController = () => import('#controllers/books_controller')
 const AuthController = () => import('#controllers/auth_controller')
-const AuthorsController = () => import('#controllers/authors_controller')
-const NarratorsController = () => import('#controllers/narrators_controller')
+const ContributorsController = () => import('#controllers/contributor_controller')
 const SeriesController = () => import('#controllers/series_controller')
 const GenresController = () => import('#controllers/genres_controller')
 const TracksController = () => import('#controllers/tracks_controller')
@@ -32,6 +31,9 @@ router.get('/swagger', async () => {
 })
 
 router.get('/docs', async () => {
+  return AutoSwagger.default.ui('/swagger')
+})
+router.get('/', async () => {
   return AutoSwagger.default.scalar('/swagger')
 })
 
@@ -54,20 +56,14 @@ router.post('/books', [BooksController, 'create']).use(middleware.relaxAuth()).u
 router.post('/books/abs', [BooksController, 'abs']).use(middleware.auth()).use(r3Limiter)
 
 /**
- * Author
- */
-router.get('/author/:id', [AuthorsController, 'get']).use(middleware.relaxAuth()).use(r3Limiter)
-router
-  .get('/author/books/:id', [AuthorsController, 'books'])
-  .use(middleware.relaxAuth())
-  .use(r2Limiter)
-
-/**
  * Narrator
  */
-router.get('/narrator/:id', [NarratorsController, 'get']).use(middleware.relaxAuth()).use(r3Limiter)
 router
-  .get('/narrator/books/:id', [NarratorsController, 'books'])
+  .get('/contributor/:id', [ContributorsController, 'get'])
+  .use(middleware.relaxAuth())
+  .use(r3Limiter)
+router
+  .get('/contributor/books/:id', [ContributorsController, 'books'])
   .use(middleware.relaxAuth())
   .use(r2Limiter)
 
@@ -99,11 +95,7 @@ router.get('/track/:id', [TracksController, 'get']).use(middleware.relaxAuth()).
  */
 router.get('/search/book', [SearchesController, 'book']).use(middleware.relaxAuth()).use(r2Limiter)
 router
-  .get('/search/author', [SearchesController, 'author'])
-  .use(middleware.relaxAuth())
-  .use(r2Limiter)
-router
-  .get('/search/narrator', [SearchesController, 'narrator'])
+  .get('/search/contributor', [SearchesController, 'contributor'])
   .use(middleware.relaxAuth())
   .use(r2Limiter)
 router

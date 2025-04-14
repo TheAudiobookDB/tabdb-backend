@@ -1,23 +1,15 @@
 import type { HttpContext } from '@adonisjs/core/http'
 import {
-  searchAuthorValidator,
   searchBookValidator,
+  searchContributorValidator,
   searchGenreValidator,
-  searchNarratorValidator,
   searchSeriesValidator,
 } from '#validators/search_validator'
 import Book from '#models/book'
-import {
-  authorIndex,
-  bookIndex,
-  client,
-  genreIndex,
-  narratorIndex,
-  seriesIndex,
-} from '#config/meilisearch'
-import Author from '#models/author'
-import Narrator from '#models/narrator'
+import { bookIndex, client, contributorIndex, genreIndex, seriesIndex } from '#config/meilisearch'
+import Contributor from '#models/contributor'
 import Series from '#models/series'
+import { SearchEngineHelper } from '../helpers/search_engine.js'
 
 export default class SearchesController {
   /**
@@ -56,21 +48,23 @@ export default class SearchesController {
     const payload = await searchBookValidator.validate(request.all())
     const queries = []
     const page = Number.parseInt(request.input('page', 1))
-    const limit = 10
+    const limit = payload.limit ?? 10
 
     if (payload.author) {
       queries.push({
-        indexUid: authorIndex.uid,
+        indexUid: contributorIndex.uid,
         q: payload.author,
         attributesToSearchOn: ['name'],
+        filterExpression: 'contributors.type = 1',
         limit: 3,
       })
     }
     if (payload.narrator) {
       queries.push({
-        indexUid: narratorIndex.uid,
+        indexUid: contributorIndex.uid,
         q: payload.narrator,
         attributesToSearchOn: ['name'],
+        filterExpression: 'contributors.type = 2',
         limit: 3,
       })
     }
@@ -100,7 +94,7 @@ export default class SearchesController {
 
     if (payload.author && multiSearchResults.results[0]?.hits?.length) {
       const authorResult = multiSearchResults.results.find(
-        (result) => result.indexUid === authorIndex.uid
+        (result) => result.indexUid === contributorIndex.uid && result.query === payload.author
       )
       if (authorResult && authorResult.hits) {
         authorNames = authorResult.hits.map((author) => author.name)
@@ -109,7 +103,7 @@ export default class SearchesController {
 
     if (payload.narrator) {
       const narratorResult = multiSearchResults.results.find(
-        (result) => result.indexUid === narratorIndex.uid
+        (result) => result.indexUid === contributorIndex.uid && result.query === payload.narrator
       )
       if (narratorResult && narratorResult.hits) {
         narratorNames = narratorResult.hits.map((narrator) => narrator.name)
@@ -134,8 +128,8 @@ export default class SearchesController {
       }
     }
 
-    const authorFilterExpression = `(authors IN ["${authorNames.join('","')}"])`
-    const narratorFilterExpression = `(narrators IN ["${narratorNames.join('","')}"])`
+    const authorFilterExpression = `(contributors IN ["${authorNames.join('","')}"] AND contributors.type = 1)`
+    const narratorFilterExpression = `(contributors IN ["${narratorNames.join('","')}"] AND contributors.type = 2)`
     const genreFilterExpression = `(genres IN ["${genreNames.join('","')}"])`
     const seriesFilterExpression = `(series.name IN ["${seriesNames.join('","')}"])`
 
@@ -175,7 +169,7 @@ export default class SearchesController {
       attributesToSearchOn: payload.keywords
         ? undefined
         : ['title', 'subtitle', 'series.name', 'series.position'],
-      limit: limit,
+      hitsPerPage: limit,
       page: page,
       filter: filterExpression,
       showRankingScore: true,
@@ -190,8 +184,7 @@ export default class SearchesController {
     const bookIds = books.hits.map((book) => book.id)
 
     const bookResults = await Book.query()
-      .preload('authors')
-      .preload('narrators')
+      .preload('contributors', (q) => q.pivotColumns(['role', 'type']))
       .preload('genres')
       .preload('identifiers')
       .preload('series')
@@ -222,26 +215,19 @@ export default class SearchesController {
 
     const result = bookResults.serialize({})
 
-    result.meta.total = books.totalHits
-    result.meta.lastPage = Math.ceil(books.totalHits / limit)
-    result.meta.page = page
-    result.meta.lastPageUrl = `/?page=${result.meta.lastPage}`
-    result.meta.nextPageUrl = page + 1 <= result.meta.lastPage ? `/?page=${page + 1}` : null
-    result.meta.previousPageUrl = page - 1 >= 1 ? `/?page=${page - 1}` : null
-    result.meta.currentPage = page
+    result.meta = SearchEngineHelper.buildPagination(page, books.totalHits, limit)
 
     return result
   }
 
   /**
-   * @author
-   * @operationId searchAuthor
-   * @summary Search for an author
-   * @description Search for an author by name or keywords and return a paginated list of authors.
+   * @contributor
+   * @operationId searchContributor
+   * @summary Search for a contributor
+   * @description Search for a contributor by name or keywords and return a paginated list.
    *
-   * @paramQuery title - The title of the book to search for. - @type(string)
-   * @paramQuery subtitle - The subtitle of the book to search for. - @type(string)
-   * @paramQuery keywords - The keywords to search for to search an author. Takes description and name into account. Can find authors that are not close to your input - @type(string)
+   * @paramQuery name - The name of the contributor to search for. - @type(string)
+   * @paramQuery keywords - The keywords to search for a contributor. - @type(string)
    *
    * @paramQuery page - The page number to return. - @type(number) @default(1)
    * @paramQuery threshold - The threshold for the ranking score. - @type(number) @default(0.35)
@@ -249,111 +235,40 @@ export default class SearchesController {
    * @responseHeader 200 - @use(rate)
    * @responseHeader 200 - @use(requestId)
    *
-   * @responseBody 200 - <Book[]>.with(relations).paginated()
+   * @responseBody 200 - <Contributor[]>.with(identifiers).exclude(books).paginated()
    * @responseBody 422 - <ValidationInterface>
    * @responseBody 429 - <TooManyRequests>
    */
-  async author({ request }: HttpContext) {
-    const payload = await searchAuthorValidator.validate(request.all())
+  async contributor({ request }: HttpContext) {
+    const payload = await searchContributorValidator.validate(request.all())
     const page = payload.page ?? 1
-    const limit = 10
+    const limit = payload.limit ?? 10
 
-    const authors = await authorIndex.search(payload.name || payload.keywords, {
+    const contributors = await contributorIndex.search(payload.name || payload.keywords, {
       attributesToSearchOn: payload.keywords ? ['*'] : ['name'],
-      limit: limit,
-      page: page,
-      showRankingScore: true,
-      rankingScoreThreshold: payload.threshold,
-    })
-
-    if (!authors || !authors.hits || authors.hits.length <= 0) {
-      return {
-        message: 'Authors not found',
-      }
-    }
-
-    const authorIds = authors.hits.map((author) => author.id)
-
-    const authorResults = await Author.query()
-      .preload('identifiers')
-      .where((builder) => {
-        if (authorIds && authorIds.length > 0) {
-          builder.whereIn('id', authorIds)
-        }
-      })
-      .orderByRaw(
-        `CASE id ${authorIds.map((id, index) => `WHEN ${id} THEN ${index}`).join(' ')} END`
-      )
-      .paginate(1, limit)
-
-    const result = authorResults.serialize({})
-
-    result.meta.total = authors.totalHits
-    result.meta.lastPage = Math.ceil(authors.totalHits / limit)
-    result.meta.page = page
-    result.meta.lastPageUrl = `/?page=${result.meta.lastPage}`
-    result.meta.nextPageUrl = page + 1 <= result.meta.lastPage ? `/?page=${page + 1}` : null
-    result.meta.previousPageUrl = page - 1 >= 1 ? `/?page=${page - 1}` : null
-    result.meta.currentPage = page
-
-    return result
-  }
-
-  /**
-   * @narrator
-   * @operationId searchNarrator
-   * @summary Search for a narrator
-   * @description Search for a narrator by name or keywords and return a paginated list.
-   *
-   * @paramQuery name - The name of the narrator to search for. - @type(string)
-   * @paramQuery keywords - The keywords to search for a narrator. - @type(string)
-   *
-   * @paramQuery page - The page number to return. - @type(number) @default(1)
-   * @paramQuery threshold - The threshold for the ranking score. - @type(number) @default(0.35)
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - <Narrator[]>.with(identifiers).paginated()
-   * @responseBody 422 - <ValidationInterface>
-   * @responseBody 429 - <TooManyRequests>
-   */
-  async narrator({ request }: HttpContext) {
-    const payload = await searchNarratorValidator.validate(request.all())
-    const page = payload.page ?? 1
-    const limit = 10
-
-    const narrators = await narratorIndex.search(payload.name || payload.keywords, {
-      attributesToSearchOn: payload.keywords ? ['*'] : ['name'],
-      limit: limit,
+      hitsPerPage: limit,
       page: page,
       showRankingScore: true,
       rankingScoreThreshold: payload.threshold || 0.35,
     })
 
-    if (!narrators || !narrators.hits || narrators.hits.length <= 0) {
+    if (!contributors || !contributors.hits || contributors.hits.length <= 0) {
       return { message: 'Narrators not found' }
     }
 
-    const narratorIds = narrators.hits.map((narrator) => narrator.id)
+    const contributorsIds = contributors.hits.map((contributor) => contributor.id)
 
-    const narratorResults = await Narrator.query()
+    const narratorResults = await Contributor.query()
       .preload('identifiers')
-      .whereIn('id', narratorIds)
+      .whereIn('id', contributorsIds)
       .orderByRaw(
-        `CASE id ${narratorIds.map((id, index) => `WHEN ${id} THEN ${index}`).join(' ')} END`
+        `CASE id ${contributorsIds.map((id, index) => `WHEN ${id} THEN ${index}`).join(' ')} END`
       )
       .paginate(1, limit)
 
     const result = narratorResults.serialize({})
 
-    result.meta.total = narrators.totalHits
-    result.meta.lastPage = Math.ceil(narrators.totalHits / limit)
-    result.meta.page = page
-    result.meta.lastPageUrl = `/?page=${result.meta.lastPage}`
-    result.meta.nextPageUrl = page + 1 <= result.meta.lastPage ? `/?page=${page + 1}` : null
-    result.meta.previousPageUrl = page - 1 >= 1 ? `/?page=${page - 1}` : null
-    result.meta.currentPage = page
+    result.meta = SearchEngineHelper.buildPagination(page, contributors.totalHits, limit)
 
     return result
   }
@@ -373,18 +288,18 @@ export default class SearchesController {
    * @responseHeader 200 - @use(rate)
    * @responseHeader 200 - @use(requestId)
    *
-   * @responseBody 200 - <Genre[]>.paginated()
+   * @responseBody 200 - <Genre[]>.exclude(books).paginated()
    * @responseBody 422 - <ValidationInterface>
    * @responseBody 429 - <TooManyRequests>
    */
   async genre({ request }: HttpContext) {
     const payload = await searchGenreValidator.validate(request.all())
     const page = payload.page ?? 1
-    const limit = 10
+    const limit = payload.limit ?? 10
 
     const genres = await genreIndex.search(payload.name, {
       attributesToSearchOn: ['name'],
-      limit: limit,
+      hitsPerPage: limit,
       page: page,
       filter: payload.type ? `type = "${payload.type}"` : undefined,
       showRankingScore: true,
@@ -393,15 +308,7 @@ export default class SearchesController {
 
     return {
       hits: genres.hits,
-      meta: {
-        total: genres.totalHits,
-        lastPage: Math.ceil(genres.totalHits / limit),
-        page: page,
-        lastPageUrl: `/?page=${Math.ceil(genres.totalHits / limit)}`,
-        nextPageUrl: page + 1 <= Math.ceil(genres.totalHits / limit) ? `/?page=${page + 1}` : null,
-        previousPageUrl: page - 1 >= 1 ? `/?page=${page - 1}` : null,
-        currentPage: page,
-      },
+      meta: SearchEngineHelper.buildPagination(page, genres.totalHits, limit),
     }
   }
 
@@ -420,18 +327,18 @@ export default class SearchesController {
    * @responseHeader 200 - @use(rate)
    * @responseHeader 200 - @use(requestId)
    *
-   * @responseBody 200 - <Series[]>.with(identifiers).paginated()
+   * @responseBody 200 - <Series[]>.with(identifiers).exclude(books).paginated()
    * @responseBody 422 - <ValidationInterface>
    * @responseBody 429 - <TooManyRequests>
    */
   async series({ request }: HttpContext) {
     const payload = await searchSeriesValidator.validate(request.all())
     const page = payload.page ?? 1
-    const limit = 10
+    const limit = payload.limit ?? 10
 
     const series = await seriesIndex.search(payload.name || payload.keywords, {
       attributesToSearchOn: payload.keywords ? ['*'] : ['name'],
-      limit: limit,
+      hitsPerPage: limit,
       page: page,
       showRankingScore: true,
       rankingScoreThreshold: payload.threshold || 0.35,
@@ -453,13 +360,7 @@ export default class SearchesController {
 
     const result = seriesResults.serialize({})
 
-    result.meta.total = series.totalHits
-    result.meta.lastPage = Math.ceil(series.totalHits / limit)
-    result.meta.page = page
-    result.meta.lastPageUrl = `/?page=${result.meta.lastPage}`
-    result.meta.nextPageUrl = page + 1 <= result.meta.lastPage ? `/?page=${page + 1}` : null
-    result.meta.previousPageUrl = page - 1 >= 1 ? `/?page=${page - 1}` : null
-    result.meta.currentPage = page
+    result.meta = SearchEngineHelper.buildPagination(page, series.totalHits, limit)
 
     return result
   }

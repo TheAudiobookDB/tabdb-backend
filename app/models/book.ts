@@ -10,9 +10,8 @@ import {
   hasMany,
   manyToMany,
 } from '@adonisjs/lucid/orm'
-import Author from '#models/author'
 import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
-import Narrator from '#models/narrator'
+import Contributor from '#models/contributor'
 import Genre from '#models/genre'
 import Identifier from '#models/identifier'
 import Series from '#models/series'
@@ -27,36 +26,47 @@ export default class Book extends BaseModel {
   declare id: number
 
   @column({ serializeAs: 'id' })
+  // @props({"name": "id"})
   declare publicId: string
 
   @column()
+  // @example(Harry Potter and the Philosopher's Stone)
   declare title: string
 
   @column()
+  // @example(Harry Potter 1)
   declare subtitle: string | null
 
   @column()
+  // @example(Short summary of the book)
   declare summary: string | null
 
   @column()
+  // @example(Longer more detailed description of the book)
   declare description: string | null
 
   @column()
+  // @example(Bloomsbury Publishing)
   declare publisher: string | null
 
   @column()
+  // @example(https://example.com/image.jpg)
   declare image: string | null
 
   @column()
+  // @example(English)
   declare language: string | null
 
   @column()
+  // @example(©1997 J.K. Rowling (P)2011 Der Hörverlag in der Verlagsgruppe Random House GmbH)
   declare copyright: string | null
 
   @column()
+  // @example(123)
   declare pages: number | null
 
   @column()
+  // @props({"description": "The duration of the book (in seconds) if type is audiobook or podcast."})
   declare duration: number | null
 
   @column.dateTime()
@@ -81,15 +91,10 @@ export default class Book extends BaseModel {
   // @enum(book, audiobook, podcast, e-book)
   declare type: 'book' | 'audiobook' | 'podcast' | 'e-book'
 
-  @manyToMany(() => Author, {
-    pivotTable: 'book_author',
-  })
-  declare authors: ManyToMany<typeof Author>
-
-  @manyToMany(() => Narrator, {
+  @manyToMany(() => Contributor, {
     pivotColumns: ['role'],
   })
-  declare narrators: ManyToMany<typeof Narrator>
+  declare contributors: ManyToMany<typeof Contributor>
 
   @manyToMany(() => Genre)
   declare genres: ManyToMany<typeof Genre>
@@ -131,13 +136,22 @@ export default class Book extends BaseModel {
       id: book.id,
       title: book.title,
       subtitle: book.subtitle,
-      description: SearchEngineHelper.removeHtmlTags(book.description),
+      description: SearchEngineHelper.removeHtmlTags(book.summary),
       type: book.type,
-      authors: book.authors ? book.authors.map((author) => author.name) : null,
-      narrators: book.narrators ? book.narrators.map((narrator) => narrator.name) : null,
+      contributors: book.contributors
+        ? book.contributors.map((contributor) => ({
+            name: contributor.name,
+            type: contributor.$extras.pivot_type,
+          }))
+        : null,
       genres: book.genres ? book.genres.map((genre) => genre.name) : null,
       series: book.series
-        ? book.series.map((serie) => serie.name + (serie.position ? `${serie.position}` : ''))
+        ? book.series.map((serie) => {
+            return {
+              name: serie.name,
+              position: serie.$extras.pivot_position ? serie.$extras.pivot_position : null,
+            }
+          })
         : null,
       language: book.language
         ? {
@@ -151,8 +165,7 @@ export default class Book extends BaseModel {
   private static async fetchBookWithRelations(bookId: number): Promise<Book> {
     return (await Book.query()
       .where('id', bookId)
-      .preload('authors')
-      .preload('narrators')
+      .preload('contributors', (q) => q.pivotColumns(['role', 'type']))
       .preload('genres')
       .preload('series')
       .first()) as Book
@@ -194,16 +207,10 @@ export default class Book extends BaseModel {
 
     const fetchedBook = await this.fetchBookWithRelations(book.id)
 
-    for (const author of fetchedBook.authors) {
-      if (!author.enabled) {
-        author.enabled = true
-        await author.save()
-      }
-    }
-    for (const narrator of fetchedBook.narrators) {
-      if (!narrator.enabled) {
-        narrator.enabled = true
-        await narrator.save()
+    for (const contributor of fetchedBook.contributors) {
+      if (!contributor.enabled) {
+        contributor.enabled = true
+        await contributor.save()
       }
     }
     for (const genre of fetchedBook.genres) {

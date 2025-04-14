@@ -7,15 +7,14 @@ const client = new MeiliSearch({
 })
 
 const bookIndex = client.index('books')
-const authorIndex = client.index('authors')
-const narratorIndex = client.index('narrators')
+const contributorIndex = client.index('contributors')
 const genreIndex = client.index('genres')
 const seriesIndex = client.index('series')
 
 await bookIndex.updateSettings({
   filterableAttributes: [
-    'authors',
-    'narrators',
+    'contributors.name',
+    'contributors.type',
     'genres',
     'series.name',
     'language.language',
@@ -27,4 +26,4 @@ await genreIndex.updateSettings({
   filterableAttributes: ['type'],
 })
 
-export { client, bookIndex, authorIndex, narratorIndex, genreIndex, seriesIndex }
+export { client, bookIndex, contributorIndex, genreIndex, seriesIndex }

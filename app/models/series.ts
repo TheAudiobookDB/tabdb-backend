@@ -36,6 +36,9 @@ export default class Series extends BaseModel {
   @column({ serializeAs: null })
   declare enabled: boolean
 
+  @column()
+  declare language: string | null
+
   @manyToMany(() => Identifier)
   declare identifiers: ManyToMany<typeof Identifier>
 
@@ -65,6 +68,12 @@ export default class Series extends BaseModel {
         id: series.id,
         name: series.name,
         description: SearchEngineHelper.removeHtmlTags(series.description),
+        language: series.language
+          ? {
+              language: series.language.split('-')[0],
+              code: series.language.includes('-') ? series.language.split('-')[1] : null,
+            }
+          : null,
       },
     ])
   }
@@ -77,6 +86,12 @@ export default class Series extends BaseModel {
         id: series.id,
         name: series.name,
         description: SearchEngineHelper.removeHtmlTags(series.description),
+        language: series.language
+          ? {
+              language: series.language.split('-')[0],
+              code: series.language.includes('-') ? series.language.split('-')[1] : null,
+            }
+          : null,
       },
     ])
   }
@@ -94,7 +109,10 @@ export default class Series extends BaseModel {
     }
     if (!currentSeries) {
       currentSeries = await Series.firstOrCreate(
-        { name: series.name },
+        {
+          name: series.name,
+          ...(series.language ? { language: series.language } : {}),
+        },
         {
           description: series.description,
         }
