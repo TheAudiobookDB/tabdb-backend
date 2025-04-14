@@ -200,6 +200,13 @@ export const contributorValidation = vine.object({
 })
 export const contributorValidator = vine.compile(contributorValidation)
 
+export const publisherValidation = vine.object({
+  id: nanoIdValidation.optional().requiredIfMissing('name'),
+  name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
+  description: vine.string().optional(),
+})
+export const publisherValidator = vine.compile(publisherValidation)
+
 export const seriesValidation = vine.object({
   id: nanoIdValidation.optional().requiredIfMissing('name'),
   name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),

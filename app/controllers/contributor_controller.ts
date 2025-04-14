@@ -50,6 +50,7 @@ export default class NarratorsController {
       .preload('identifiers')
       .preload('genres')
       .preload('tracks')
+      .preload('publisher')
       .whereHas('contributors', (q) => {
         q.where('public_id', payload.id)
       })

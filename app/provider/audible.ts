@@ -6,6 +6,7 @@ import {
   audiMetaSeriesValidator,
   audiMetaTrackValidator,
   contributorValidator,
+  publisherValidator,
 } from '#validators/provider_validator'
 import { DateTime } from 'luxon'
 import BooksController from '#controllers/books_controller'
@@ -37,7 +38,6 @@ export class Audible {
     book.subtitle = payload.subtitle ?? null
     book.description = payload.summary ?? null
     book.summary = payload.description ?? null
-    book.publisher = payload.publisher ?? null
     book.language = payload.language ?? null
     book.copyright = payload.copyright ?? null
 
@@ -120,6 +120,13 @@ export class Audible {
           ]
         : []),
     ])
+
+    if (payload.publisher) {
+      const publisher: Infer<typeof publisherValidator> = {
+        name: payload.publisher,
+      }
+      await BooksController.addPublisherToBook(book, publisher)
+    }
 
     await Book.enableBookAndRelations(fullBook.id)
 

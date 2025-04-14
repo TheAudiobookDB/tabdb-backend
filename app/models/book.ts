@@ -20,6 +20,7 @@ import BookGroup from '#models/book_group'
 import { nanoid } from '#config/app'
 import { bookIndex } from '#config/meilisearch'
 import { SearchEngineHelper } from '../helpers/search_engine.js'
+import Publisher from '#models/publisher'
 
 export default class Book extends BaseModel {
   @column({ isPrimary: true, serializeAs: null })
@@ -44,10 +45,6 @@ export default class Book extends BaseModel {
   @column()
   // @example(Longer more detailed description of the book)
   declare description: string | null
-
-  @column()
-  // @example(Bloomsbury Publishing)
-  declare publisher: string | null
 
   @column()
   // @example(https://example.com/image.jpg)
@@ -118,6 +115,14 @@ export default class Book extends BaseModel {
   })
   declare group: BelongsTo<typeof BookGroup>
 
+  @column({ serializeAs: null })
+  declare public publisher_id: number
+
+  @belongsTo(() => Publisher, {
+    foreignKey: 'publisher_id',
+  })
+  declare public publisher: BelongsTo<typeof Publisher>
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
@@ -168,6 +173,7 @@ export default class Book extends BaseModel {
       .preload('contributors', (q) => q.pivotColumns(['role', 'type']))
       .preload('genres')
       .preload('series')
+      .preload('publisher')
       .first()) as Book
   }
 
@@ -224,6 +230,11 @@ export default class Book extends BaseModel {
         serie.enabled = true
         await serie.save()
       }
+    }
+    const publisher: Publisher | undefined = fetchedBook.publisher
+    if (publisher && !publisher.enabled) {
+      publisher.enabled = true
+      await publisher.save()
     }
   }
 }

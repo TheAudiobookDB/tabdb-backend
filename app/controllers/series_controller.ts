@@ -47,6 +47,7 @@ export default class SeriesController {
       .preload('identifiers')
       .preload('genres')
       .preload('tracks')
+      .preload('publisher')
       .whereHas('series', (q) => {
         q.where('public_id', payload.id)
       })

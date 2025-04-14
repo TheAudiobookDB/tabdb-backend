@@ -3,6 +3,7 @@ import {
   contributorValidator,
   genreValidator,
   identifierValidator,
+  publisherValidator,
 } from '#validators/provider_validator'
 import { ModelHelper } from '../helpers/model_helper.js'
 import Book from '#models/book'
@@ -49,7 +50,6 @@ export class Audiobookshelf {
       ? DateTime.fromObject({ year: Number.parseInt(payload.publishedYear) })
       : null
     book.language = payload.language ?? null
-    book.publisher = payload.publisher ?? null
     book.isExplicit = payload.explicit ?? false
     book.isAbridged = payload.abridged ?? null
 
@@ -87,6 +87,13 @@ export class Audiobookshelf {
     }
 
     await BooksController.addTrackToBook(book, chapters)
+
+    if (payload.publisher) {
+      const publisher: Infer<typeof publisherValidator> = {
+        name: payload.publisher,
+      }
+      await BooksController.addPublisherToBook(book, publisher)
+    }
 
     const identifiers: Infer<typeof identifierValidator>[] = []
     if (payload.asin) {
