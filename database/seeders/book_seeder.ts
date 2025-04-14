@@ -1,6 +1,8 @@
 import { BaseSeeder } from '@adonisjs/lucid/seeders'
 import axios from 'axios'
 import { Audible } from '../../app/provider/audible.js'
+import Book from '#models/book'
+import { ContributorType } from '../../app/enum/contributor_enum.js'
 
 export default class extends BaseSeeder {
   async run() {
@@ -8,7 +10,7 @@ export default class extends BaseSeeder {
       return new Promise((resolve) => setTimeout(resolve, ms))
     }
 
-    for (let page = 1; page <= 20; page++) {
+    for (let page = 1; page <= 10; page++) {
       const response = await axios.get('https://api.audible.com/1.0/catalog/products', {
         params: {
           num_results: 50,
@@ -31,7 +33,7 @@ export default class extends BaseSeeder {
       console.log(`Added 50 books from page ${page}`)
     }
 
-    for (let page = 1; page <= 20; page++) {
+    for (let page = 1; page <= 10; page++) {
       const response = await axios.get('https://api.audible.de/1.0/catalog/products', {
         params: {
           num_results: 50,
@@ -52,6 +54,36 @@ export default class extends BaseSeeder {
       }
 
       console.log(`Added 50 books from page ${page}`)
+    }
+
+    const books = await Book.query().preload('contributors', (q) =>
+      q
+        .pivotColumns(['role', 'type'])
+        .preload('identifiers', (q2) => q2.where('type', 'audible:asin'))
+        .where('type', ContributorType.AUTHOR)
+    )
+
+    const authors: string[] = []
+
+    for (const book of books) {
+      for (const author of book.contributors) {
+        for (const identifier of author.identifiers) {
+          if (identifier.type === 'audible:asin') {
+            authors.push(identifier.value)
+          }
+        }
+      }
+    }
+
+    const authorsSet = new Set(authors)
+    let authorsArray = Array.from(authorsSet)
+
+    authorsArray = authorsArray.slice(0, 50)
+
+    for (const author of authorsArray) {
+      void Audible.fetchAuthor(author, 'us')
+
+      await sleep(401)
     }
   }
 }

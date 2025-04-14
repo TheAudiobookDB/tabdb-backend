@@ -8,15 +8,15 @@ import Book from '#models/book'
 export default class NarratorsController {
   /**
    * @get
-   * @operationId getNarrator
-   * @summary Get an narrator by ID
+   * @operationId getContributor
+   * @summary Get a contributor by ID
    *
    * @requestBody - <getIdValidator>
    *
    * @responseHeader 200 - @use(rate)
    * @responseHeader 200 - @use(requestId)
    *
-   * @responseBody 200 - <Narrator>.with(relations).exclude(books)
+   * @responseBody 200 - <Contributor>.with(relations).exclude(books)
    * @responseBody 422 - <ValidationInterface>
    * @responseBody 429 - <TooManyRequests>
    */

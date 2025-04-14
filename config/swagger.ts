@@ -67,4 +67,8 @@ export default {
       ],
     },
   },
+  securitySchemes: {
+    ApiKeyAuth: {},
+    BasicAuth: {},
+  },
 }

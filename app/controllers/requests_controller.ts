@@ -18,7 +18,7 @@ export default class RequestsController {
    * @responseBody 422 - <ValidationInterface>
    * @responseBody 429 - <TooManyRequests>
    */
-  async index({ request }: HttpContext) {
+  async index({ request, response }: HttpContext) {
     const payload = await request.validateUsing(indexRequestValidator)
 
     switch (payload.provider) {
@@ -39,6 +39,12 @@ export default class RequestsController {
             }
           case 'author':
             const authorResult = await Audible.fetchAuthor(payload.identifier, payload.language)
+            if (!authorResult) {
+              return response.status(404).send({
+                message: `No author found or an error occurred while fetching author ${payload.identifier} from provider ${payload.provider}. If you think this is`,
+                requestId: request.id(),
+              })
+            }
             return {
               message: `Request for author ${payload.identifier} from provider ${payload.provider} successful`,
               id: authorResult.publicId,

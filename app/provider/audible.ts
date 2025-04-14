@@ -15,6 +15,7 @@ import Series from '#models/series'
 import { Infer } from '@vinejs/vine/types'
 import { ContributorType } from '../enum/contributor_enum.js'
 import Contributor from '#models/contributor'
+import logger from '@adonisjs/core/services/logger'
 
 export class Audible {
   static async fetchBook(identifier: string, language: string): Promise<Book> {
@@ -125,39 +126,48 @@ export class Audible {
     return fullBook
   }
 
-  static async fetchAuthor(identifier: string, language: string): Promise<Contributor> {
-    const result = await axios.get(`https://audimeta.de/author/${identifier}?region=${language}`)
-    const response = result.data
+  static async fetchAuthor(identifier: string, language: string): Promise<Contributor | undefined> {
+    try {
+      const result = await axios.get(`https://audimeta.de/author/${identifier}?region=${language}`)
+      const response = result.data
 
-    const payload = await audiMetaAuthorValidator.validate(response)
+      const payload = await audiMetaAuthorValidator.validate(response)
 
-    let author: Contributor
-    const foundAuthors = await ModelHelper.findByIdentifier(
-      Contributor,
-      payload.asin,
-      'audible:asin'
-    )
-    if (foundAuthors && foundAuthors.length > 0) {
-      author = foundAuthors[0] as Contributor
-      console.log('Found an author with the same ASIN, updating it')
-    } else {
-      author = new Contributor()
+      let author: Contributor
+      const foundAuthors = await ModelHelper.findByIdentifier(
+        Contributor,
+        payload.asin,
+        'audible:asin'
+      )
+      if (foundAuthors && foundAuthors.length > 0) {
+        author = foundAuthors[0] as Contributor
+        console.log('Found an author with the same ASIN, updating it')
+      } else {
+        author = new Contributor()
+      }
+
+      author.name = payload.name
+      author.description = payload.description ?? null
+      author.enabled = true
+
+      await author.save()
+
+      await ModelHelper.addIdentifier(author, [
+        {
+          type: 'audible:asin',
+          value: payload.asin,
+        },
+      ])
+
+      return author
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 404) {
+        logger.warn(`Audible author ${identifier} not found`)
+        return undefined
+      }
+
+      logger.error(err)
     }
-
-    author.name = payload.name
-    author.description = payload.description ?? null
-    author.enabled = true
-
-    await author.save()
-
-    await ModelHelper.addIdentifier(author, [
-      {
-        type: 'audible:asin',
-        value: payload.asin,
-      },
-    ])
-
-    return author
   }
 
   static async fetchTracks(identifier: string, language: string) {

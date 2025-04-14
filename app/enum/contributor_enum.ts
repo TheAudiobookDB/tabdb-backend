@@ -6,4 +6,5 @@ export enum ContributorType {
   EDITOR = 5,
   SCRIPTWRITER = 6,
   TRANSLATOR = 7,
+  OTHER = 99,
 }

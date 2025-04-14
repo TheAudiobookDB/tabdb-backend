@@ -1,6 +1,8 @@
 import vine from '@vinejs/vine'
 import { languageValidation, limitValidation, nanoIdValidation, pageValidation } from '#config/app'
 import { isLanguageRule } from '#start/rules/language'
+import { ContributorType } from '../enum/contributor_enum.js'
+import type { FieldContext } from '@vinejs/vine/types'
 
 export const asinValidation = vine
   .string()
@@ -175,8 +177,26 @@ export const contributorValidation = vine.object({
   description: vine.string().optional(),
   image: vine.string().url().optional(),
   role: vine.string().maxLength(255).optional(),
-  type: vine.number().min(1).max(7).withoutDecimals(),
-  identifiers: vine.array(identifierValidation).maxLength(5).optional(),
+  type: vine
+    .number()
+    .parse((value, field: Pick<FieldContext, 'data' | 'parent' | 'meta'>) => {
+      if (typeof value === 'number') {
+        if (value in ContributorType) {
+          return value
+        }
+      }
+      const allowedTypes = Object.values(ContributorType).map((type) => type.toString())
+      const fieldContext = field as FieldContext
+      fieldContext.report(
+        'Invalid type. Allowed types are: ' + allowedTypes.join(', '),
+        'invalid_type',
+        fieldContext
+      )
+    })
+    .min(1)
+    .max(99)
+    .withoutDecimals(),
+  identifiers: vine.array(identifierValidation).maxLength(10).optional(),
 })
 export const contributorValidator = vine.compile(contributorValidation)
 

@@ -31,7 +31,7 @@ router.get('/swagger', async () => {
 })
 
 router.get('/docs', async () => {
-  return AutoSwagger.default.scalar('/swagger')
+  return AutoSwagger.default.ui('/swagger')
 })
 router.get('/', async () => {
   return AutoSwagger.default.scalar('/swagger')

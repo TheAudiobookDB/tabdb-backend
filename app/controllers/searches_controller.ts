@@ -9,6 +9,7 @@ import Book from '#models/book'
 import { bookIndex, client, contributorIndex, genreIndex, seriesIndex } from '#config/meilisearch'
 import Contributor from '#models/contributor'
 import Series from '#models/series'
+import { SearchEngineHelper } from '../helpers/search_engine.js'
 
 export default class SearchesController {
   /**
@@ -214,13 +215,7 @@ export default class SearchesController {
 
     const result = bookResults.serialize({})
 
-    result.meta.total = books.totalHits
-    result.meta.lastPage = Math.ceil(books.totalHits / limit)
-    result.meta.page = page
-    result.meta.lastPageUrl = `/?page=${result.meta.lastPage}`
-    result.meta.nextPageUrl = page + 1 <= result.meta.lastPage ? `/?page=${page + 1}` : null
-    result.meta.previousPageUrl = page - 1 >= 1 ? `/?page=${page - 1}` : null
-    result.meta.currentPage = page
+    result.meta = SearchEngineHelper.buildPagination(page, books.totalHits, limit)
 
     return result
   }
@@ -273,13 +268,7 @@ export default class SearchesController {
 
     const result = narratorResults.serialize({})
 
-    result.meta.total = contributors.totalHits
-    result.meta.lastPage = Math.ceil(contributors.totalHits / limit)
-    result.meta.page = page
-    result.meta.lastPageUrl = `/?page=${result.meta.lastPage}`
-    result.meta.nextPageUrl = page + 1 <= result.meta.lastPage ? `/?page=${page + 1}` : null
-    result.meta.previousPageUrl = page - 1 >= 1 ? `/?page=${page - 1}` : null
-    result.meta.currentPage = page
+    result.meta = SearchEngineHelper.buildPagination(page, contributors.totalHits, limit)
 
     return result
   }
@@ -319,15 +308,7 @@ export default class SearchesController {
 
     return {
       hits: genres.hits,
-      meta: {
-        total: genres.totalHits,
-        lastPage: Math.ceil(genres.totalHits / limit),
-        page: page,
-        lastPageUrl: `/?page=${Math.ceil(genres.totalHits / limit)}`,
-        nextPageUrl: page + 1 <= Math.ceil(genres.totalHits / limit) ? `/?page=${page + 1}` : null,
-        previousPageUrl: page - 1 >= 1 ? `/?page=${page - 1}` : null,
-        currentPage: page,
-      },
+      meta: SearchEngineHelper.buildPagination(page, genres.totalHits, limit),
     }
   }
 
@@ -379,13 +360,7 @@ export default class SearchesController {
 
     const result = seriesResults.serialize({})
 
-    result.meta.total = series.totalHits
-    result.meta.lastPage = Math.ceil(series.totalHits / limit)
-    result.meta.page = page
-    result.meta.lastPageUrl = `/?page=${result.meta.lastPage}`
-    result.meta.nextPageUrl = page + 1 <= result.meta.lastPage ? `/?page=${page + 1}` : null
-    result.meta.previousPageUrl = page - 1 >= 1 ? `/?page=${page - 1}` : null
-    result.meta.currentPage = page
+    result.meta = SearchEngineHelper.buildPagination(page, series.totalHits, limit)
 
     return result
   }

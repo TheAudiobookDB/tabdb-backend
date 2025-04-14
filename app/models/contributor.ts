@@ -27,12 +27,15 @@ export default class Contributor extends BaseModel {
   declare publicId: string
 
   @column()
+  // @example('J.K. Rowling')
   declare name: string
 
   @column()
+  // @example('British author, best known for the Harry Potter series')
   declare description: string | null
 
   @column()
+  // @example('https://example.com/contributor.jpg')
   declare image: string | null
 
   @column({ serializeAs: null })
@@ -47,9 +50,11 @@ export default class Contributor extends BaseModel {
   declare identifiers: ManyToMany<typeof Identifier>
 
   @column.dateTime({ autoCreate: true })
+  // @example('2023-01-01T00:00:00Z')
   declare createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
+  // @example('2023-01-01T00:00:00Z')
   declare updatedAt: DateTime
 
   @beforeCreate()
@@ -124,5 +129,12 @@ export default class Contributor extends BaseModel {
     }
   }
 
+  // @example(Harry Potter) @props({"maxLength": 255})
   declare role: string | null
+
+  // @props({"type": "number"}) @example(1)
+  declare type: 1 | 2 | 3 | 4 | 5 | 6 | 7 | 99
+
+  // @enum('author', 'narrator', 'editor', 'translator', 'adapter', 'reader', 'performer')
+  declare typeString: string
 }
