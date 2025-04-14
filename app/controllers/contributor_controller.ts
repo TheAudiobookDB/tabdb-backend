@@ -30,8 +30,8 @@ export default class NarratorsController {
 
   /**
    * @books
-   * @operationId getBooksByNarrator
-   * @summary Get books by narrator ID
+   * @operationId getBooksByContributor
+   * @summary Get books by contributor ID
    *
    * @paramUse(pagination)
    *

@@ -21,6 +21,7 @@ const ContributorsController = () => import('#controllers/contributor_controller
 const SeriesController = () => import('#controllers/series_controller')
 const GenresController = () => import('#controllers/genres_controller')
 const TracksController = () => import('#controllers/tracks_controller')
+const PublishersController = () => import('#controllers/publishers_controller')
 
 /**
  * Swagger
@@ -89,6 +90,18 @@ router
  * Tracks
  */
 router.get('/track/:id', [TracksController, 'get']).use(middleware.relaxAuth()).use(r3Limiter)
+
+/**
+ * Publisher
+ */
+router
+  .get('/publisher/:id', [PublishersController, 'get'])
+  .use(middleware.relaxAuth())
+  .use(r3Limiter)
+router
+  .get('/publisher/books/:id', [PublishersController, 'books'])
+  .use(middleware.relaxAuth())
+  .use(r2Limiter)
 
 /**
  * Search
