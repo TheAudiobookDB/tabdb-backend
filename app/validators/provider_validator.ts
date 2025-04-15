@@ -277,3 +277,8 @@ export const getIdPaginationValidator = vine.compile(
     limit: limitValidation,
   })
 )
+
+export const imageValidation = vine.file({
+  size: '3mb',
+  extnames: ['jpg', 'jpeg', 'png', 'webp'],
+})

@@ -19,6 +19,7 @@ import {
 import { middleware } from '#start/kernel'
 import AutoSwagger from 'adonis-autoswagger'
 import swagger from '#config/swagger'
+import { FileHelper } from '../app/helpers/file_helper.js'
 const RequestsController = () => import('#controllers/requests_controller')
 const ConfirmsController = () => import('#controllers/confirms_controller')
 const SearchesController = () => import('#controllers/searches_controller')
@@ -160,3 +161,15 @@ router
   })
   .use(middleware.auth())
   .use(r1Limiter)
+
+router.put('/upload/file', async (context) => {
+  const file = context.request.file('file')
+
+  if (!file) {
+    return context.response.status(400).send({
+      message: 'No file uploaded',
+    })
+  }
+
+  await FileHelper.saveFile(file)
+})
