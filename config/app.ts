@@ -26,7 +26,7 @@ export const http = defineConfig({
    * Enabling async local storage will let you access HTTP context
    * from anywhere inside your application.
    */
-  useAsyncLocalStorage: false,
+  useAsyncLocalStorage: true,
 
   /**
    * Manage cookies configuration. The settings for the session id cookie are
@@ -60,6 +60,7 @@ export const pageValidation = vine
   .withoutDecimals()
   .max(20)
   .min(1)
+  .parse((v) => v || 1)
   .optional()
   .transform((v) => v || 1)
 export const limitValidation = vine
@@ -68,5 +69,8 @@ export const limitValidation = vine
   .withoutDecimals()
   .max(50)
   .min(1)
+  .parse((v) => {
+    return v || 10
+  })
   .optional()
   .transform((v) => v || 10)

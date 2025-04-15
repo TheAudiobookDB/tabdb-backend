@@ -30,6 +30,7 @@ const GenresController = () => import('#controllers/genres_controller')
 const TracksController = () => import('#controllers/tracks_controller')
 const PublishersController = () => import('#controllers/publishers_controller')
 const UsersController = () => import('#controllers/users_controller')
+const LogsController = () => import('#controllers/logs_controller')
 
 /**
  * Swagger
@@ -150,5 +151,12 @@ router.get('/create/confirm', [ConfirmsController, 'create']).use(middleware.aut
 /**
  * Request
  */
-
 router.post('/request', [RequestsController, 'index']).use(middleware.relaxAuth()).use(r1Limiter)
+
+router
+  .get('/:model/:id/edit-history', [LogsController, 'getEditHistory'])
+  .where('model', {
+    match: /^(book|contributor|series|genre|publisher)$/,
+  })
+  .use(middleware.auth())
+  .use(r1Limiter)

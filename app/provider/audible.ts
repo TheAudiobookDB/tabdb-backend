@@ -17,6 +17,7 @@ import { Infer } from '@vinejs/vine/types'
 import { ContributorType } from '../enum/contributor_enum.js'
 import Contributor from '#models/contributor'
 import logger from '@adonisjs/core/services/logger'
+import { LogState } from '../enum/log_enum.js'
 
 export class Audible {
   static async fetchBook(identifier: string, language: string): Promise<Book> {
@@ -53,7 +54,7 @@ export class Audible {
     book.type = 'audiobook'
     book.groupId = null
 
-    const fullBook: Book = await book.save()
+    const fullBook: Book = await book.saveWithLog(LogState.APPROVED)
 
     const contributors: Infer<typeof contributorValidator>[] = []
 
@@ -157,7 +158,7 @@ export class Audible {
       author.description = payload.description ?? null
       author.enabled = true
 
-      await author.save()
+      await author.saveWithLog(LogState.APPROVED)
 
       await ModelHelper.addIdentifier(author, [
         {
@@ -206,7 +207,7 @@ export class Audible {
     })
 
     if (tracksData.length > 0) {
-      await Track.createMany(tracksData)
+      await Track.updateOrCreateMany(['bookId', 'name'], tracksData)
     }
 
     return book
@@ -242,7 +243,7 @@ export class Audible {
       },
     ])
 
-    await series.save()
+    await series.saveWithLog()
 
     return series
   }

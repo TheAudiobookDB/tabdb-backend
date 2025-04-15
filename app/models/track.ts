@@ -1,12 +1,13 @@
 import { DateTime } from 'luxon'
-import { BaseModel, beforeCreate, belongsTo, column, computed } from '@adonisjs/lucid/orm'
+import { beforeCreate, belongsTo, column, computed } from '@adonisjs/lucid/orm'
 import Book from '#models/book'
 import type { BelongsTo } from '@adonisjs/lucid/types/relations'
 import { nanoid } from '#config/app'
 import { Infer } from '@vinejs/vine/types'
 import { trackValidator } from '#validators/provider_validator'
+import { LogExtension } from '../extensions/log_extension.js'
 
-export default class Track extends BaseModel {
+export default class Track extends LogExtension {
   @column({ isPrimary: true, serializeAs: null })
   declare id: number
 

@@ -53,7 +53,7 @@ export class Audiobookshelf {
     book.isExplicit = payload.explicit ?? false
     book.isAbridged = payload.abridged ?? null
 
-    await book.save()
+    await book.saveWithLog()
 
     const genresTags: Infer<typeof genreValidator>[] = []
     for (const tag of payload.tags ?? []) {

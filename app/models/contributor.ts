@@ -1,12 +1,5 @@
 import { DateTime } from 'luxon'
-import {
-  afterCreate,
-  afterUpdate,
-  BaseModel,
-  beforeCreate,
-  column,
-  manyToMany,
-} from '@adonisjs/lucid/orm'
+import { afterCreate, afterUpdate, beforeCreate, column, manyToMany } from '@adonisjs/lucid/orm'
 import Book from '#models/book'
 import type { ManyToMany } from '@adonisjs/lucid/types/relations'
 import Identifier from '#models/identifier'
@@ -18,8 +11,9 @@ import { contributorValidator } from '#validators/provider_validator'
 import { ModelHelper } from '../helpers/model_helper.js'
 import { ContributorType } from '../enum/contributor_enum.js'
 import { assert } from '@japa/assert'
+import { LogExtension } from '../extensions/log_extension.js'
 
-export default class Contributor extends BaseModel {
+export default class Contributor extends LogExtension {
   @column({ isPrimary: true, serializeAs: null })
   declare id: number
 

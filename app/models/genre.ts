@@ -1,20 +1,14 @@
 import { DateTime } from 'luxon'
-import {
-  afterCreate,
-  afterUpdate,
-  BaseModel,
-  beforeCreate,
-  column,
-  manyToMany,
-} from '@adonisjs/lucid/orm'
+import { afterCreate, afterUpdate, beforeCreate, column, manyToMany } from '@adonisjs/lucid/orm'
 import Book from '#models/book'
 import type { ManyToMany } from '@adonisjs/lucid/types/relations'
 import { nanoid } from '#config/app'
 import { genreIndex } from '#config/meilisearch'
 import { Infer } from '@vinejs/vine/types'
 import { genreValidator } from '#validators/provider_validator'
+import { LogExtension } from '../extensions/log_extension.js'
 
-export default class Genre extends BaseModel {
+export default class Genre extends LogExtension {
   @column({ isPrimary: true, serializeAs: null })
   declare id: number
 

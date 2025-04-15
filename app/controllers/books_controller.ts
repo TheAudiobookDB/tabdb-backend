@@ -110,7 +110,7 @@ export default class BooksController {
 
     await book.save()
 
-    await Log.createLog(
+    void Log.createLog(
       LogAction.CREATE,
       LogModel.BOOK,
       context.auth.getUserOrFail().id,
@@ -174,7 +174,7 @@ export default class BooksController {
           roles[narratorModel.id] = { type }
         }
       }
-      await book.related('contributors').sync(roles)
+      await book.related('contributors').attach(roles)
     }
   }
 
@@ -191,7 +191,7 @@ export default class BooksController {
           positions[serieModel.id] = {}
         }
       }
-      await book.related('series').sync(positions)
+      await book.related('series').attach(positions)
     }
   }
 
