@@ -1,10 +1,11 @@
 import { DateTime } from 'luxon'
-import { BaseModel, beforeCreate, column, hasMany } from '@adonisjs/lucid/orm'
+import { beforeCreate, column, hasMany } from '@adonisjs/lucid/orm'
 import Book from '#models/book'
 import type { HasMany } from '@adonisjs/lucid/types/relations'
 import { nanoid } from '#config/app'
+import { LogExtension } from '../extensions/log_extension.js'
 
-export default class BookGroup extends BaseModel {
+export default class BookGroup extends LogExtension {
   @column({ isPrimary: true, serializeAs: null })
   declare id: number
 

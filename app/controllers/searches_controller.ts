@@ -190,6 +190,7 @@ export default class SearchesController {
       .preload('series')
       .preload('tracks')
       .preload('group')
+      .preload('publisher')
       .where((builder) => {
         if (bookIds && bookIds.length > 0) {
           builder.whereIn('id', bookIds)

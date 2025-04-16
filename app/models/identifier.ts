@@ -1,10 +1,11 @@
 import { DateTime } from 'luxon'
-import { BaseModel, beforeCreate, column, manyToMany } from '@adonisjs/lucid/orm'
+import { beforeCreate, column, manyToMany } from '@adonisjs/lucid/orm'
 import Book from '#models/book'
 import type { ManyToMany } from '@adonisjs/lucid/types/relations'
 import { nanoid } from '#config/app'
+import { LogExtension } from '../extensions/log_extension.js'
 
-export default class Identifier extends BaseModel {
+export default class Identifier extends LogExtension {
   @column({ isPrimary: true, serializeAs: null })
   declare id: number
 

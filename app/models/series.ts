@@ -1,12 +1,5 @@
 import { DateTime } from 'luxon'
-import {
-  afterCreate,
-  afterUpdate,
-  BaseModel,
-  beforeCreate,
-  column,
-  manyToMany,
-} from '@adonisjs/lucid/orm'
+import { afterCreate, afterUpdate, beforeCreate, column, manyToMany } from '@adonisjs/lucid/orm'
 import Book from '#models/book'
 import type { ManyToMany } from '@adonisjs/lucid/types/relations'
 import Identifier from '#models/identifier'
@@ -16,8 +9,9 @@ import { SearchEngineHelper } from '../helpers/search_engine.js'
 import { Infer } from '@vinejs/vine/types'
 import { seriesValidator } from '#validators/provider_validator'
 import { ModelHelper } from '../helpers/model_helper.js'
+import { LogExtension } from '../extensions/log_extension.js'
 
-export default class Series extends BaseModel {
+export default class Series extends LogExtension {
   @column({ isPrimary: true, serializeAs: null })
   declare id: number
 

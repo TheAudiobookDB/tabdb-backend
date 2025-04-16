@@ -57,4 +57,22 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   AXIOM_DATASET: Env.schema.string.optional(),
   AXIOM_TOKEN: Env.schema.string.optional(),
+
+  CDN_HOST: Env.schema.string(),
+
+  CDN_ZONE: Env.schema.string(),
+
+  CDN_KEY: Env.schema.string(),
+
+  CDN_IMAGE_HOST: Env.schema.string(),
+
+  CDN_PROCESS_HOST: Env.schema.string(),
+
+  CDN_IMAGE_CLIENT_ID: Env.schema.string(),
+
+  CDN_IMAGE_SECRET: Env.schema.string(),
+
+  CDN_SERVE_HOST: Env.schema.string(),
+
+  EXPERIMENTAL_DOWNLOAD: Env.schema.boolean()
 })

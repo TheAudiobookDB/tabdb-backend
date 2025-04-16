@@ -30,7 +30,7 @@ export default class AuthController {
       .prefixUrl(env.get('APP_URL'))
       .params({ email: email })
       .qs({ uuid: randomUUID() })
-      .makeSigned('/login', { expiresIn: '5m', purpose: 'login' })
+      .makeSigned('/auth/login', { expiresIn: '5m', purpose: 'login' })
 
     await mail.send((message) => {
       message
@@ -84,5 +84,46 @@ export default class AuthController {
     } else {
       return response.badRequest('Expired or invalid token')
     }
+  }
+
+  /**
+   * @logout
+   * @operationId logout
+   * @summary Logs out the user
+   *
+   * @responseBody 422 - <ValidationInterface>
+   * @responseBody 429 - <TooManyRequests>
+   */
+  async logout({ auth }: HttpContext) {
+    const user = auth.user
+    if (!user) {
+      throw new Error('Unauthorized')
+    }
+
+    await User.accessTokens.delete(user, user.currentAccessToken.identifier)
+
+    return {
+      message: 'Logged out successfully',
+    }
+  }
+
+  /**
+   * @apiKey
+   * @operationId generateApiKey
+   * @summary Generates a new API key for the user
+   * @description Generates a new API key for the user
+   *
+   * @responseBody 200 - <AccessTokenInterface>
+   */
+  async apiKey({ auth }: HttpContext) {
+    const user = auth.user
+    if (!user) {
+      throw new Error('Unauthorized')
+    }
+
+    return await User.apiTokens.create(user, user.currentAccessToken.abilities, {
+      name: randomUUID(),
+      expiresIn: '1y',
+    })
   }
 }

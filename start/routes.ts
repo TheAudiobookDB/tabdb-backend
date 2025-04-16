@@ -8,10 +8,18 @@
 */
 
 import router from '@adonisjs/core/services/router'
-import { emailLimiter, loginLimiter, r1Limiter, r2Limiter, r3Limiter } from '#start/limiter'
+import {
+  apiKeyLimiter,
+  emailLimiter,
+  loginLimiter,
+  r1Limiter,
+  r2Limiter,
+  r3Limiter,
+} from '#start/limiter'
 import { middleware } from '#start/kernel'
 import AutoSwagger from 'adonis-autoswagger'
 import swagger from '#config/swagger'
+import app from '@adonisjs/core/services/app'
 const RequestsController = () => import('#controllers/requests_controller')
 const ConfirmsController = () => import('#controllers/confirms_controller')
 const SearchesController = () => import('#controllers/searches_controller')
@@ -21,6 +29,9 @@ const ContributorsController = () => import('#controllers/contributor_controller
 const SeriesController = () => import('#controllers/series_controller')
 const GenresController = () => import('#controllers/genres_controller')
 const TracksController = () => import('#controllers/tracks_controller')
+const PublishersController = () => import('#controllers/publishers_controller')
+const UsersController = () => import('#controllers/users_controller')
+const LogsController = () => import('#controllers/logs_controller')
 
 /**
  * Swagger
@@ -41,8 +52,22 @@ router.get('/', async () => {
  * Auth
  */
 
-router.post('/login/:email', [AuthController, 'create']).as('/login').use(r1Limiter)
-router.post('/login', [AuthController, 'store']).use(loginLimiter).use(emailLimiter)
+router.post('/auth/login/:email', [AuthController, 'create']).as('/auth/login').use(r1Limiter)
+router.post('/auth/login', [AuthController, 'store']).use(loginLimiter).use(emailLimiter)
+router.post('/auth/logout', [AuthController, 'logout']).use(middleware.auth())
+router.post('/auth/apiKey', [AuthController, 'apiKey']).use(middleware.auth()).use(apiKeyLimiter)
+
+/**
+ * User
+ */
+router.get('/user', [UsersController, 'getMe']).use(middleware.auth()).use(r1Limiter)
+router.get('/user/:id', [UsersController, 'get']).use(middleware.auth()).use(r1Limiter)
+router
+  .get('/user/:id/edit-history', [UsersController, 'editHistory'])
+  .use(middleware.auth())
+  .use(r1Limiter)
+
+router.patch('/user', [UsersController, 'update']).use(middleware.auth()).use(r1Limiter)
 
 /**
  * Book
@@ -91,6 +116,18 @@ router
 router.get('/track/:id', [TracksController, 'get']).use(middleware.relaxAuth()).use(r3Limiter)
 
 /**
+ * Publisher
+ */
+router
+  .get('/publisher/:id', [PublishersController, 'get'])
+  .use(middleware.relaxAuth())
+  .use(r3Limiter)
+router
+  .get('/publisher/books/:id', [PublishersController, 'books'])
+  .use(middleware.relaxAuth())
+  .use(r2Limiter)
+
+/**
  * Search
  */
 router.get('/search/book', [SearchesController, 'book']).use(middleware.relaxAuth()).use(r2Limiter)
@@ -115,5 +152,31 @@ router.get('/create/confirm', [ConfirmsController, 'create']).use(middleware.aut
 /**
  * Request
  */
-
 router.post('/request', [RequestsController, 'index']).use(middleware.relaxAuth()).use(r1Limiter)
+
+router
+  .get('/:model/:id/edit-history', [LogsController, 'getEditHistory'])
+  .where('model', {
+    match: /^(book|contributor|series|genre|publisher)$/,
+  })
+  .use(middleware.auth())
+  .use(r1Limiter)
+
+router.get('/tmp/:file', async (context) => {
+  const file = context.request.param('file')
+
+  if (!file) {
+    return context.response.status(400).send({
+      message: 'No file provided',
+    })
+  }
+
+  if (file.includes('..')) {
+    return context.response.status(400).send({
+      message: 'Invalid file path',
+    })
+  }
+
+  const filePath = app.makePath('storage/uploads', file)
+  return context.response.download(filePath)
+})

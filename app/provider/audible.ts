@@ -6,6 +6,7 @@ import {
   audiMetaSeriesValidator,
   audiMetaTrackValidator,
   contributorValidator,
+  publisherValidator,
 } from '#validators/provider_validator'
 import { DateTime } from 'luxon'
 import BooksController from '#controllers/books_controller'
@@ -16,6 +17,8 @@ import { Infer } from '@vinejs/vine/types'
 import { ContributorType } from '../enum/contributor_enum.js'
 import Contributor from '#models/contributor'
 import logger from '@adonisjs/core/services/logger'
+import { LogState } from '../enum/log_enum.js'
+import { FileHelper } from '../helpers/file_helper.js'
 
 export class Audible {
   static async fetchBook(identifier: string, language: string): Promise<Book> {
@@ -37,7 +40,6 @@ export class Audible {
     book.subtitle = payload.subtitle ?? null
     book.description = payload.summary ?? null
     book.summary = payload.description ?? null
-    book.publisher = payload.publisher ?? null
     book.language = payload.language ?? null
     book.copyright = payload.copyright ?? null
 
@@ -53,7 +55,14 @@ export class Audible {
     book.type = 'audiobook'
     book.groupId = null
 
-    const fullBook: Book = await book.save()
+    if (payload.imageUrl && payload.imageUrl !== '' && !book.image) {
+      const filePath = await FileHelper.saveFile(payload.imageUrl, 'covers', book.publicId)
+      if (filePath) {
+        book.image = filePath
+      }
+    }
+
+    const fullBook: Book = await book.saveWithLog(LogState.APPROVED)
 
     const contributors: Infer<typeof contributorValidator>[] = []
 
@@ -121,6 +130,13 @@ export class Audible {
         : []),
     ])
 
+    if (payload.publisher) {
+      const publisher: Infer<typeof publisherValidator> = {
+        name: payload.publisher,
+      }
+      await BooksController.addPublisherToBook(book, publisher)
+    }
+
     await Book.enableBookAndRelations(fullBook.id)
 
     return fullBook
@@ -150,7 +166,7 @@ export class Audible {
       author.description = payload.description ?? null
       author.enabled = true
 
-      await author.save()
+      await author.saveWithLog(LogState.APPROVED)
 
       await ModelHelper.addIdentifier(author, [
         {
@@ -199,7 +215,7 @@ export class Audible {
     })
 
     if (tracksData.length > 0) {
-      await Track.createMany(tracksData)
+      await Track.updateOrCreateMany(['bookId', 'name'], tracksData)
     }
 
     return book
@@ -235,7 +251,7 @@ export class Audible {
       },
     ])
 
-    await series.save()
+    await series.saveWithLog()
 
     return series
   }

@@ -11,6 +11,7 @@ import { DateTime } from 'luxon'
 import {
   contributorValidator,
   genreValidator,
+  publisherValidator,
   seriesValidator,
   trackValidator,
 } from '#validators/provider_validator'
@@ -25,6 +26,7 @@ import env from '#start/env'
 import { Infer } from '@vinejs/vine/types'
 import app from '@adonisjs/core/services/app'
 import { cuid } from '@adonisjs/core/helpers'
+import Publisher from '#models/publisher'
 
 export default class BooksController {
   /**
@@ -89,7 +91,6 @@ export default class BooksController {
     book.subtitle = payload.subtitle ?? null
     book.summary = payload.summary ?? null
     book.description = payload.description ?? null
-    book.publisher = payload.publisher ?? null
     book.language = payload.language ?? null
     book.copyright = payload.copyright ?? null
     book.pages = payload.pages ?? null
@@ -109,7 +110,7 @@ export default class BooksController {
 
     await book.save()
 
-    await Log.createLog(
+    void Log.createLog(
       LogAction.CREATE,
       LogModel.BOOK,
       context.auth.getUserOrFail().id,
@@ -123,6 +124,7 @@ export default class BooksController {
     await BooksController.addContributorToBook(book, payload.contributors)
     await BooksController.addTrackToBook(book, payload.tracks)
     await BooksController.addSeriesToBook(book, payload.series)
+    await BooksController.addPublisherToBook(book, payload.publisher)
 
     await book.save()
 
@@ -206,6 +208,15 @@ export default class BooksController {
     }
   }
 
+  static async addPublisherToBook(book: Book, publisher?: Infer<typeof publisherValidator>) {
+    if (publisher) {
+      const publisherModel = await Publisher.findByModelOrCreate(publisher)
+      if (publisherModel) {
+        await book.related('publisher').associate(publisherModel)
+      }
+    }
+  }
+
   /**
    * @abs
    * @operationId createBookABS
@@ -253,6 +264,7 @@ export default class BooksController {
       .preload('series', (q) => q.pivotColumns(['position']))
       .preload('tracks')
       .preload('group')
+      .preload('publisher')
       .firstOrFail()
   }
 }

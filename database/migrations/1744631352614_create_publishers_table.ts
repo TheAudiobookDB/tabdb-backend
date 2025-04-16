@@ -1,7 +1,7 @@
 import { BaseSchema } from '@adonisjs/lucid/schema'
 
 export default class extends BaseSchema {
-  protected tableName = 'authors'
+  protected tableName = 'publishers'
 
   async up() {
     this.schema.createTable(this.tableName, (table) => {
@@ -11,9 +11,10 @@ export default class extends BaseSchema {
       table.unique('public_id')
       table.index('public_id')
 
-      table.string('name').notNullable()
+      table.text('name')
       table.text('description').nullable()
-      table.string('image').nullable()
+
+      table.boolean('enabled').defaultTo(false)
 
       table.timestamp('created_at')
       table.timestamp('updated_at')

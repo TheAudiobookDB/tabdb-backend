@@ -24,6 +24,7 @@ export class BooksHelper {
       .preload('series')
       .preload('tracks')
       .preload('group')
+      .preload('publisher')
       .where('title', 'like', `%${title}%`)
 
     if (!showDisabled) {

@@ -3,8 +3,6 @@ import {
   afterCreate,
   afterDelete,
   afterUpdate,
-  BaseModel,
-  beforeCreate,
   belongsTo,
   column,
   hasMany,
@@ -17,17 +15,14 @@ import Identifier from '#models/identifier'
 import Series from '#models/series'
 import Track from '#models/track'
 import BookGroup from '#models/book_group'
-import { nanoid } from '#config/app'
 import { bookIndex } from '#config/meilisearch'
 import { SearchEngineHelper } from '../helpers/search_engine.js'
+import Publisher from '#models/publisher'
+import { LogExtension } from '../extensions/log_extension.js'
 
-export default class Book extends BaseModel {
+export default class Book extends LogExtension {
   @column({ isPrimary: true, serializeAs: null })
   declare id: number
-
-  @column({ serializeAs: 'id' })
-  // @props({"name": "id"})
-  declare publicId: string
 
   @column()
   // @example(Harry Potter and the Philosopher's Stone)
@@ -44,10 +39,6 @@ export default class Book extends BaseModel {
   @column()
   // @example(Longer more detailed description of the book)
   declare description: string | null
-
-  @column()
-  // @example(Bloomsbury Publishing)
-  declare publisher: string | null
 
   @column()
   // @example(https://example.com/image.jpg)
@@ -118,18 +109,19 @@ export default class Book extends BaseModel {
   })
   declare group: BelongsTo<typeof BookGroup>
 
+  @column({ serializeAs: null })
+  declare public publisher_id: number
+
+  @belongsTo(() => Publisher, {
+    foreignKey: 'publisher_id',
+  })
+  declare public publisher: BelongsTo<typeof Publisher>
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
   @column.dateTime({ autoCreate: true, autoUpdate: true })
   declare updatedAt: DateTime
-
-  @beforeCreate()
-  public static ensurePublicId(book: Book) {
-    if (!book.publicId) {
-      book.publicId = nanoid()
-    }
-  }
 
   private static buildSearchDocument(book: Book) {
     return {
@@ -168,6 +160,7 @@ export default class Book extends BaseModel {
       .preload('contributors', (q) => q.pivotColumns(['role', 'type']))
       .preload('genres')
       .preload('series')
+      .preload('publisher')
       .first()) as Book
   }
 
@@ -203,27 +196,32 @@ export default class Book extends BaseModel {
   public static async enableBookAndRelations(bookId: number): Promise<void> {
     const book = await Book.findOrFail(bookId)
     book.enabled = true
-    await book.save()
+    await book.saveWithLog()
 
     const fetchedBook = await this.fetchBookWithRelations(book.id)
 
     for (const contributor of fetchedBook.contributors) {
       if (!contributor.enabled) {
         contributor.enabled = true
-        await contributor.save()
+        await contributor.saveWithLog()
       }
     }
     for (const genre of fetchedBook.genres) {
       if (!genre.enabled) {
         genre.enabled = true
-        await genre.save()
+        await genre.saveWithLog()
       }
     }
     for (const serie of fetchedBook.series) {
       if (!serie.enabled) {
         serie.enabled = true
-        await serie.save()
+        await serie.saveWithLog()
       }
+    }
+    const publisher: Publisher | undefined = fetchedBook.publisher
+    if (publisher && !publisher.enabled) {
+      publisher.enabled = true
+      await publisher.saveWithLog()
     }
   }
 }

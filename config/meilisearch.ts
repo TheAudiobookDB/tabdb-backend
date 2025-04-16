@@ -10,6 +10,7 @@ const bookIndex = client.index('books')
 const contributorIndex = client.index('contributors')
 const genreIndex = client.index('genres')
 const seriesIndex = client.index('series')
+const publisherIndex = client.index('publishers')
 
 await bookIndex.updateSettings({
   filterableAttributes: [
@@ -26,4 +27,4 @@ await genreIndex.updateSettings({
   filterableAttributes: ['type'],
 })
 
-export { client, bookIndex, contributorIndex, genreIndex, seriesIndex }
+export { client, bookIndex, contributorIndex, genreIndex, seriesIndex, publisherIndex }

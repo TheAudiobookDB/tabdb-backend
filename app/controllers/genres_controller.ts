@@ -48,6 +48,7 @@ export default class GenresController {
       .preload('identifiers')
       .preload('genres')
       .preload('tracks')
+      .preload('publisher')
       .whereHas('genres', (q) => {
         q.where('public_id', payload.id)
       })
