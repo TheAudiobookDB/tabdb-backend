@@ -19,7 +19,7 @@ import {
 import { middleware } from '#start/kernel'
 import AutoSwagger from 'adonis-autoswagger'
 import swagger from '#config/swagger'
-import { FileHelper } from '../app/helpers/file_helper.js'
+import app from '@adonisjs/core/services/app'
 const RequestsController = () => import('#controllers/requests_controller')
 const ConfirmsController = () => import('#controllers/confirms_controller')
 const SearchesController = () => import('#controllers/searches_controller')
@@ -162,14 +162,21 @@ router
   .use(middleware.auth())
   .use(r1Limiter)
 
-router.put('/upload/file', async (context) => {
-  const file = context.request.file('file')
+router.get('/tmp/:file', async (context) => {
+  const file = context.request.param('file')
 
   if (!file) {
     return context.response.status(400).send({
-      message: 'No file uploaded',
+      message: 'No file provided',
     })
   }
 
-  await FileHelper.saveFile(file)
+  if (file.includes('..')) {
+    return context.response.status(400).send({
+      message: 'Invalid file path',
+    })
+  }
+
+  const filePath = app.makePath('storage/uploads', file)
+  return context.response.download(filePath)
 })

@@ -18,6 +18,7 @@ import { ContributorType } from '../enum/contributor_enum.js'
 import Contributor from '#models/contributor'
 import logger from '@adonisjs/core/services/logger'
 import { LogState } from '../enum/log_enum.js'
+import { FileHelper } from '../helpers/file_helper.js'
 
 export class Audible {
   static async fetchBook(identifier: string, language: string): Promise<Book> {
@@ -53,6 +54,13 @@ export class Audible {
     book.isExplicit = payload.explicit ?? false
     book.type = 'audiobook'
     book.groupId = null
+
+    if (payload.imageUrl && payload.imageUrl !== '' && !book.image) {
+      const filePath = await FileHelper.saveFile(payload.imageUrl, 'covers', book.publicId)
+      if (filePath) {
+        book.image = filePath
+      }
+    }
 
     const fullBook: Book = await book.saveWithLog(LogState.APPROVED)
 

@@ -174,7 +174,7 @@ export default class BooksController {
           roles[narratorModel.id] = { type }
         }
       }
-      await book.related('contributors').attach(roles)
+      await book.related('contributors').sync(roles)
     }
   }
 
@@ -191,7 +191,7 @@ export default class BooksController {
           positions[serieModel.id] = {}
         }
       }
-      await book.related('series').attach(positions)
+      await book.related('series').sync(positions)
     }
   }
 

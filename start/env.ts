@@ -64,5 +64,15 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   CDN_KEY: Env.schema.string(),
 
-  CDN_IMAGE_HOST: Env.schema.string()
+  CDN_IMAGE_HOST: Env.schema.string(),
+
+  CDN_PROCESS_HOST: Env.schema.string(),
+
+  CDN_IMAGE_CLIENT_ID: Env.schema.string(),
+
+  CDN_IMAGE_SECRET: Env.schema.string(),
+
+  CDN_SERVE_HOST: Env.schema.string(),
+
+  EXPERIMENTAL_DOWNLOAD: Env.schema.boolean()
 })
