@@ -19,6 +19,7 @@ import Contributor from '#models/contributor'
 import logger from '@adonisjs/core/services/logger'
 import { LogState } from '../enum/log_enum.js'
 import { FileHelper } from '../helpers/file_helper.js'
+import { nanoid } from '#config/app'
 
 export class Audible {
   static async fetchBook(identifier: string, language: string): Promise<Book> {
@@ -36,6 +37,7 @@ export class Audible {
       book = new Book()
     }
 
+    book.publicId = nanoid()
     book.title = payload.title
     book.subtitle = payload.subtitle ?? null
     book.description = payload.summary ?? null
