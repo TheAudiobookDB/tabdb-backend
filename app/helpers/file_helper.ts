@@ -7,6 +7,7 @@ import axios from 'axios'
 import { PassThrough, Readable } from 'node:stream'
 import app from '@adonisjs/core/services/app'
 import { nanoid } from '#config/app'
+import logger from '@adonisjs/core/services/logger'
 
 const MAX_FILE_SIZE = 3 * 1024 * 1024 // 3MB
 const ALLOWED_MIME = ['jpg', 'jpeg', 'png', 'webp']
@@ -109,13 +110,17 @@ export class FileHelper {
 
       return `${env.get('CDN_SERVE_HOST')}/${subDirectory}/${fileName}.webp`
     } catch (error) {
-      console.error('Error uploading file:', error)
+      logger.error('Error uploading file:', error)
       throw error
     } finally {
-      if (!experimentalDownload) {
-        await FileHelper.deleteRemoteFile(completeFileName)
-      } else {
-        await FileHelper.deleteLocalFile(completeFileName)
+      try {
+        if (!experimentalDownload) {
+          await FileHelper.deleteRemoteFile(completeFileName)
+        } else {
+          await FileHelper.deleteLocalFile(completeFileName)
+        }
+      } catch (e) {
+        logger.warn('Error deleting file:', e)
       }
     }
   }

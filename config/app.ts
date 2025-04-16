@@ -45,7 +45,7 @@ export const http = defineConfig({
 /**
  * The configuration for nanoId
  */
-export const nanoid = customAlphabet('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ', 16)
+export const nanoid = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 16)
 
 export const nanoIdValidation = vine
   .string()
