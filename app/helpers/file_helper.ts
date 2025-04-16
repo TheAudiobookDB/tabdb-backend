@@ -109,6 +109,7 @@ export class FileHelper {
 
       return `${env.get('CDN_SERVE_HOST')}/${subDirectory}/${fileName}.webp`
     } catch (error) {
+      console.error('Error uploading file:', error)
       throw error
     } finally {
       if (!experimentalDownload) {
