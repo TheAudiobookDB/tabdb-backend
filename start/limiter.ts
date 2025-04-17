@@ -10,6 +10,7 @@
 */
 
 import limiter from '@adonisjs/limiter/services/main'
+import { UserAbilities } from '../app/enum/user_enum.js'
 
 export const emailLimiter = limiter.define('login_email', (ctx) => {
   /**
@@ -38,17 +39,15 @@ export const loginLimiter = limiter.define('login', (ctx) => {
 export const r1Limiter = limiter.define('rate1', (ctx) => {
   const user = ctx.auth.user
   if (user) {
-    const abilities = user.currentAccessToken.abilities
+    const abilities: UserAbilities = new UserAbilities(user.currentAccessToken.abilities)
 
-    for (const ability of abilities) {
-      if (ability.includes('rate1:')) {
-        const rate = Number.parseInt(ability.split(':')[1])
-        return limiter
-          .allowRequests(rate)
-          .every('1 minute')
-          .usingKey(`rate1_${ctx.request.ip()}`)
-          .blockFor('1 minute')
-      }
+    const rate = abilities.getRate(1)
+    if (rate) {
+      return limiter
+        .allowRequests(rate)
+        .every('1 minute')
+        .usingKey(`rate1_${ctx.request.ip()}`)
+        .blockFor('1 minute')
     }
   }
 
@@ -62,17 +61,15 @@ export const r1Limiter = limiter.define('rate1', (ctx) => {
 export const r2Limiter = limiter.define('rate2', (ctx) => {
   const user = ctx.auth.user
   if (user) {
-    const abilities = user.currentAccessToken.abilities
+    const abilities: UserAbilities = new UserAbilities(user.currentAccessToken.abilities)
 
-    for (const ability of abilities) {
-      if (ability.includes('rate2:')) {
-        const rate = Number.parseInt(ability.split(':')[1])
-        return limiter
-          .allowRequests(rate)
-          .every('1 minute')
-          .usingKey(`rate2_${ctx.request.ip()}`)
-          .blockFor('1 minute')
-      }
+    const rate = abilities.getRate(2)
+    if (rate) {
+      return limiter
+        .allowRequests(rate)
+        .every('1 minute')
+        .usingKey(`rate2_${ctx.request.ip()}`)
+        .blockFor('1 minute')
     }
   }
 
@@ -86,17 +83,15 @@ export const r2Limiter = limiter.define('rate2', (ctx) => {
 export const r3Limiter = limiter.define('rate3', (ctx) => {
   const user = ctx.auth.user
   if (user) {
-    const abilities = user.currentAccessToken.abilities
+    const abilities: UserAbilities = new UserAbilities(user.currentAccessToken.abilities)
 
-    for (const ability of abilities) {
-      if (ability.includes('rate3:')) {
-        const rate = Number.parseInt(ability.split(':')[1])
-        return limiter
-          .allowRequests(rate)
-          .every('1 minute')
-          .usingKey(`rate3_${ctx.request.ip()}`)
-          .blockFor('1 minute')
-      }
+    const rate = abilities.getRate(3)
+    if (rate) {
+      return limiter
+        .allowRequests(rate)
+        .every('1 minute')
+        .usingKey(`rate3_${ctx.request.ip()}`)
+        .blockFor('1 minute')
     }
   }
 
