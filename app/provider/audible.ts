@@ -39,23 +39,24 @@ export class Audible {
 
     book.publicId = nanoid()
     book.title = payload.title
-    book.subtitle = payload.subtitle ?? null
-    book.description = payload.summary ?? null
-    book.summary = payload.description ?? null
-    book.language = payload.language ?? null
-    book.copyright = payload.copyright ?? null
+    book.subtitle = book.subtitle ?? payload.subtitle ?? null
+    book.description = book.description ?? payload.summary ?? null
+    book.summary = book.summary ?? payload.description ?? null
+    book.language = book.language ?? payload.language ?? null
+    book.copyright = book.copyright ?? payload.copyright ?? null
 
     const audibleCopyright = 'Certain parts of this item are copyrighted by Audible, Inc.'
     if (!book.copyright || !book.copyright?.includes('audibleCopyright')) {
       if (!book.copyright) book.copyright = audibleCopyright
       else book.copyright += `, ${audibleCopyright}`
     }
-    book.duration = payload.lengthMinutes !== undefined ? payload.lengthMinutes * 60 : null
-    book.releasedAt = payload.releaseDate ? DateTime.fromISO(payload.releaseDate) : null
-    book.isAbridged = payload.bookFormat === 'abridged'
-    book.isExplicit = payload.explicit ?? false
+    book.duration =
+      book.duration ?? (payload.lengthMinutes !== undefined ? payload.lengthMinutes * 60 : null)
+    book.releasedAt =
+      book.releasedAt ?? (payload.releaseDate ? DateTime.fromISO(payload.releaseDate) : null)
+    book.isAbridged = book.isAbridged ?? payload.bookFormat === 'abridged'
+    book.isExplicit = book.isExplicit ?? payload.explicit ?? false
     book.type = 'audiobook'
-    book.groupId = null
 
     if (payload.imageUrl && payload.imageUrl !== '' && !book.image) {
       const filePath = await FileHelper.saveFile(payload.imageUrl, 'covers', book.publicId)

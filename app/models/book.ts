@@ -21,6 +21,7 @@ import Publisher from '#models/publisher'
 import { LogExtension } from '../extensions/log_extension.js'
 import { ImageExtension } from '../extensions/image_extension.js'
 import { compose } from '@adonisjs/core/helpers'
+import { LogState } from '../enum/log_enum.js'
 
 export default class Book extends compose(LogExtension, ImageExtension) {
   @column({ isPrimary: true, serializeAs: null })
@@ -198,32 +199,32 @@ export default class Book extends compose(LogExtension, ImageExtension) {
   public static async enableBookAndRelations(bookId: number): Promise<void> {
     const book = await Book.findOrFail(bookId)
     book.enabled = true
-    await book.saveWithLog()
+    await book.saveWithLog(LogState.APPROVED)
 
     const fetchedBook = await this.fetchBookWithRelations(book.id)
 
     for (const contributor of fetchedBook.contributors) {
       if (!contributor.enabled) {
         contributor.enabled = true
-        await contributor.saveWithLog()
+        await contributor.saveWithLog(LogState.APPROVED)
       }
     }
     for (const genre of fetchedBook.genres) {
       if (!genre.enabled) {
         genre.enabled = true
-        await genre.saveWithLog()
+        await genre.saveWithLog(LogState.APPROVED)
       }
     }
     for (const serie of fetchedBook.series) {
       if (!serie.enabled) {
         serie.enabled = true
-        await serie.saveWithLog()
+        await serie.saveWithLog(LogState.APPROVED)
       }
     }
     const publisher: Publisher | undefined = fetchedBook.publisher
     if (publisher && !publisher.enabled) {
       publisher.enabled = true
-      await publisher.saveWithLog()
+      await publisher.saveWithLog(LogState.APPROVED)
     }
   }
 }

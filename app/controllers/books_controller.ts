@@ -108,16 +108,7 @@ export default class BooksController {
       })
     }
 
-    await book.save()
-
-    void Log.createLog(
-      LogAction.CREATE,
-      LogModel.BOOK,
-      context.auth.getUserOrFail().id,
-      undefined,
-      result.hits.length > 0 ? LogState.DUPLICATE_FOUND : LogState.PENDING,
-      book.publicId
-    )
+    await book.saveWithLog(result.hits.length > 0 ? LogState.DUPLICATE_FOUND : LogState.PENDING)
 
     await BooksController.addGenreToBook(book, payload.genres)
     await ModelHelper.addIdentifier(book, payload.identifiers)
@@ -125,8 +116,6 @@ export default class BooksController {
     await BooksController.addTrackToBook(book, payload.tracks)
     await BooksController.addSeriesToBook(book, payload.series)
     await BooksController.addPublisherToBook(book, payload.publisher)
-
-    await book.save()
 
     if (result.hits.length > 0) {
       const url = router
@@ -140,7 +129,7 @@ export default class BooksController {
         message: 'Book created, but a duplicate was found.',
         book,
         confirmation: url,
-        available: true,
+        available: false,
       }
     }
 
@@ -164,6 +153,23 @@ export default class BooksController {
   ) {
     if (payloadObject) {
       const roles: Record<string, ModelObject> = {}
+
+      if (!book.contributors) {
+        await book.load('contributors', (q) => q.pivotColumns(['role', 'type']))
+      }
+      if (book.contributors && book.contributors.length > 0) {
+        for (const contributor of book.contributors) {
+          if (contributor.$extras.pivot_role) {
+            roles[contributor.id] = {
+              role: contributor.$extras.pivot_role,
+              type: contributor.$extras.pivot_type,
+            }
+          } else {
+            roles[contributor.id] = { type: contributor.$extras.pivot_type }
+          }
+        }
+      }
+
       for (const narrator of payloadObject) {
         const narratorModel = await Contributor.findByModelOrCreate(narrator)
         const role = narrator.role
@@ -181,6 +187,20 @@ export default class BooksController {
   static async addSeriesToBook(book: Book, payloadObject?: Infer<typeof seriesValidator>[]) {
     if (payloadObject) {
       const positions: Record<string, ModelObject> = {}
+
+      if (!book.series) {
+        await book.load('series', (q) => q.pivotColumns(['position']))
+      }
+      if (book.series && book.series.length > 0) {
+        for (const serie of book.series) {
+          if (serie.$extras.pivot_position) {
+            positions[serie.id] = { position: serie.$extras.pivot_position }
+          } else {
+            positions[serie.id] = {}
+          }
+        }
+      }
+
       for (const serie of payloadObject) {
         const serieModel = await Series.findByModelOrCreate(serie)
 
@@ -208,8 +228,13 @@ export default class BooksController {
     }
   }
 
-  static async addPublisherToBook(book: Book, publisher?: Infer<typeof publisherValidator>) {
+  static async addPublisherToBook(
+    book: Book,
+    publisher?: Infer<typeof publisherValidator>,
+    replace = false
+  ) {
     if (publisher) {
+      if (book.publisher_id && !replace) return
       const publisherModel = await Publisher.findByModelOrCreate(publisher)
       if (publisherModel) {
         await book.related('publisher').associate(publisherModel)
