@@ -1,11 +1,13 @@
 import { DateTime } from 'luxon'
 import hash from '@adonisjs/core/services/hash'
 import { compose } from '@adonisjs/core/helpers'
-import { BaseModel, column, hasMany } from '@adonisjs/lucid/orm'
+import { BaseModel, beforeCreate, column, computed, hasMany } from '@adonisjs/lucid/orm'
 import { withAuthFinder } from '@adonisjs/auth/mixins/lucid'
 import { DbAccessTokensProvider } from '@adonisjs/auth/access_tokens'
 import Log from '#models/log'
 import type { HasMany } from '@adonisjs/lucid/types/relations'
+import { imageTypes, nanoid } from '#config/app'
+import * as model_1 from '@adonisjs/lucid/types/model'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
@@ -24,6 +26,29 @@ export default class User extends compose(BaseModel, AuthFinder) {
 
   @column()
   declare email: string
+
+  @column()
+  declare username: string | null
+
+  @column()
+  declare avatar: string | null
+
+  @computed({ serializeAs: 'avatar' })
+  get avatarUrl(): object {
+    return imageTypes.reduce(
+      (map, type) => {
+        map[type] = `${this.avatar}?s=${type}`
+        return map
+      },
+      {} as Record<string, string>
+    )
+  }
+
+  @column()
+  declare role: number
+
+  @column()
+  declare customAbilities: string[] | null
 
   @column({ serializeAs: null })
   declare password: string | null
@@ -52,4 +77,11 @@ export default class User extends compose(BaseModel, AuthFinder) {
     type: 'api_token',
     tokenSecretLength: 60,
   })
+
+  @beforeCreate()
+  public static ensurePublicId(model: model_1.ModelObject) {
+    if (!model.publicId) {
+      model.publicId = nanoid()
+    }
+  }
 }

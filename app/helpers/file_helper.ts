@@ -6,7 +6,7 @@ import env from '#start/env'
 import axios from 'axios'
 import { PassThrough, Readable } from 'node:stream'
 import app from '@adonisjs/core/services/app'
-import { nanoid } from '#config/app'
+import { cloudflareClient, imageTypes, nanoid } from '#config/app'
 import logger from '@adonisjs/core/services/logger'
 
 const MAX_FILE_SIZE = 3 * 1024 * 1024 // 3MB
@@ -20,13 +20,17 @@ export class FileHelper {
    * @param file - The file as a MultipartFile or Buffer.
    * @param subDirectory - One of: 'covers', 'contributors', or 'users'.
    * @param prefix - A prefix for the file name.
+   * @param useRandomName
+   * @param previousUrl
    */
   public static async saveFile(
     file: MultipartFile | string,
     subDirectory: 'covers' | 'contributors' | 'users',
-    prefix: string
+    prefix: string,
+    useRandomName: boolean = true,
+    previousUrl?: string | null | undefined
   ): Promise<string | undefined> {
-    const fileName = `${prefix}-${nanoid(6)}`
+    const fileName = useRandomName ? `${prefix}-${nanoid(6)}` : prefix
     console.log(fileName)
     const ctx = HttpContext.get()
 
@@ -85,6 +89,7 @@ export class FileHelper {
         const fileBuffer = await FileHelper.downloadFile(
           `https://${env.get('CDN_IMAGE_HOST')}/${completeFileName}?class=p`
         )
+        if (previousUrl) await FileHelper.deleteOldFile(previousUrl)
         await FileHelper.upload(fileBuffer, `${subDirectory}/${fileName}.webp`)
       } else {
         const uploadPath = app.makePath('storage/uploads')
@@ -105,12 +110,13 @@ export class FileHelper {
             'CF-Access-Client-Secret': env.get('CDN_IMAGE_SECRET'),
           }
         )
+        if (previousUrl) await FileHelper.deleteOldFile(previousUrl)
         await FileHelper.upload(fileBuffer, `${subDirectory}/${fileName}.webp`)
       }
 
       return `${env.get('CDN_SERVE_HOST')}/${subDirectory}/${fileName}.webp`
     } catch (error) {
-      logger.error('Error uploading file:', error)
+      logger.error(error)
       throw error
     } finally {
       try {
@@ -201,5 +207,41 @@ export class FileHelper {
     return new Promise((resolve, reject) => {
       fs.unlink(filePath, (err) => (err ? reject(err) : resolve(true)))
     })
+  }
+
+  private static async deleteOldFile(previousUrl: string) {
+    previousUrl = previousUrl.split('?')[0]
+    const urlEncoded = encodeURIComponent(previousUrl) + '%2A'
+
+    const path = new URL(previousUrl).pathname
+
+    try {
+      await FileHelper.deleteRemoteFile(path)
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        return
+      } else {
+        throw new Error(error)
+      }
+    }
+
+    try {
+      void cloudflareClient.cache.purge({
+        zone_id: env.get('CF_ZONE'),
+        files: [previousUrl, ...imageTypes.map((type) => `${previousUrl}?class=${type}`)],
+      })
+
+      void axios.request({
+        params: {
+          url: urlEncoded,
+          async: true,
+        },
+        url: `https://api.bunny.net/purge`,
+        method: 'POST',
+        headers: {
+          AccessKey: env.get('BUNNY_KEY'),
+        },
+      })
+    } catch (_) {}
   }
 }

@@ -5,6 +5,7 @@ import { defineConfig } from '@adonisjs/core/http'
 import { customAlphabet } from 'nanoid'
 import vine from '@vinejs/vine'
 import { isLanguageRule } from '#start/rules/language'
+import Cloudflare from 'cloudflare'
 
 /**
  * The app key is used for encrypting cookies, generating signed URLs,
@@ -41,6 +42,12 @@ export const http = defineConfig({
     sameSite: 'lax',
   },
 })
+
+export const cloudflareClient = new Cloudflare({
+  apiToken: env.get('CF_AUTH'),
+})
+
+export const imageTypes: string[] = ['thumb', 'small', 'medium', 'large']
 
 /**
  * The configuration for nanoId

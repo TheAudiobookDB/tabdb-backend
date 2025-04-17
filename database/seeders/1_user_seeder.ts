@@ -14,6 +14,8 @@ export default class extends BaseSeeder {
         publicId,
         fullName,
         email,
+        role: 99,
+        username: 'system',
       }
     )
   }

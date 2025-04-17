@@ -6,6 +6,7 @@ import User from '#models/user'
 import { LogState } from '../enum/log_enum.js'
 import Log from '#models/log'
 import { updateUserValidator } from '#validators/user_validator'
+import { FileHelper } from '../helpers/file_helper.js'
 
 export default class UsersController {
   /**
@@ -40,7 +41,11 @@ export default class UsersController {
    */
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
-    return await User.query().where('publicId', payload.id).firstOrFail()
+    return (await User.query().where('publicId', payload.id).firstOrFail()).serialize({
+      fields: {
+        pick: ['id', 'username', 'avatar', 'role'],
+      },
+    })
   }
 
   /**
@@ -85,8 +90,14 @@ export default class UsersController {
    *
    * @responseBody 200 - <User>
    */
-  async update({ auth, request }: HttpContext) {
+  async update({ auth, request, response }: HttpContext) {
     const user = await auth.authenticate()
+    if (user.updatedAt && user.updatedAt.diffNow().as('hours') >= -1) {
+      return response.status(429).send({
+        message: 'You can only update your profile once every 1 hour.',
+      })
+    }
+
     const payload = await request.validateUsing(updateUserValidator)
 
     if (payload.email) {
@@ -95,9 +106,32 @@ export default class UsersController {
     if (payload.fullName) {
       user.fullName = payload.fullName
     }
+    if (payload.username) {
+      user.username = payload.username
+    }
+    if (payload.avatar) {
+      const filePath = await FileHelper.saveFile(
+        payload.avatar,
+        'users',
+        user.publicId,
+        true,
+        user.avatar
+      )
+      if (filePath) {
+        user.avatar = filePath
+      } else {
+        return response.status(422).send({
+          message: 'File upload failed',
+        })
+      }
+    }
 
     await user.save()
 
-    return user
+    return user.serialize({
+      fields: {
+        pick: ['id', 'username', 'avatar', 'role'],
+      },
+    })
   }
 }

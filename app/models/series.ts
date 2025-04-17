@@ -10,8 +10,10 @@ import { Infer } from '@vinejs/vine/types'
 import { seriesValidator } from '#validators/provider_validator'
 import { ModelHelper } from '../helpers/model_helper.js'
 import { LogExtension } from '../extensions/log_extension.js'
+import { ImageExtension } from '../extensions/image_extension.js'
+import { compose } from '@adonisjs/core/helpers'
 
-export default class Series extends LogExtension {
+export default class Series extends compose(LogExtension, ImageExtension) {
   @column({ isPrimary: true, serializeAs: null })
   declare id: number
 

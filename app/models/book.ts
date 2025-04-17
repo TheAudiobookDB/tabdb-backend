@@ -19,8 +19,10 @@ import { bookIndex } from '#config/meilisearch'
 import { SearchEngineHelper } from '../helpers/search_engine.js'
 import Publisher from '#models/publisher'
 import { LogExtension } from '../extensions/log_extension.js'
+import { ImageExtension } from '../extensions/image_extension.js'
+import { compose } from '@adonisjs/core/helpers'
 
-export default class Book extends LogExtension {
+export default class Book extends compose(LogExtension, ImageExtension) {
   @column({ isPrimary: true, serializeAs: null })
   declare id: number
 

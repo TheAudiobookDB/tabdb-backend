@@ -12,8 +12,10 @@ import { ModelHelper } from '../helpers/model_helper.js'
 import { ContributorType } from '../enum/contributor_enum.js'
 import { assert } from '@japa/assert'
 import { LogExtension } from '../extensions/log_extension.js'
+import { ImageExtension } from '../extensions/image_extension.js'
+import { compose } from '@adonisjs/core/helpers'
 
-export default class Contributor extends LogExtension {
+export default class Contributor extends compose(LogExtension, ImageExtension) {
   @column({ isPrimary: true, serializeAs: null })
   declare id: number
 

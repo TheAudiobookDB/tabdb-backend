@@ -29,7 +29,7 @@ export const audiMetaBookValidator = vine.compile(
       .array(
         vine.object({
           asin: asinValidation,
-          name: vine.string().minLength(3).maxLength(255),
+          name: vine.string().minLength(1).maxLength(255),
           position: vine.string().maxLength(255).optional(),
         })
       )
@@ -241,7 +241,7 @@ export const audiobookshelfValidator = vine.compile(
     genres: vine.array(vine.string().minLength(3).maxLength(255)).optional(),
     authors: vine.array(vine.string().minLength(3).maxLength(255)).optional(),
     narrators: vine.array(vine.string().minLength(3).maxLength(255)).optional(),
-    series: vine.array(vine.string().minLength(3).maxLength(255)).optional(),
+    series: vine.array(vine.string().minLength(1).maxLength(255)).optional(),
     chapters: vine
       .array(
         vine.object({
