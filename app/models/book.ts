@@ -242,6 +242,16 @@ export default class Book extends compose(LogExtension, ImageExtension) {
       .preloadOnce('group')
   })
 
+  static fullAll = scope((query: Builder) => {
+    query
+      .withScopes((s) => s.fullContributors())
+      .withScopes((s) => s.fullSeries())
+      .withScopes((s) => s.fullPublisher())
+      .preload('genres', (q) => q.where('enabled', true))
+      .preloadOnce('identifiers')
+      .preloadOnce('group')
+  })
+
   static minimalContributors = scope((query: Builder) => {
     query.preload('contributors', (q) =>
       q.pivotColumns(['role', 'type']).withScopes((s) => s.minimal())
@@ -259,7 +269,7 @@ export default class Book extends compose(LogExtension, ImageExtension) {
   })
 
   static fullSeries = scope((query: Builder) => {
-    query.preload('series', (q) => q.pivotColumns(['role']).withScopes((s) => s.full()))
+    query.preload('series', (q) => q.pivotColumns(['position']).withScopes((s) => s.full()))
   })
 
   static minimalPublisher = scope((query: Builder) => {

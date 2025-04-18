@@ -26,6 +26,7 @@ import { Infer } from '@vinejs/vine/types'
 import app from '@adonisjs/core/services/app'
 import { cuid } from '@adonisjs/core/helpers'
 import Publisher from '#models/publisher'
+import { BookDto } from '#dtos/book'
 
 export default class BooksController {
   /**
@@ -280,15 +281,11 @@ export default class BooksController {
   async get({ params }: HttpContext) {
     await getBookValidator.validate(params)
 
-    return await Book.query()
+    const book: Book = await Book.query()
       .where('public_id', params.id)
-      .preload('contributors', (q) => q.pivotColumns(['role', 'type']))
-      .preload('genres')
-      .preload('identifiers')
-      .preload('series', (q) => q.pivotColumns(['position']))
-      .preload('tracks')
-      .preload('group')
-      .preload('publisher')
+      .withScopes((s) => s.fullAll())
       .firstOrFail()
+
+    return new BookDto(book)
   }
 }

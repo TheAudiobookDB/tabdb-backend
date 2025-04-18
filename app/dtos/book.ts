@@ -1,23 +1,23 @@
 import { BaseModelDto } from '@adocasts.com/dto/base'
 import Book from '#models/book'
-import { ContributorBaseDto, ContributorFullDto } from '#dtos/contributor'
-import GenreDto from '#dtos/genre'
-import IdentifierDto from '#dtos/identifier'
-import SeriesDto from '#dtos/series'
-import TrackDto from '#dtos/track'
-import PublisherDto from '#dtos/publisher'
-import { BookGroupFullDto } from '#dtos/book_group'
+import { PublisherBaseDto, PublisherMinimalDto } from '#dtos/publisher'
+import { BookGroupBaseDto, BookGroupFullDto } from '#dtos/book_group'
+import { ContributorBaseDto, ContributorFullDto, ContributorMinimalDto } from '#dtos/contributor'
+import { GenreBaseDto, GenreMinimalDto } from '#dtos/genre'
+import { IdentifierBaseDto, IdentifierMinimalDto } from '#dtos/identifier'
+import { SeriesBaseDto, SeriesMinimalDto } from '#dtos/series'
+import { TrackBaseDto } from '#dtos/track'
 
 /**
  * Base class for common book fields.
  */
 export abstract class BookBaseDto<
-  TContributor = ContributorFullDto,
+  TContributor = ContributorBaseDto,
   TGroup = BookGroupFullDto,
-  TGenre = GenreDto,
-  TIdentifier = IdentifierDto,
-  TSeries = SeriesDto,
-  TPublisher = PublisherDto,
+  TGenre = GenreBaseDto,
+  TIdentifier = IdentifierBaseDto,
+  TSeries = SeriesBaseDto,
+  TPublisher = PublisherBaseDto,
 > extends BaseModelDto {
   declare id: string
   declare title: string
@@ -72,7 +72,7 @@ export abstract class BookBaseDto<
 export class BookDto extends BookBaseDto {
   declare summary: string | null
   declare description: string | null
-  declare tracks: TrackDto[]
+  declare tracks: TrackBaseDto[]
   declare createdAt: string
   declare updatedAt: string
 
@@ -84,7 +84,7 @@ export class BookDto extends BookBaseDto {
 
     this.summary = book.summary
     this.description = book.description
-    this.tracks = TrackDto.fromArray(book.tracks)
+    this.tracks = TrackBaseDto.fromArray(book.tracks)
     this.createdAt = book.createdAt.toISO()!
     this.updatedAt = book.updatedAt.toISO()!
   }
@@ -92,12 +92,30 @@ export class BookDto extends BookBaseDto {
 
 /**
  * DTO for search results that only require common book fields.
+ *   TContributor = ContributorFullDto,
+ *   TGroup = BookGroupFullDto,
+ *   TGenre = GenreDto,
+ *   TIdentifier = IdentifierDto,
+ *   TSeries = SeriesDto,
+ *   TPublisher = PublisherDto,
  */
-export class SearchBookDto extends BookBaseDto<ContributorBaseDto> {
+export class SearchBookDto extends BookBaseDto<
+  ContributorMinimalDto,
+  BookGroupBaseDto,
+  GenreMinimalDto,
+  IdentifierMinimalDto,
+  SeriesMinimalDto,
+  PublisherMinimalDto
+> {
   constructor(book?: Book) {
     super(book)
 
     if (!book) return
-    this.contributors = ContributorBaseDto.fromArray(book.contributors)
+    this.contributors = ContributorMinimalDto.fromArray(book.contributors)
+    this.genres = GenreMinimalDto.fromArray(book.genres)
+    this.identifiers = IdentifierMinimalDto.fromArray(book.identifiers)
+    this.series = SeriesMinimalDto.fromArray(book.series)
+    this.group = book.group && new BookGroupBaseDto(book.group)
+    this.publisher = book.publisher && new PublisherMinimalDto(book.publisher)
   }
 }

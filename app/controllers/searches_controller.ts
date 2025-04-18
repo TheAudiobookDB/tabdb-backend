@@ -11,6 +11,8 @@ import Contributor from '#models/contributor'
 import Series from '#models/series'
 import { SearchEngineHelper } from '../helpers/search_engine.js'
 import { SearchBookDto } from '#dtos/book'
+import { ContributorBaseDto } from '#dtos/contributor'
+import { SeriesBaseDto } from '#dtos/series'
 
 export default class SearchesController {
   /**
@@ -262,7 +264,7 @@ export default class SearchesController {
       )
       .paginate(1, limit)
 
-    const result = narratorResults.serialize({})
+    const result = ContributorBaseDto.fromPaginator(narratorResults)
 
     result.meta = SearchEngineHelper.buildPagination(page, contributors.totalHits, limit)
 
@@ -354,7 +356,7 @@ export default class SearchesController {
       )
       .paginate(1, limit)
 
-    const result = seriesResults.serialize({})
+    const result = SeriesBaseDto.fromPaginator(seriesResults)
 
     result.meta = SearchEngineHelper.buildPagination(page, series.totalHits, limit)
 
