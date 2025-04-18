@@ -19,7 +19,7 @@ export const emailLimiter = limiter.define('login_email', (ctx) => {
   const { email } = ctx.request.all()
 
   if (email !== undefined) {
-    return limiter.allowRequests(1).every('5 minutes').usingKey(`login_email_${email}`)
+    return limiter.allowRequests(2).every('5 minutes').usingKey(`login_email_${email}`)
   }
 
   return limiter.noLimit()
@@ -111,4 +111,12 @@ export const apiKeyLimiter = limiter.define('apiKey', (ctx) => {
   }
 
   return limiter.allowRequests(1).every('1 day').usingKey(`apiKey_${user.id}`)
+})
+
+export const oneTimeActionLimiter = limiter.define('oneTimeAction', (ctx) => {
+  return limiter
+    .allowRequests(25)
+    .every('24 hour')
+    .usingKey(`oneTimeAction_${ctx.request.ip()}`)
+    .blockFor('7 day')
 })

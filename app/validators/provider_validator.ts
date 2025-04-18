@@ -9,6 +9,11 @@ export const asinValidation = vine
   .regex(RegExp('^[0-9a-zA-Z]{10}$|^[0-9]{11,12}$'))
   .transform((value) => value.toUpperCase())
 
+export const imageValidation = vine.file({
+  size: '3mb',
+  extnames: ['jpg', 'jpeg', 'png', 'webp'],
+})
+
 export const audiMetaBookValidator = vine.compile(
   vine.object({
     asin: vine.string().minLength(10).maxLength(11),
@@ -175,8 +180,11 @@ export const contributorValidation = vine.object({
   id: nanoIdValidation.optional().requiredIfMissing('name'),
   name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
   description: vine.string().optional(),
-  image: vine.string().url().optional(),
+  image: imageValidation.optional(),
   role: vine.string().maxLength(255).optional(),
+  birthdate: vine.date().optional(),
+  country: vine.string().maxLength(2).minLength(2).optional(),
+  website: vine.string().url().optional(),
   type: vine
     .number()
     .parse((value, field: Pick<FieldContext, 'data' | 'parent' | 'meta'>) => {
@@ -211,7 +219,7 @@ export const seriesValidation = vine.object({
   id: nanoIdValidation.optional().requiredIfMissing('name'),
   name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
   description: vine.string().optional(),
-  image: vine.string().url().optional(),
+  image: imageValidation,
   position: vine.string().optional(),
   language: languageValidation.optional(),
   identifiers: vine.array(identifierValidation).maxLength(5).optional(),
@@ -277,8 +285,3 @@ export const getIdPaginationValidator = vine.compile(
     limit: limitValidation,
   })
 )
-
-export const imageValidation = vine.file({
-  size: '3mb',
-  extnames: ['jpg', 'jpeg', 'png', 'webp'],
-})

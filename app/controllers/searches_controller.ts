@@ -6,13 +6,22 @@ import {
   searchSeriesValidator,
 } from '#validators/search_validator'
 import Book from '#models/book'
-import { bookIndex, client, contributorIndex, genreIndex, seriesIndex } from '#config/meilisearch'
+import {
+  bookIndex,
+  client,
+  contributorIndex,
+  genreIndex,
+  publisherIndex,
+  seriesIndex,
+} from '#config/meilisearch'
 import Contributor from '#models/contributor'
 import Series from '#models/series'
 import { SearchEngineHelper } from '../helpers/search_engine.js'
 import { SearchBookDto } from '#dtos/book'
 import { ContributorBaseDto } from '#dtos/contributor'
 import { SeriesBaseDto } from '#dtos/series'
+import Publisher from '#models/publisher'
+import { PublisherMinimalDto } from '#dtos/publisher'
 
 export default class SearchesController {
   /**
@@ -361,5 +370,55 @@ export default class SearchesController {
     result.meta = SearchEngineHelper.buildPagination(page, series.totalHits, limit)
 
     return result
+  }
+
+  /**
+   * @publisher
+   * @operationId searchPublisher
+   * @summary Search for a publisher
+   * @description Search for a publisher by name and return a paginated list.
+   *
+   * @paramQuery name - The name of the series to search for. - @type(string)
+   *
+   * @paramUse(pagination)
+   * @paramQuery threshold - The threshold for the ranking score. - @type(number) @default(0.35)
+   *
+   * @responseHeader 200 - @use(rate)
+   * @responseHeader 200 - @use(requestId)
+   *
+   * @responseBody 200 - <Publisher[]>.exclude(books).paginated()
+   * @responseBody 422 - <ValidationInterface>
+   * @responseBody 429 - <TooManyRequests>
+   */
+  async publisher({ request }: HttpContext) {
+    const payload = await searchSeriesValidator.validate(request.all())
+    const page = payload.page ?? 1
+    const limit = payload.limit ?? 10
+
+    const publishers = await publisherIndex.search(payload.name, {
+      attributesToSearchOn: ['name'],
+      hitsPerPage: limit,
+      page: page,
+      showRankingScore: true,
+      rankingScoreThreshold: payload.threshold || 0.35,
+    })
+
+    const publisherIds = publishers.hits.map((publisher) => publisher.id)
+
+    if (!publishers || !publishers.hits || publishers.hits.length <= 0) {
+      return { message: 'Publisher not found' }
+    }
+
+    const publisherResults = await Publisher.query()
+      .whereIn('id', publisherIds)
+      .orderByRaw(
+        `CASE id ${publisherIds.map((id, index) => `WHEN ${id} THEN ${index}`).join(' ')} END`
+      )
+      .paginate(1, limit)
+
+    return {
+      hits: PublisherMinimalDto.fromPaginator(publisherResults),
+      meta: SearchEngineHelper.buildPagination(page, publishers.totalHits, limit),
+    }
   }
 }

@@ -12,6 +12,7 @@ import {
   apiKeyLimiter,
   emailLimiter,
   loginLimiter,
+  oneTimeActionLimiter,
   r1Limiter,
   r2Limiter,
   r3Limiter,
@@ -56,6 +57,10 @@ router.post('/auth/login/:email', [AuthController, 'create']).as('/auth/login').
 router.post('/auth/login', [AuthController, 'store']).use(loginLimiter).use(emailLimiter)
 router.post('/auth/logout', [AuthController, 'logout']).use(middleware.auth())
 router.post('/auth/apiKey', [AuthController, 'apiKey']).use(middleware.auth()).use(apiKeyLimiter)
+router
+  .get('/auth/checkUsername/:username', [AuthController, 'checkFreeUsername'])
+  .use(middleware.auth())
+  .use(oneTimeActionLimiter)
 
 /**
  * User
@@ -141,6 +146,10 @@ router
   .use(r2Limiter)
 router
   .get('/search/series', [SearchesController, 'series'])
+  .use(middleware.relaxAuth())
+  .use(r2Limiter)
+router
+  .get('/search/publisher', [SearchesController, 'publisher'])
   .use(middleware.relaxAuth())
   .use(r2Limiter)
 

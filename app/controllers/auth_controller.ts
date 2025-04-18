@@ -1,5 +1,5 @@
 import { HttpContext } from '@adonisjs/core/http'
-import { storeLoginValidator } from '#validators/auth_validator'
+import { storeLoginValidator, usernameValidator } from '#validators/auth_validator'
 import router from '@adonisjs/core/services/router'
 import User from '#models/user'
 import mail from '@adonisjs/mail/services/main'
@@ -20,10 +20,17 @@ export default class AuthController {
    * @responseBody 422 - <ValidationInterface>
    * @responseBody 429 - <TooManyRequests>
    */
-  async store({ request }: HttpContext) {
+  async store({ request, response }: HttpContext) {
     await storeLoginValidator.validate(request.all())
 
     const { email, username } = request.all()
+
+    const user = await User.findBy('email', email)
+    if (!user && !username) {
+      return response.notFound({
+        message: 'You must provide a username to create a new user',
+      })
+    }
 
     const url = router
       .builder()
@@ -61,6 +68,13 @@ export default class AuthController {
       const { uuid, username } = request.qs()
 
       let user = await User.findBy('email', email)
+
+      let existingUser = await User.findBy('username', username)
+      if (existingUser) {
+        return response.badRequest({
+          message: 'Username is already taken',
+        })
+      }
 
       if (!user) {
         if (!username) {
@@ -131,6 +145,31 @@ export default class AuthController {
     return await User.apiTokens.create(user, user.currentAccessToken.abilities, {
       name: randomUUID(),
       expiresIn: '1y',
+    })
+  }
+
+  /**
+   * @checkFreeUsername
+   * @operationId checkFreeUsername
+   * @summary Checks if the username is free
+   * @description Checks if the username is free
+   *
+   * @responseHeader 200 - @use(rate)
+   * @responseHeader 200 - @use(requestId)
+   */
+  async checkFreeUsername({ request, response }: HttpContext) {
+    await usernameValidator.validate(request.params())
+    const username = request.param('username')
+
+    const user = await User.findBy('username', username)
+    if (user) {
+      return response.badRequest({
+        message: 'Username is already taken',
+      })
+    }
+
+    return response.ok({
+      message: 'Username is available',
     })
   }
 }

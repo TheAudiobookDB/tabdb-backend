@@ -3,6 +3,7 @@ import {
   contributorValidation,
   genreValidation,
   identifierValidation,
+  imageValidation,
   publisherValidation,
   seriesValidation,
   trackValidation,
@@ -29,12 +30,7 @@ export const createBookValidator = vine.compile(
     isExplicit: vine.boolean().optional(),
     isAbridged: vine.boolean().optional(),
     groupId: vine.number().positive().withoutDecimals().optional(),
-    image: vine
-      .file({
-        size: '1mb',
-        extnames: ['jpg', 'jpeg', 'png', 'webp'],
-      })
-      .optional(),
+    image: imageValidation.optional(),
     type: typeValidation.optional(),
     genres: vine.array(genreValidation).maxLength(30).optional(),
     contributors: vine.array(contributorValidation).maxLength(50).optional(),
