@@ -74,7 +74,7 @@ router.patch('/user', [UsersController, 'update']).use(middleware.auth()).use(r1
  */
 router.get('/book/:id', [BooksController, 'get']).use(middleware.relaxAuth()).use(r1Limiter)
 router
-  .get('/book/tracks/:id', [TracksController, 'getTracksForBook'])
+  .get('/book/:id/tracks', [TracksController, 'getTracksForBook'])
   .use(middleware.relaxAuth())
   .use(r2Limiter)
 router.post('/books', [BooksController, 'create']).use(middleware.relaxAuth()).use(r3Limiter)
@@ -88,7 +88,7 @@ router
   .use(middleware.relaxAuth())
   .use(r3Limiter)
 router
-  .get('/contributor/books/:id', [ContributorsController, 'books'])
+  .get('/contributor/:id/books', [ContributorsController, 'books'])
   .use(middleware.relaxAuth())
   .use(r2Limiter)
 
@@ -97,7 +97,7 @@ router
  */
 router.get('/series/:id', [SeriesController, 'get']).use(middleware.relaxAuth()).use(r3Limiter)
 router
-  .get('/series/books/:id', [SeriesController, 'books'])
+  .get('/series/:id/books', [SeriesController, 'books'])
   .use(middleware.relaxAuth())
   .use(r2Limiter)
 
@@ -106,7 +106,7 @@ router
  */
 router.get('/genre/:id', [GenresController, 'get']).use(middleware.relaxAuth()).use(r3Limiter)
 router
-  .get('/genre/books/:id', [GenresController, 'books'])
+  .get('/genre/:id/books', [GenresController, 'books'])
   .use(middleware.relaxAuth())
   .use(r2Limiter)
 
@@ -123,7 +123,7 @@ router
   .use(middleware.relaxAuth())
   .use(r3Limiter)
 router
-  .get('/publisher/books/:id', [PublishersController, 'books'])
+  .get('/publisher/:id/books', [PublishersController, 'books'])
   .use(middleware.relaxAuth())
   .use(r2Limiter)
 

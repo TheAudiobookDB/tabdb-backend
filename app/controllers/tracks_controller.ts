@@ -3,6 +3,7 @@
 import { HttpContext } from '@adonisjs/core/http'
 import { getIdPaginationValidator, getIdValidator } from '#validators/provider_validator'
 import Track from '#models/track'
+import { TrackBaseDto, TrackFullDto } from '#dtos/track'
 
 export default class TracksController {
   /**
@@ -19,7 +20,7 @@ export default class TracksController {
    */
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
-    return await Track.query().where('publicId', payload.id).firstOrFail()
+    return new TrackFullDto(await Track.query().where('publicId', payload.id).firstOrFail())
   }
 
   /**
@@ -38,9 +39,10 @@ export default class TracksController {
    */
   async getTracksForBook({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
-    return await Track.query()
-      .where('bookId', payload.id)
-      .preload('book')
-      .paginate(payload.page, payload.limit)
+    return TrackBaseDto.fromPaginator(
+      await Track.query()
+        .preload('book', (q) => q.where('publicId', payload.id))
+        .paginate(payload.page, payload.limit)
+    )
   }
 }

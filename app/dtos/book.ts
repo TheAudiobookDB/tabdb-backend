@@ -22,7 +22,7 @@ export abstract class BookBaseDto<
   declare id: string
   declare title: string
   declare subtitle: string | null
-  declare image: string | null
+  declare image: object | null
   declare language: string | null
   declare pages: number | null
   declare duration: number | null
@@ -46,7 +46,7 @@ export abstract class BookBaseDto<
     this.id = book.publicId
     this.title = book.title
     this.subtitle = book.subtitle
-    this.image = book.image
+    this.image = book.imageUrl
     this.language = book.language
     this.pages = book.pages
     this.duration = book.duration
@@ -81,6 +81,11 @@ export class BookDto extends BookBaseDto {
     if (!book) return
 
     this.contributors = ContributorFullDto.fromArray(book.contributors)
+    this.genres = GenreBaseDto.fromArray(book.genres)
+    this.identifiers = IdentifierBaseDto.fromArray(book.identifiers)
+    this.series = SeriesBaseDto.fromArray(book.series)
+    this.group = book.group && new BookGroupFullDto(book.group)
+    this.publisher = book.publisher && new PublisherBaseDto(book.publisher)
 
     this.summary = book.summary
     this.description = book.description

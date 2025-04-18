@@ -4,6 +4,8 @@ import { HttpContext } from '@adonisjs/core/http'
 import { getIdPaginationValidator, getIdValidator } from '#validators/provider_validator'
 import Genre from '#models/genre'
 import Book from '#models/book'
+import { GenreFullDto } from '#dtos/genre'
+import { BookDto } from '#dtos/book'
 
 export default class GenresController {
   /**
@@ -22,7 +24,7 @@ export default class GenresController {
    */
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
-    return await Genre.query().where('publicId', payload.id).firstOrFail()
+    return new GenreFullDto(await Genre.query().where('publicId', payload.id).firstOrFail())
   }
 
   /**
@@ -41,17 +43,19 @@ export default class GenresController {
    */
   async books({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
-    return Book.query()
-      .preload('genres')
-      .preload('contributors', (q) => q.pivotColumns(['role', 'type']))
-      .preload('series')
-      .preload('identifiers')
-      .preload('genres')
-      .preload('tracks')
-      .preload('publisher')
-      .whereHas('genres', (q) => {
-        q.where('public_id', payload.id)
-      })
-      .paginate(payload.page, payload.limit)
+    return BookDto.fromPaginator(
+      await Book.query()
+        .preload('genres')
+        .preload('contributors', (q) => q.pivotColumns(['role', 'type']))
+        .preload('series')
+        .preload('identifiers')
+        .preload('genres')
+        .preload('tracks')
+        .preload('publisher')
+        .whereHas('genres', (q) => {
+          q.where('public_id', payload.id)
+        })
+        .paginate(payload.page, payload.limit)
+    )
   }
 }

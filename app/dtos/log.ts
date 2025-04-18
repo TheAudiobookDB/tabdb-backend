@@ -1,7 +1,6 @@
 import { BaseModelDto } from '@adocasts.com/dto/base'
 import Log from '#models/log'
-import { UserMinimalDto } from '#dtos/user'
-import { UserFullDto } from '#dtos/user'
+import { UserPublicDto } from '#dtos/user'
 import { LogAction, LogModel, LogState } from '../enum/log_enum.js'
 
 export class LogMinimalDto extends BaseModelDto {
@@ -24,11 +23,10 @@ export class LogBaseDto extends BaseModelDto {
   declare model: LogModel
   declare modelId: string | undefined
   declare data: object | object[] | undefined
-  declare userId: number
   declare state: LogState | undefined
-  declare user: UserMinimalDto | null
+  declare user: UserPublicDto | null
 
-  constructor(log?: Log, userDto: { new (user?: any): UserMinimalDto } = UserMinimalDto) {
+  constructor(log?: Log, userDto: { new (user?: any): UserPublicDto } = UserPublicDto) {
     super()
     if (!log) return
     this.id = log.publicId
@@ -36,7 +34,6 @@ export class LogBaseDto extends BaseModelDto {
     this.model = log.model
     this.modelId = log.modelId
     this.data = log.data
-    this.userId = log.userId
     this.state = log.state
     this.user = log.user ? new userDto(log.user) : null
   }
@@ -46,7 +43,7 @@ export class LogFullDto extends LogBaseDto {
   declare createdAt: string
   declare updatedAt: string
 
-  constructor(log?: Log, userDto: { new (user?: any): UserFullDto } = UserFullDto) {
+  constructor(log?: Log, userDto: { new (user?: any): UserPublicDto } = UserPublicDto) {
     super(log, userDto)
     if (!log) return
     this.createdAt = log.createdAt.toISO()!

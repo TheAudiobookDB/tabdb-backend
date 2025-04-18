@@ -34,7 +34,10 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare avatar: string | null
 
   @computed({ serializeAs: 'avatar' })
-  get avatarUrl(): object {
+  get avatarUrl(): object | null {
+    if (!this.avatar) {
+      return null
+    }
     return imageTypes.reduce(
       (map, type) => {
         map[type] = `${this.avatar}?s=${type}`

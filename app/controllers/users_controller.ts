@@ -7,6 +7,8 @@ import { LogState } from '../enum/log_enum.js'
 import Log from '#models/log'
 import { updateUserValidator } from '#validators/user_validator'
 import { FileHelper } from '../helpers/file_helper.js'
+import { UserBaseDto, UserFullDto, UserPublicDto } from '#dtos/user'
+import { LogBaseDto } from '#dtos/log'
 
 export default class UsersController {
   /**
@@ -22,7 +24,7 @@ export default class UsersController {
    * @responseBody 429 - <TooManyRequests>
    */
   async getMe({ auth }: HttpContext) {
-    return await auth.authenticate()
+    return new UserBaseDto(await auth.authenticate())
   }
 
   /**
@@ -41,11 +43,7 @@ export default class UsersController {
    */
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
-    return (await User.query().where('publicId', payload.id).firstOrFail()).serialize({
-      fields: {
-        pick: ['id', 'username', 'avatar', 'role'],
-      },
-    })
+    return new UserPublicDto(await User.query().where('publicId', payload.id).firstOrFail())
   }
 
   /**
@@ -72,12 +70,14 @@ export default class UsersController {
 
     const fetchUser = await User.query().where('publicId', payload.id).firstOrFail()
 
-    return Log.query()
-      .where('userId', fetchUser.id)
-      .where((q) => {
-        if (!privileged) q.where('state', LogState.APPROVED)
-      })
-      .paginate(payload.page, payload.limit)
+    return LogBaseDto.fromPaginator(
+      await Log.query()
+        .where('userId', fetchUser.id)
+        .where((q) => {
+          if (!privileged) q.where('state', LogState.APPROVED)
+        })
+        .paginate(payload.page, payload.limit)
+    )
   }
 
   /**
@@ -128,10 +128,6 @@ export default class UsersController {
 
     await user.save()
 
-    return user.serialize({
-      fields: {
-        pick: ['id', 'username', 'avatar', 'role'],
-      },
-    })
+    return new UserFullDto(user)
   }
 }

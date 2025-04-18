@@ -117,6 +117,8 @@ export default class BooksController {
     await BooksController.addSeriesToBook(book, payload.series)
     await BooksController.addPublisherToBook(book, payload.publisher)
 
+    const bookDto = new BookDto(book)
+
     if (result.hits.length > 0) {
       const url = router
         .builder()
@@ -127,13 +129,13 @@ export default class BooksController {
 
       return {
         message: 'Book created, but a duplicate was found.',
-        book,
+        book: bookDto,
         confirmation: url,
         available: false,
       }
     }
 
-    return { book, message: 'Book created successfully.', available: false }
+    return { book: bookDto, message: 'Book created successfully.', available: false }
   }
 
   static async addGenreToBook(book: Book, payloadObject?: Infer<typeof genreValidator>[]) {
@@ -258,9 +260,9 @@ export default class BooksController {
    * @responseBody 429 - <TooManyRequests>
    */
   async abs({ request }: HttpContext) {
-    const absBook = Audiobookshelf.fetchBook(request.body())
+    const absBook = await Audiobookshelf.fetchBook(request.body())
 
-    return absBook
+    return new BookDto(absBook)
   }
 
   /**

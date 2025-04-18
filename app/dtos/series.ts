@@ -6,25 +6,29 @@ import { BookDto } from '#dtos/book'
 export class SeriesMinimalDto extends BaseModelDto {
   declare id: string
   declare name: string
+  declare position: string | null
 
   constructor(series?: Series) {
     super()
     if (!series) return
     this.id = series.publicId
     this.name = series.name
+    if (series.$extras.pivot_position) {
+      this.position = series.$extras.pivot_position
+    }
   }
 }
 
 export class SeriesBaseDto extends SeriesMinimalDto {
   declare description: string | null
-  declare image: string | null
+  declare image: object | null
   declare language: string | null
 
   constructor(series?: Series) {
     super(series)
     if (!series) return
     this.description = series.description
-    this.image = series.image
+    this.image = series.imageUrl
     this.language = series.language
   }
 }

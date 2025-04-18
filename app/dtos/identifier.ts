@@ -5,22 +5,21 @@ import { BookDto } from '#dtos/book'
 export class IdentifierMinimalDto extends BaseModelDto {
   declare id: string
   declare value: string
+  declare type: 'audible:asin' | 'amazon:asin' | 'isbn10' | 'isbn13' | 'ean'
 
   constructor(identifier?: Identifier) {
     super()
     if (!identifier) return
     this.id = identifier.publicId
     this.value = identifier.value
+    this.type = identifier.type
   }
 }
 
+// Filler class
 export class IdentifierBaseDto extends IdentifierMinimalDto {
-  declare type: 'audible:asin' | 'amazon:asin' | 'isbn10' | 'isbn13' | 'ean'
-
   constructor(identifier?: Identifier) {
     super(identifier)
-    if (!identifier) return
-    this.type = identifier.type
   }
 }
 

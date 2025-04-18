@@ -57,7 +57,7 @@ export const nanoid = customAlphabet('0123456789abcdefghijklmnopqrstuvwxyz', 16)
 export const nanoIdValidation = vine
   .string()
   .regex(RegExp('^[a-zA-Z0-9_-]{16}$'))
-  .transform((value) => value.toUpperCase())
+  .transform((value) => value.toLowerCase())
 
 export const languageValidation = vine.string().use(isLanguageRule({}))
 
