@@ -7,6 +7,7 @@ import { GenreBaseDto, GenreMinimalDto } from '#dtos/genre'
 import { IdentifierBaseDto, IdentifierMinimalDto } from '#dtos/identifier'
 import { SeriesBaseDto, SeriesMinimalDto } from '#dtos/series'
 import { TrackBaseDto } from '#dtos/track'
+import { ImageBaseDto } from '#dtos/image'
 
 /**
  * Base class for common book fields.
@@ -46,7 +47,6 @@ export abstract class BookBaseDto<
     this.id = book.publicId
     this.title = book.title
     this.subtitle = book.subtitle
-    this.image = book.imageUrl
     this.language = book.language
     this.pages = book.pages
     this.duration = book.duration
@@ -62,6 +62,7 @@ export abstract class BookBaseDto<
     this.identifiers = [] as unknown as TIdentifier[]
     this.group = book.group && ([] as unknown as TGroup)
     this.publisher = book.publisher && ([] as unknown as TPublisher)
+    this.image = book.imageUrl
   }
 }
 
@@ -75,18 +76,19 @@ export class BookDto extends BookBaseDto {
   declare tracks: TrackBaseDto[]
   declare createdAt: string
   declare updatedAt: string
+  declare images: ImageBaseDto[]
 
   constructor(book?: Book) {
     super(book)
     if (!book) return
 
+    if (book.images) this.images = ImageBaseDto.fromArray(book.images)
     this.contributors = ContributorFullDto.fromArray(book.contributors)
     this.genres = GenreBaseDto.fromArray(book.genres)
     this.identifiers = IdentifierBaseDto.fromArray(book.identifiers)
     this.series = SeriesBaseDto.fromArray(book.series)
     this.group = book.group && new BookGroupFullDto(book.group)
     this.publisher = book.publisher && new PublisherBaseDto(book.publisher)
-
     this.summary = book.summary
     this.description = book.description
     this.tracks = TrackBaseDto.fromArray(book.tracks)

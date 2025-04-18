@@ -18,13 +18,8 @@ components:
     BearerAuth:
       type: "http"
       scheme: "bearer"
-    BasicAuth:
-      type: "http"
-      scheme: "basic"
-    ApiKeyAuth:
-      type: "apiKey"
-      in: "header"
-      name: "X-API-Key"
+    BasicAuth: {}
+    ApiKeyAuth: {}
   schemas:
     Any:
       description: "Any JSON object not defined as schema"
@@ -128,7 +123,7 @@ components:
         retryAfter:
           type: "number"
           nullable: false
-          example: 413
+          example: 864
       required:
         - "message"
         - "retryAfter"
@@ -179,78 +174,37 @@ components:
         - "message"
         - "id"
       description: "RequestResponse (Interface)"
-    Author:
-      type: "object"
-      required: []
-      properties:
-        public_id:
-          type: "string"
-          example: "Lorem Ipsum"
-        name:
-          type: "string"
-          example: "John Doe"
-        description:
-          type: "string"
-          example: "Lorem ipsum dolor sit amet"
-        image:
-          type: "string"
-          example: "Lorem Ipsum"
-        books:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/Book"
-            example: null
-        identifiers:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/Identifier"
-            example: null
-        created_at:
-          type: "string"
-          example: "2021-03-23T16:13:08.489+01:00"
-          format: "date-time"
-        updated_at:
-          type: "string"
-          example: "2021-03-23T16:13:08.489+01:00"
-          format: "date-time"
-      description: "Author (Model)"
     Book:
       type: "object"
       required: []
       properties:
-        public_id:
-          type: "string"
-          example: "Lorem Ipsum"
         title:
           type: "string"
-          example: "Lorem Ipsum"
+          example: "Harry Potter and the Philosopher's Stone"
         subtitle:
           type: "string"
-          example: "Lorem Ipsum"
+          example: "Harry Potter 1"
         summary:
           type: "string"
-          example: "Lorem Ipsum"
+          example: "Short summary of the book"
         description:
           type: "string"
-          example: "Lorem ipsum dolor sit amet"
-        publisher:
-          type: "string"
-          example: "Lorem Ipsum"
+          example: "Longer more detailed description of the book"
         image:
           type: "string"
-          example: "Lorem Ipsum"
+          example: "https://example.com/image.jpg"
         language:
           type: "string"
-          example: "Lorem Ipsum"
+          example: "English"
         copyright:
           type: "string"
           example: "Lorem Ipsum"
         pages:
           type: "number"
-          example: 871
+          example: "123"
         duration:
           type: "number"
-          example: 285
+          example: 831
         released_at:
           type: "string"
           example: "2021-03-23T16:13:08.489+01:00"
@@ -263,7 +217,7 @@ components:
           example: true
         group_id:
           type: "number"
-          example: 654
+          example: 806
         type:
           type: "string"
           example: "book"
@@ -272,15 +226,10 @@ components:
             - "audiobook"
             - "podcast"
             - "e-book"
-        authors:
+        contributors:
           type: "array"
           items:
-            $ref: "#/components/schemas/Author"
-            example: null
-        narrators:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/Narrator"
+            $ref: "#/components/schemas/Contributor"
             example: null
         genres:
           type: "array"
@@ -305,6 +254,14 @@ components:
         group:
           $ref: "#/components/schemas/BookGroup"
           example: null
+        public_publisher:
+          $ref: "#/components/schemas/Publisher"
+          example: null
+        images:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/Image"
+            example: null
         created_at:
           type: "string"
           example: "2021-03-23T16:13:08.489+01:00"
@@ -338,6 +295,60 @@ components:
           example: "2021-03-23T16:13:08.489+01:00"
           format: "date-time"
       description: "BookGroup (Model)"
+    Contributor:
+      type: "object"
+      required: []
+      properties:
+        public_id:
+          type: "string"
+          example: "Lorem Ipsum"
+        name:
+          type: "string"
+          example: "'J.K. Rowling'"
+        description:
+          type: "string"
+          example: "'British author, best known for the Harry Potter series'"
+        image:
+          type: "string"
+          example: "'https://example.com/contributor.jpg'"
+        books:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/Book"
+            example: null
+        identifiers:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/Identifier"
+            example: null
+        created_at:
+          type: "string"
+          example: "'2023-01-01T00:00:00Z'"
+          format: "date-time"
+        updated_at:
+          type: "string"
+          example: "'2023-01-01T00:00:00Z'"
+          format: "date-time"
+        role:
+          type: "string"
+          example: "Harry Potter"
+          maxLength: 255
+        type:
+          $ref: "#/components/schemas/1"
+          example: "1"
+          type: "number"
+        type_string:
+          type: "string"
+          example: "'author'"
+          enum:
+            - "'author'"
+            - "'narrator'"
+            - "'editor'"
+            - "'translator'"
+            - "'adapter'"
+            - "'reader'"
+            - "'performer'"
+      description: "Contributor (Model)"
     Genre:
       type: "object"
       required: []
@@ -392,6 +403,31 @@ components:
           example: "2021-03-23T16:13:08.489+01:00"
           format: "date-time"
       description: "Identifier (Model)"
+    Image:
+      type: "object"
+      required: []
+      properties:
+        id:
+          type: "number"
+          example: 330
+        image:
+          type: "string"
+          example: "Lorem Ipsum"
+        book_id:
+          type: "number"
+          example: 852
+        book:
+          $ref: "#/components/schemas/Book"
+          example: null
+        created_at:
+          type: "string"
+          example: "2021-03-23T16:13:08.489+01:00"
+          format: "date-time"
+        updated_at:
+          type: "string"
+          example: "2021-03-23T16:13:08.489+01:00"
+          format: "date-time"
+      description: "Image (Model)"
     Log:
       type: "object"
       required: []
@@ -413,7 +449,7 @@ components:
           example: null
         user_id:
           type: "number"
-          example: 712
+          example: 643
         state:
           $ref: "#/components/schemas/LogState"
           example: null
@@ -429,10 +465,13 @@ components:
           example: "2021-03-23T16:13:08.489+01:00"
           format: "date-time"
       description: "Log (Model)"
-    Narrator:
+    Publisher:
       type: "object"
       required: []
       properties:
+        id:
+          type: "number"
+          example: 346
         public_id:
           type: "string"
           example: "Lorem Ipsum"
@@ -442,19 +481,6 @@ components:
         description:
           type: "string"
           example: "Lorem ipsum dolor sit amet"
-        image:
-          type: "string"
-          example: "Lorem Ipsum"
-        books:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/Book"
-            example: null
-        identifiers:
-          type: "array"
-          items:
-            $ref: "#/components/schemas/Identifier"
-            example: null
         created_at:
           type: "string"
           example: "2021-03-23T16:13:08.489+01:00"
@@ -463,10 +489,12 @@ components:
           type: "string"
           example: "2021-03-23T16:13:08.489+01:00"
           format: "date-time"
-        role:
-          type: "string"
-          example: "Lorem Ipsum"
-      description: "Narrator (Model)"
+        books:
+          type: "array"
+          items:
+            $ref: "#/components/schemas/Book"
+            example: null
+      description: "Publisher (Model)"
     Series:
       type: "object"
       required: []
@@ -481,6 +509,9 @@ components:
           type: "string"
           example: "Lorem ipsum dolor sit amet"
         image:
+          type: "string"
+          example: "Lorem Ipsum"
+        language:
           type: "string"
           example: "Lorem Ipsum"
         identifiers:
@@ -503,7 +534,7 @@ components:
           format: "date-time"
         position:
           type: "number"
-          example: 844
+          example: 498
       description: "Series (Model)"
     Track:
       type: "object"
@@ -517,10 +548,10 @@ components:
           example: "John Doe"
         start:
           type: "number"
-          example: 867
+          example: 475
         end:
           type: "number"
-          example: 55
+          example: 742
         book:
           $ref: "#/components/schemas/Book"
           example: null
@@ -529,9 +560,9 @@ components:
       type: "object"
       required: []
       properties:
-        id:
-          type: "number"
-          example: 381
+        public_id:
+          type: "string"
+          example: "Lorem Ipsum"
         full_name:
           type: "string"
           example: "John Doe"
@@ -539,6 +570,20 @@ components:
           type: "string"
           example: "johndoe@example.com"
           format: "email"
+        username:
+          type: "string"
+          example: "Lorem Ipsum"
+        avatar:
+          type: "string"
+          example: "https://example.com/avatar.png"
+        role:
+          type: "number"
+          example: 564
+        custom_abilities:
+          type: "array"
+          items:
+            type: "string"
+            example: "Lorem Ipsum"
         logs:
           type: "array"
           items:
@@ -584,9 +629,20 @@ components:
           type: "string"
           example: "Lorem Ipsum"
         publisher:
-          type: "string"
-          example: "Lorem Ipsum"
-          maxLength: 1023
+          type: "object"
+          properties:
+            id:
+              type: "string"
+              example: "Lorem Ipsum"
+              pattern: "/^[a-zA-Z0-9_-]{16}$/"
+            name:
+              type: "string"
+              example: "Lorem Ipsum"
+              minLength: 3
+              maxLength: 255
+            description:
+              type: "string"
+              example: "Lorem Ipsum"
         language:
           type: "string"
           example: "Lorem Ipsum"
@@ -596,13 +652,13 @@ components:
           maxLength: 255
         pages:
           type: "number"
-          example: 653
+          example: 694
         duration:
           type: "number"
-          example: 591
+          example: 511
         releasedAt:
           type: "number"
-          example: 721
+          example: 253
         isExplicit:
           type: "boolean"
           example: true
@@ -611,13 +667,13 @@ components:
           example: true
         groupId:
           type: "number"
-          example: 535
+          example: 702
         image:
           type: "number"
-          example: 15
+          example: 558
         type:
           type: "number"
-          example: 168
+          example: 610
           choices:
             - "book"
             - "audiobook"
@@ -630,7 +686,7 @@ components:
             properties:
               id:
                 type: "number"
-                example: 406
+                example: 354
                 pattern: "/^[a-zA-Z0-9_-]{16}$/"
               name:
                 type: "number"
@@ -639,7 +695,7 @@ components:
                 maximum: 255
               type:
                 type: "number"
-                example: 648
+                example: 719
                 choices:
                   - "genre"
                   - "tag"
@@ -651,14 +707,14 @@ components:
               name:
                 type: "string"
                 example: "Lorem Ipsum"
-        authors:
+        contributors:
           type: "array"
           items:
             type: "object"
             properties:
               id:
                 type: "number"
-                example: 232
+                example: 596
                 pattern: "/^[a-zA-Z0-9_-]{16}$/"
               name:
                 type: "number"
@@ -667,60 +723,26 @@ components:
                 maximum: 255
               description:
                 type: "number"
-                example: 293
+                example: 775
               image:
                 type: "number"
-                example: 379
-              identifiers:
-                type: "array"
-                items:
-                  type: "number"
-                  example: 926
-                  maximum: 5
-          properties:
-            items:
-              id:
-                type: "string"
-                example: "Lorem Ipsum"
-              name:
-                type: "string"
-                example: "Lorem Ipsum"
-              description:
-                type: "string"
-                example: "Lorem Ipsum"
-              image:
-                type: "string"
-                example: "Lorem Ipsum"
-        narrators:
-          type: "array"
-          items:
-            type: "object"
-            properties:
-              id:
-                type: "number"
-                example: 778
-                pattern: "/^[a-zA-Z0-9_-]{16}$/"
-              name:
-                type: "number"
-                example: 3
-                minimum: 3
-                maximum: 255
-              description:
-                type: "number"
-                example: 705
-              image:
-                type: "number"
-                example: 759
+                example: 223
               role:
                 type: "number"
-                example: 181
+                example: 802
                 maximum: 255
+              type:
+                type: "number"
+                example: 1
+                minimum: 1
+                maximum: 99
+                required: true
               identifiers:
                 type: "array"
                 items:
                   type: "number"
-                  example: 743
-                  maximum: 5
+                  example: 532
+                  maximum: 10
           properties:
             items:
               id:
@@ -742,7 +764,7 @@ components:
           type: "array"
           items:
             type: "number"
-            example: 662
+            example: 79
             maximum: 5
         series:
           type: "array"
@@ -751,7 +773,7 @@ components:
             properties:
               id:
                 type: "number"
-                example: 419
+                example: 214
                 pattern: "/^[a-zA-Z0-9_-]{16}$/"
               name:
                 type: "number"
@@ -760,18 +782,21 @@ components:
                 maximum: 255
               description:
                 type: "number"
-                example: 412
+                example: 595
               image:
                 type: "number"
-                example: 612
+                example: 414
               position:
                 type: "number"
-                example: 230
+                example: 484
+              language:
+                type: "number"
+                example: 226
               identifiers:
                 type: "array"
                 items:
                   type: "number"
-                  example: 232
+                  example: 866
                   maximum: 5
           properties:
             items:
@@ -790,6 +815,9 @@ components:
               position:
                 type: "string"
                 example: "Lorem Ipsum"
+              language:
+                type: "string"
+                example: "Lorem Ipsum"
         tracks:
           type: "array"
           items:
@@ -797,7 +825,7 @@ components:
             properties:
               id:
                 type: "number"
-                example: 668
+                example: 559
                 pattern: "/^[a-zA-Z0-9_-]{16}$/"
               name:
                 type: "number"
@@ -806,10 +834,10 @@ components:
                 maximum: 255
               start:
                 type: "number"
-                example: 256
+                example: 697
               end:
                 type: "number"
-                example: 94
+                example: 338
           properties:
             items:
               id:
@@ -823,51 +851,49 @@ components:
         subtitle: "Lorem Ipsum"
         description: "Lorem Ipsum"
         summary: "Lorem Ipsum"
-        publisher: "Lorem Ipsum"
+        publisher:
+          id: "Lorem Ipsum"
+          name: "Lorem Ipsum"
+          description: "Lorem Ipsum"
         language: "Lorem Ipsum"
         copyright: "Lorem Ipsum"
-        pages: 653
-        duration: 591
-        releasedAt: 721
+        pages: 694
+        duration: 511
+        releasedAt: 253
         isExplicit: true
         isAbridged: true
-        groupId: 535
-        image: 15
-        type: 168
+        groupId: 702
+        image: 558
+        type: 610
         genres:
           - id: "Lorem Ipsum"
             name: "Lorem Ipsum"
-            type: 648
-        authors:
-          - id: "Lorem Ipsum"
-            name: "Lorem Ipsum"
-            description: "Lorem Ipsum"
-            image: "Lorem Ipsum"
-            identifiers:
-              - 926
-        narrators:
+            type: 719
+        contributors:
           - id: "Lorem Ipsum"
             name: "Lorem Ipsum"
             description: "Lorem Ipsum"
             image: "Lorem Ipsum"
             role: "Lorem Ipsum"
+            type: 1
             identifiers:
-              - 743
+              - 532
         identifiers:
-          - 662
+          - 79
         series:
           - id: "Lorem Ipsum"
             name: "Lorem Ipsum"
             description: "Lorem Ipsum"
             image: "Lorem Ipsum"
             position: "Lorem Ipsum"
+            language: "Lorem Ipsum"
             identifiers:
-              - 232
+              - 866
         tracks:
           - id: "Lorem Ipsum"
             name: "Lorem Ipsum"
-            start: 256
-            end: 94
+            start: 697
+            end: 338
       description: "createBookValidator (Validator)"
     getBookValidator:
       type: "object"
@@ -936,14 +962,14 @@ components:
           example: "Lorem Ipsum"
         bookFormat:
           type: "number"
-          example: 721
+          example: 614
           choices:
             - "abridged"
             - "unabridged"
             - "original_recording"
         lengthMinutes:
           type: "number"
-          example: 482
+          example: 254
         imageUrl:
           type: "string"
           example: "Lorem Ipsum"
@@ -972,18 +998,18 @@ components:
             properties:
               asin:
                 type: "number"
-                example: 581
+                example: 760
                 pattern: "/^[0-9a-zA-Z]{10}$|^[0-9]{11,12}$/"
                 required: true
               name:
                 type: "number"
-                example: 3
-                minimum: 3
+                example: 1
+                minimum: 1
                 maximum: 255
                 required: true
               position:
                 type: "number"
-                example: 877
+                example: 67
                 maximum: 255
           properties:
             items:
@@ -1003,7 +1029,7 @@ components:
             properties:
               asin:
                 type: "number"
-                example: 837
+                example: 654
                 required: true
               name:
                 type: "number"
@@ -1039,7 +1065,7 @@ components:
             properties:
               asin:
                 type: "number"
-                example: 90
+                example: 983
                 pattern: "/^[0-9a-zA-Z]{10}$|^[0-9]{11,12}$/"
                 required: true
               name:
@@ -1050,7 +1076,7 @@ components:
                 required: true
               type:
                 type: "number"
-                example: 51
+                example: 554
                 choices:
                   - "Genres"
                   - "Tags"
@@ -1069,8 +1095,8 @@ components:
         copyright: "Lorem Ipsum"
         description: "Lorem Ipsum"
         summary: "Lorem Ipsum"
-        bookFormat: 721
-        lengthMinutes: 482
+        bookFormat: 614
+        lengthMinutes: 254
         imageUrl: "Lorem Ipsum"
         explicit: true
         isbn: "Lorem Ipsum"
@@ -1082,14 +1108,14 @@ components:
             name: "Lorem Ipsum"
             position: "Lorem Ipsum"
         authors:
-          - asin: 837
+          - asin: 654
             name: "Lorem Ipsum"
         narrators:
           - name: "Lorem Ipsum"
         genres:
           - asin: "Lorem Ipsum"
             name: "Lorem Ipsum"
-            type: 51
+            type: 554
       description: "audiMetaBookValidator (Validator)"
     audiMetaSeriesValidator:
       type: "object"
@@ -1118,16 +1144,16 @@ components:
       properties:
         brandIntroDurationMs:
           type: "number"
-          example: 442
+          example: 452
         brandOutroDurationMs:
           type: "number"
-          example: 591
+          example: 686
         is_accurate:
           type: "boolean"
           example: true
         runtime_length_ms:
           type: "number"
-          example: 539
+          example: 530
         runtime_length:
           type: "string"
           example: "Lorem Ipsum"
@@ -1144,14 +1170,14 @@ components:
                 required: true
               startOffsetMs:
                 type: "number"
-                example: 966
+                example: 596
                 required: true
               startOffsetSec:
                 type: "number"
-                example: 936
+                example: 958
               lengthMs:
                 type: "number"
-                example: 800
+                example: 284
                 required: true
           required: true
           properties:
@@ -1160,16 +1186,16 @@ components:
                 type: "string"
                 example: "Lorem Ipsum"
       example:
-        brandIntroDurationMs: 442
-        brandOutroDurationMs: 591
+        brandIntroDurationMs: 452
+        brandOutroDurationMs: 686
         is_accurate: true
-        runtime_length_ms: 539
+        runtime_length_ms: 530
         runtime_length: "Lorem Ipsum"
         chapters:
           - title: "Lorem Ipsum"
-            startOffsetMs: 966
-            startOffsetSec: 936
-            lengthMs: 800
+            startOffsetMs: 596
+            startOffsetSec: 958
+            lengthMs: 284
       description: "audiMetaTrackValidator (Validator)"
     audiobookshelfValidator:
       type: "object"
@@ -1189,7 +1215,7 @@ components:
           type: "array"
           items:
             type: "number"
-            example: 751
+            example: 488
           properties:
             items:
               type: "string"
@@ -1198,7 +1224,7 @@ components:
           type: "array"
           items:
             type: "number"
-            example: 856
+            example: 312
           properties:
             items:
               type: "string"
@@ -1207,7 +1233,7 @@ components:
           type: "array"
           items:
             type: "number"
-            example: 453
+            example: 118
           properties:
             items:
               type: "string"
@@ -1216,7 +1242,7 @@ components:
           type: "array"
           items:
             type: "number"
-            example: 490
+            example: 696
           properties:
             items:
               type: "string"
@@ -1225,7 +1251,7 @@ components:
           type: "array"
           items:
             type: "number"
-            example: 287
+            example: 371
           properties:
             items:
               type: "string"
@@ -1237,11 +1263,11 @@ components:
             properties:
               start:
                 type: "number"
-                example: 889
+                example: 731
                 required: true
               end:
                 type: "number"
-                example: 30
+                example: 962
                 required: true
               title:
                 type: "number"
@@ -1292,8 +1318,8 @@ components:
         series:
           - "Lorem Ipsum"
         chapters:
-          - start: 889
-            end: 30
+          - start: 731
+            end: 962
             title: "Lorem Ipsum"
         publishedYear: "Lorem Ipsum"
         publisher: "Lorem Ipsum"
@@ -1304,7 +1330,7 @@ components:
         explicit: true
         abridged: true
       description: "audiobookshelfValidator (Validator)"
-    authorValidator:
+    contributorValidator:
       type: "object"
       properties:
         id:
@@ -1322,20 +1348,32 @@ components:
         image:
           type: "string"
           example: "Lorem Ipsum"
+        role:
+          type: "string"
+          example: "Lorem Ipsum"
+          maxLength: 255
+        type:
+          type: "number"
+          example: 1
+          minimum: 1
+          maximum: 99
+          required: true
         identifiers:
           type: "array"
           items:
             type: "number"
-            example: 389
-            maximum: 5
+            example: 439
+            maximum: 10
       example:
         id: "Lorem Ipsum"
         name: "Lorem Ipsum"
         description: "Lorem Ipsum"
         image: "Lorem Ipsum"
+        role: "Lorem Ipsum"
+        type: 1
         identifiers:
-          - 389
-      description: "authorValidator (Validator)"
+          - 439
+      description: "contributorValidator (Validator)"
     genreValidator:
       type: "object"
       properties:
@@ -1350,14 +1388,14 @@ components:
           maxLength: 255
         type:
           type: "number"
-          example: 336
+          example: 961
           choices:
             - "genre"
             - "tag"
       example:
         id: "Lorem Ipsum"
         name: "Lorem Ipsum"
-        type: 336
+        type: 961
       description: "genreValidator (Validator)"
     getIdPaginationValidator:
       type: "object"
@@ -1394,10 +1432,10 @@ components:
         id: "Lorem Ipsum"
       description: "getIdValidator (Validator)"
 paths:
-  /login/{email}:
-    get:
+  /auth/login/{email}:
+    post:
       summary: "Confirms the login (create)"
-      description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/auth_controller.ts_ - **create**"
+      description: "Creates a new user if it does not exist and creates a new token for the user\n\n _app/controllers/auth_controller.ts_ - **create**"
       operationId: "confirmLogin"
       parameters:
         - in: "path"
@@ -1406,7 +1444,7 @@ paths:
             type: "string"
           required: true
       tags:
-        - "LOGIN"
+        - "AUTH"
       responses:
         200:
           content:
@@ -1441,17 +1479,17 @@ paths:
               example:
                 errors:
                   - message: "Lorem Ipsum"
-                    retryAfter: 413
+                    retryAfter: 864
           description: "Returns **429** (Too Many Requests) as **application/json**"
       security: []
-  /login:
+  /auth/login:
     post:
       summary: "Sends an email to the user with a link to log in (store)"
       description: "Sends an email to the user with a link to log in\n\n _app/controllers/auth_controller.ts_ - **store**"
       operationId: "login"
       parameters: []
       tags:
-        - "LOGIN"
+        - "AUTH"
       responses:
         200:
           content:
@@ -1498,14 +1536,188 @@ paths:
               example:
                 errors:
                   - message: "Lorem Ipsum"
-                    retryAfter: 413
+                    retryAfter: 864
           description: "Returns **429** (Too Many Requests) as **application/json**"
       security: []
-  /book/{id}:
+  /auth/logout:
+    post:
+      summary: "Logs out the user (logout)"
+      description: "\n\n _app/controllers/auth_controller.ts_ - **logout**"
+      operationId: "logout"
+      parameters: []
+      tags:
+        - "AUTH"
+      responses:
+        401:
+          description: "Returns **401** (Unauthorized)"
+        403:
+          description: "Returns **403** (Forbidden)"
+        422:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationInterface"
+              example:
+                errors:
+                  - field: "Lorem Ipsum"
+                    rule: "Lorem Ipsum"
+                    message: "Lorem Ipsum"
+          description: "Returns **422** (Unprocessable Entity) as **application/json**"
+        429:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TooManyRequests"
+              example:
+                errors:
+                  - message: "Lorem Ipsum"
+                    retryAfter: 864
+          description: "Returns **429** (Too Many Requests) as **application/json**"
+      security:
+        - BearerAuth:
+            - "access"
+  /auth/apiKey:
+    post:
+      summary: "Generates a new API key for the user (apiKey)"
+      description: "Generates a new API key for the user\n\n _app/controllers/auth_controller.ts_ - **apiKey**"
+      operationId: "generateApiKey"
+      parameters: []
+      tags:
+        - "AUTH"
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessTokenInterface"
+              example:
+                type: "Lorem Ipsum"
+                name: "Lorem Ipsum"
+                token: "Lorem Ipsum"
+                abilities:
+                  - "Lorem Ipsum"
+                lastUsedAt: "2021-03-23"
+                expiredAt: "2021-03-23"
+          description: "Returns **200** (OK) as **application/json**"
+        401:
+          description: "Returns **401** (Unauthorized)"
+        403:
+          description: "Returns **403** (Forbidden)"
+      security:
+        - BearerAuth:
+            - "access"
+  /user:
     get:
-      summary: "Get a book by ID (get)"
-      description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/books_controller.ts_ - **get**"
-      operationId: "getBook"
+      summary: "Get the authenticated user (getMe)"
+      description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/users_controller.ts_ - **getMe**"
+      operationId: "getMe"
+      parameters: []
+      tags:
+        - "USER"
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              example:
+                public_id: "Lorem Ipsum"
+                full_name: "John Doe"
+                email: "johndoe@example.com"
+                username: "Lorem Ipsum"
+                avatar: "https://example.com/avatar.png"
+                role: 564
+                custom_abilities:
+                  - "Lorem Ipsum"
+                created_at: "2021-03-23T16:13:08.489+01:00"
+                updated_at: "2021-03-23T16:13:08.489+01:00"
+          description: "Returns **200** (OK) as **application/json**"
+          headers:
+            x-ratelimit-limit:
+              description: "Total amount of requests"
+              schema:
+                type: "integer"
+                example: 150
+            x-ratelimit-remaining:
+              description: "Remaining amount of requests"
+              schema:
+                type: "integer"
+                example: 100
+            x-request-id:
+              description: "Request ID"
+              schema:
+                type: "string"
+                example: "1234567890"
+        401:
+          description: "Returns **401** (Unauthorized)"
+        403:
+          description: "Returns **403** (Forbidden)"
+        429:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TooManyRequests"
+              example:
+                errors:
+                  - message: "Lorem Ipsum"
+                    retryAfter: 864
+          description: "Returns **429** (Too Many Requests) as **application/json**"
+      security:
+        - BearerAuth:
+            - "access"
+    patch:
+      summary: "Update current user (update)"
+      description: "\n\n _app/controllers/users_controller.ts_ - **update**"
+      operationId: "updateUser"
+      parameters: []
+      tags:
+        - "USER"
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              example:
+                public_id: "Lorem Ipsum"
+                full_name: "John Doe"
+                email: "johndoe@example.com"
+                username: "Lorem Ipsum"
+                avatar: "https://example.com/avatar.png"
+                role: 564
+                custom_abilities:
+                  - "Lorem Ipsum"
+                created_at: "2021-03-23T16:13:08.489+01:00"
+                updated_at: "2021-03-23T16:13:08.489+01:00"
+          description: "Returns **200** (OK) as **application/json**"
+          headers:
+            x-ratelimit-limit:
+              description: "Total amount of requests"
+              schema:
+                type: "integer"
+                example: 150
+            x-ratelimit-remaining:
+              description: "Remaining amount of requests"
+              schema:
+                type: "integer"
+                example: 100
+            x-request-id:
+              description: "Request ID"
+              schema:
+                type: "string"
+                example: "1234567890"
+        401:
+          description: "Returns **401** (Unauthorized)"
+        403:
+          description: "Returns **403** (Forbidden)"
+      security:
+        - BearerAuth:
+            - "access"
+  /user/{id}:
+    get:
+      summary: "Get a user by ID (get)"
+      description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/users_controller.ts_ - **get**"
+      operationId: "getUser"
       parameters:
         - in: "path"
           name: "id"
@@ -1513,73 +1725,22 @@ paths:
             type: "string"
           required: true
       tags:
-        - "BOOK"
+        - "USER"
       responses:
         200:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Book"
+                $ref: "#/components/schemas/User"
               example:
                 public_id: "Lorem Ipsum"
-                title: "Lorem Ipsum"
-                subtitle: "Lorem Ipsum"
-                summary: "Lorem Ipsum"
-                description: "Lorem ipsum dolor sit amet"
-                publisher: "Lorem Ipsum"
-                image: "Lorem Ipsum"
-                language: "Lorem Ipsum"
-                copyright: "Lorem Ipsum"
-                pages: 871
-                duration: 285
-                released_at: "2021-03-23T16:13:08.489+01:00"
-                is_explicit: true
-                is_abridged: true
-                group_id: 654
-                type: "book"
-                authors:
-                  - public_id: "Lorem Ipsum"
-                    name: "John Doe"
-                    description: "Lorem ipsum dolor sit amet"
-                    image: "Lorem Ipsum"
-                    created_at: "2021-03-23T16:13:08.489+01:00"
-                    updated_at: "2021-03-23T16:13:08.489+01:00"
-                narrators:
-                  - public_id: "Lorem Ipsum"
-                    name: "John Doe"
-                    description: "Lorem ipsum dolor sit amet"
-                    image: "Lorem Ipsum"
-                    created_at: "2021-03-23T16:13:08.489+01:00"
-                    updated_at: "2021-03-23T16:13:08.489+01:00"
-                    role: "Lorem Ipsum"
-                genres:
-                  - public_id: "Lorem Ipsum"
-                    name: "John Doe"
-                    created_at: "2021-03-23T16:13:08.489+01:00"
-                    updated_at: "2021-03-23T16:13:08.489+01:00"
-                identifiers:
-                  - public_id: "Lorem Ipsum"
-                    value: "Lorem Ipsum"
-                    created_at: "2021-03-23T16:13:08.489+01:00"
-                    updated_at: "2021-03-23T16:13:08.489+01:00"
-                series:
-                  - public_id: "Lorem Ipsum"
-                    name: "John Doe"
-                    description: "Lorem ipsum dolor sit amet"
-                    image: "Lorem Ipsum"
-                    created_at: "2021-03-23T16:13:08.489+01:00"
-                    updated_at: "2021-03-23T16:13:08.489+01:00"
-                    position: 844
-                tracks:
-                  - public_id: "Lorem Ipsum"
-                    name: "John Doe"
-                    start: 867
-                    end: 55
-                group:
-                  public_id: "Lorem Ipsum"
-                  name: "John Doe"
-                  created_at: "2021-03-23T16:13:08.489+01:00"
-                  updated_at: "2021-03-23T16:13:08.489+01:00"
+                full_name: "John Doe"
+                email: "johndoe@example.com"
+                username: "Lorem Ipsum"
+                avatar: "https://example.com/avatar.png"
+                role: 564
+                custom_abilities:
+                  - "Lorem Ipsum"
                 created_at: "2021-03-23T16:13:08.489+01:00"
                 updated_at: "2021-03-23T16:13:08.489+01:00"
           description: "Returns **200** (OK) as **application/json**"
@@ -1622,15 +1783,106 @@ paths:
               example:
                 errors:
                   - message: "Lorem Ipsum"
-                    retryAfter: 413
+                    retryAfter: 864
           description: "Returns **429** (Too Many Requests) as **application/json**"
       security:
         - BearerAuth:
             - "access"
-  /book/tracks/{id}:
+  /user/{id}/edit-history:
     get:
-      summary: " (getTracksForBook)"
-      description: "\n\n _app/controllers/tracks_controller.ts_ - **getTracksForBook**"
+      summary: "Get edit history by user ID (editHistory)"
+      description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/users_controller.ts_ - **editHistory**"
+      operationId: "getEditHistoryByUser"
+      parameters:
+        - name: "page"
+          in: "query"
+          description: "Page number"
+          required: false
+          minimum: 1
+          maximum: 10
+          schema:
+            type: "integer"
+            default: 1
+        - name: "limit"
+          in: "query"
+          description: "Number of items per page"
+          required: false
+          minimum: 1
+          maximum: 50
+          schema:
+            type: "integer"
+            default: 10
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+      tags:
+        - "USER"
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  data:
+                    type: "array"
+                    items:
+                      $ref: "#/components/schemas/Log"
+                  meta:
+                    $ref: "#/components/schemas/PaginationMeta"
+              example:
+                data:
+                  - public_id: "Lorem Ipsum"
+                    action: {}
+                    model: {}
+                    model_id: "Lorem Ipsum"
+                    data: {}
+                    user_id: 643
+                    state: {}
+                    created_at: "2021-03-23T16:13:08.489+01:00"
+                    updated_at: "2021-03-23T16:13:08.489+01:00"
+                meta:
+                  total: 100
+                  page: 2
+                  perPage: 10
+                  currentPage: 3
+                  lastPage: 10
+                  firstPage: 1
+                  lastPageUrl: "/?page=10"
+                  firstPageUrl: "/?page=1"
+                  nextPageUrl: "/?page=6"
+                  previousPageUrl: "/?page=5"
+          description: "Returns **200** (OK) as **application/json**"
+          headers:
+            x-ratelimit-limit:
+              description: "Total amount of requests"
+              schema:
+                type: "integer"
+                example: 150
+            x-ratelimit-remaining:
+              description: "Remaining amount of requests"
+              schema:
+                type: "integer"
+                example: 100
+            x-request-id:
+              description: "Request ID"
+              schema:
+                type: "string"
+                example: "1234567890"
+        401:
+          description: "Returns **401** (Unauthorized)"
+        403:
+          description: "Returns **403** (Forbidden)"
+      security:
+        - BearerAuth:
+            - "access"
+  /book/{id}:
+    get:
+      summary: "Get a book by ID (get)"
+      description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/books_controller.ts_ - **get**"
+      operationId: "getBook"
       parameters:
         - in: "path"
           name: "id"
@@ -1640,10 +1892,227 @@ paths:
       tags:
         - "BOOK"
       responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+              example:
+                title: "Harry Potter and the Philosopher's Stone"
+                subtitle: "Harry Potter 1"
+                summary: "Short summary of the book"
+                description: "Longer more detailed description of the book"
+                image: "https://example.com/image.jpg"
+                language: "English"
+                copyright: "Lorem Ipsum"
+                pages: "123"
+                duration: 831
+                released_at: "2021-03-23T16:13:08.489+01:00"
+                is_explicit: true
+                is_abridged: true
+                group_id: 806
+                type: "book"
+                contributors:
+                  - public_id: "Lorem Ipsum"
+                    name: "'J.K. Rowling'"
+                    description: "'British author, best known for the Harry Potter series'"
+                    image: "'https://example.com/contributor.jpg'"
+                    created_at: "'2023-01-01T00:00:00Z'"
+                    updated_at: "'2023-01-01T00:00:00Z'"
+                    role: "Harry Potter"
+                    type_string: "'author'"
+                genres:
+                  - public_id: "Lorem Ipsum"
+                    name: "John Doe"
+                    created_at: "2021-03-23T16:13:08.489+01:00"
+                    updated_at: "2021-03-23T16:13:08.489+01:00"
+                identifiers:
+                  - public_id: "Lorem Ipsum"
+                    value: "Lorem Ipsum"
+                    created_at: "2021-03-23T16:13:08.489+01:00"
+                    updated_at: "2021-03-23T16:13:08.489+01:00"
+                series:
+                  - public_id: "Lorem Ipsum"
+                    name: "John Doe"
+                    description: "Lorem ipsum dolor sit amet"
+                    image: "Lorem Ipsum"
+                    language: "Lorem Ipsum"
+                    created_at: "2021-03-23T16:13:08.489+01:00"
+                    updated_at: "2021-03-23T16:13:08.489+01:00"
+                    position: 498
+                tracks:
+                  - public_id: "Lorem Ipsum"
+                    name: "John Doe"
+                    start: 475
+                    end: 742
+                group:
+                  public_id: "Lorem Ipsum"
+                  name: "John Doe"
+                  created_at: "2021-03-23T16:13:08.489+01:00"
+                  updated_at: "2021-03-23T16:13:08.489+01:00"
+                public_publisher:
+                  id: 346
+                  public_id: "Lorem Ipsum"
+                  name: "John Doe"
+                  description: "Lorem ipsum dolor sit amet"
+                  created_at: "2021-03-23T16:13:08.489+01:00"
+                  updated_at: "2021-03-23T16:13:08.489+01:00"
+                images:
+                  - id: 330
+                    image: "Lorem Ipsum"
+                    book_id: 852
+                    created_at: "2021-03-23T16:13:08.489+01:00"
+                    updated_at: "2021-03-23T16:13:08.489+01:00"
+                created_at: "2021-03-23T16:13:08.489+01:00"
+                updated_at: "2021-03-23T16:13:08.489+01:00"
+          description: "Returns **200** (OK) as **application/json**"
+          headers:
+            x-ratelimit-limit:
+              description: "Total amount of requests"
+              schema:
+                type: "integer"
+                example: 150
+            x-ratelimit-remaining:
+              description: "Remaining amount of requests"
+              schema:
+                type: "integer"
+                example: 100
+            x-request-id:
+              description: "Request ID"
+              schema:
+                type: "string"
+                example: "1234567890"
         401:
           description: "Returns **401** (Unauthorized)"
         403:
           description: "Returns **403** (Forbidden)"
+        422:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationInterface"
+              example:
+                errors:
+                  - field: "Lorem Ipsum"
+                    rule: "Lorem Ipsum"
+                    message: "Lorem Ipsum"
+          description: "Returns **422** (Unprocessable Entity) as **application/json**"
+        429:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TooManyRequests"
+              example:
+                errors:
+                  - message: "Lorem Ipsum"
+                    retryAfter: 864
+          description: "Returns **429** (Too Many Requests) as **application/json**"
+      security:
+        - BearerAuth:
+            - "access"
+  /book/{id}/tracks:
+    get:
+      summary: "Get tracks for a book by ID (getTracksForBook)"
+      description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/tracks_controller.ts_ - **getTracksForBook**"
+      operationId: "getTracksForBook"
+      parameters:
+        - name: "page"
+          in: "query"
+          description: "Page number"
+          required: false
+          minimum: 1
+          maximum: 10
+          schema:
+            type: "integer"
+            default: 1
+        - name: "limit"
+          in: "query"
+          description: "Number of items per page"
+          required: false
+          minimum: 1
+          maximum: 50
+          schema:
+            type: "integer"
+            default: 10
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+      tags:
+        - "BOOK"
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  data:
+                    type: "array"
+                    items:
+                      $ref: "#/components/schemas/Track"
+                  meta:
+                    $ref: "#/components/schemas/PaginationMeta"
+              example:
+                data:
+                  - public_id: "Lorem Ipsum"
+                    name: "John Doe"
+                    start: 475
+                    end: 742
+                meta:
+                  total: 100
+                  page: 2
+                  perPage: 10
+                  currentPage: 3
+                  lastPage: 10
+                  firstPage: 1
+                  lastPageUrl: "/?page=10"
+                  firstPageUrl: "/?page=1"
+                  nextPageUrl: "/?page=6"
+                  previousPageUrl: "/?page=5"
+          description: "Returns **200** (OK) as **application/json**"
+          headers:
+            x-ratelimit-limit:
+              description: "Total amount of requests"
+              schema:
+                type: "integer"
+                example: 150
+            x-ratelimit-remaining:
+              description: "Remaining amount of requests"
+              schema:
+                type: "integer"
+                example: 100
+            x-request-id:
+              description: "Request ID"
+              schema:
+                type: "string"
+                example: "1234567890"
+        401:
+          description: "Returns **401** (Unauthorized)"
+        403:
+          description: "Returns **403** (Forbidden)"
+        422:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationInterface"
+              example:
+                errors:
+                  - field: "Lorem Ipsum"
+                    rule: "Lorem Ipsum"
+                    message: "Lorem Ipsum"
+          description: "Returns **422** (Unprocessable Entity) as **application/json**"
+        429:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TooManyRequests"
+              example:
+                errors:
+                  - message: "Lorem Ipsum"
+                    retryAfter: 864
+          description: "Returns **429** (Too Many Requests) as **application/json**"
       security:
         - BearerAuth:
             - "access"
@@ -1679,7 +2148,7 @@ paths:
               example:
                 errors:
                   - message: "Lorem Ipsum"
-                    retryAfter: 413
+                    retryAfter: 864
           description: "Returns **429** (Too Many Requests) as **application/json**"
       security:
         - BearerAuth:
@@ -1694,51 +2163,49 @@ paths:
               subtitle: "Lorem Ipsum"
               description: "Lorem Ipsum"
               summary: "Lorem Ipsum"
-              publisher: "Lorem Ipsum"
+              publisher:
+                id: "Lorem Ipsum"
+                name: "Lorem Ipsum"
+                description: "Lorem Ipsum"
               language: "Lorem Ipsum"
               copyright: "Lorem Ipsum"
-              pages: 653
-              duration: 591
-              releasedAt: 721
+              pages: 694
+              duration: 511
+              releasedAt: 253
               isExplicit: true
               isAbridged: true
-              groupId: 535
-              image: 15
-              type: 168
+              groupId: 702
+              image: 558
+              type: 610
               genres:
                 - id: "Lorem Ipsum"
                   name: "Lorem Ipsum"
-                  type: 648
-              authors:
-                - id: "Lorem Ipsum"
-                  name: "Lorem Ipsum"
-                  description: "Lorem Ipsum"
-                  image: "Lorem Ipsum"
-                  identifiers:
-                    - 926
-              narrators:
+                  type: 719
+              contributors:
                 - id: "Lorem Ipsum"
                   name: "Lorem Ipsum"
                   description: "Lorem Ipsum"
                   image: "Lorem Ipsum"
                   role: "Lorem Ipsum"
+                  type: 1
                   identifiers:
-                    - 743
+                    - 532
               identifiers:
-                - 662
+                - 79
               series:
                 - id: "Lorem Ipsum"
                   name: "Lorem Ipsum"
                   description: "Lorem Ipsum"
                   image: "Lorem Ipsum"
                   position: "Lorem Ipsum"
+                  language: "Lorem Ipsum"
                   identifiers:
-                    - 232
+                    - 866
               tracks:
                 - id: "Lorem Ipsum"
                   name: "Lorem Ipsum"
-                  start: 256
-                  end: 94
+                  start: 697
+                  end: 338
   /books/abs:
     post:
       summary: "Create a new book from ABS (abs)"
@@ -1754,21 +2221,19 @@ paths:
               schema:
                 $ref: "#/components/schemas/Book"
               example:
-                public_id: "Lorem Ipsum"
-                title: "Lorem Ipsum"
-                subtitle: "Lorem Ipsum"
-                summary: "Lorem Ipsum"
-                description: "Lorem ipsum dolor sit amet"
-                publisher: "Lorem Ipsum"
-                image: "Lorem Ipsum"
-                language: "Lorem Ipsum"
+                title: "Harry Potter and the Philosopher's Stone"
+                subtitle: "Harry Potter 1"
+                summary: "Short summary of the book"
+                description: "Longer more detailed description of the book"
+                image: "https://example.com/image.jpg"
+                language: "English"
                 copyright: "Lorem Ipsum"
-                pages: 871
-                duration: 285
+                pages: "123"
+                duration: 831
                 released_at: "2021-03-23T16:13:08.489+01:00"
                 is_explicit: true
                 is_abridged: true
-                group_id: 654
+                group_id: 806
                 type: "book"
                 created_at: "2021-03-23T16:13:08.489+01:00"
                 updated_at: "2021-03-23T16:13:08.489+01:00"
@@ -1812,7 +2277,7 @@ paths:
               example:
                 errors:
                   - message: "Lorem Ipsum"
-                    retryAfter: 413
+                    retryAfter: 864
           description: "Returns **429** (Too Many Requests) as **application/json**"
       security:
         - BearerAuth:
@@ -1836,8 +2301,8 @@ paths:
               series:
                 - "Lorem Ipsum"
               chapters:
-                - start: 889
-                  end: 30
+                - start: 731
+                  end: 962
                   title: "Lorem Ipsum"
               publishedYear: "Lorem Ipsum"
               publisher: "Lorem Ipsum"
@@ -1847,11 +2312,11 @@ paths:
               language: "Lorem Ipsum"
               explicit: true
               abridged: true
-  /author/{id}:
+  /contributor/{id}:
     get:
-      summary: "Get an author by ID (get)"
-      description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/authors_controller.ts_ - **get**"
-      operationId: "getAuthor"
+      summary: "Get a contributor by ID (get)"
+      description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/contributor_controller.ts_ - **get**"
+      operationId: "getContributor"
       parameters:
         - in: "path"
           name: "id"
@@ -1859,25 +2324,28 @@ paths:
             type: "string"
           required: true
       tags:
-        - "AUTHOR"
+        - "CONTRIBUTOR"
       responses:
         200:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Author"
+                $ref: "#/components/schemas/Contributor"
               example:
                 public_id: "Lorem Ipsum"
-                name: "John Doe"
-                description: "Lorem ipsum dolor sit amet"
-                image: "Lorem Ipsum"
+                name: "'J.K. Rowling'"
+                description: "'British author, best known for the Harry Potter series'"
+                image: "'https://example.com/contributor.jpg'"
                 identifiers:
                   - public_id: "Lorem Ipsum"
                     value: "Lorem Ipsum"
                     created_at: "2021-03-23T16:13:08.489+01:00"
                     updated_at: "2021-03-23T16:13:08.489+01:00"
-                created_at: "2021-03-23T16:13:08.489+01:00"
-                updated_at: "2021-03-23T16:13:08.489+01:00"
+                created_at: "'2023-01-01T00:00:00Z'"
+                updated_at: "'2023-01-01T00:00:00Z'"
+                role: "Harry Potter"
+                type: {}
+                type_string: "'author'"
           description: "Returns **200** (OK) as **application/json**"
           headers:
             x-ratelimit-limit:
@@ -1918,16 +2386,16 @@ paths:
               example:
                 errors:
                   - message: "Lorem Ipsum"
-                    retryAfter: 413
+                    retryAfter: 864
           description: "Returns **429** (Too Many Requests) as **application/json**"
       security:
         - BearerAuth:
             - "access"
-  /author/books/{id}:
+  /contributor/{id}/books:
     get:
-      summary: "Get books by author ID (books)"
-      description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/authors_controller.ts_ - **books**"
-      operationId: "getBooksByAuthor"
+      summary: "Get books by contributor ID (books)"
+      description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/contributor_controller.ts_ - **books**"
+      operationId: "getBooksByContributor"
       parameters:
         - name: "page"
           in: "query"
@@ -1953,7 +2421,7 @@ paths:
             type: "string"
           required: true
       tags:
-        - "AUTHOR"
+        - "CONTRIBUTOR"
       responses:
         200:
           content:
@@ -1969,37 +2437,29 @@ paths:
                     $ref: "#/components/schemas/PaginationMeta"
               example:
                 data:
-                  - public_id: "Lorem Ipsum"
-                    title: "Lorem Ipsum"
-                    subtitle: "Lorem Ipsum"
-                    summary: "Lorem Ipsum"
-                    description: "Lorem ipsum dolor sit amet"
-                    publisher: "Lorem Ipsum"
-                    image: "Lorem Ipsum"
-                    language: "Lorem Ipsum"
+                  - title: "Harry Potter and the Philosopher's Stone"
+                    subtitle: "Harry Potter 1"
+                    summary: "Short summary of the book"
+                    description: "Longer more detailed description of the book"
+                    image: "https://example.com/image.jpg"
+                    language: "English"
                     copyright: "Lorem Ipsum"
-                    pages: 871
-                    duration: 285
+                    pages: "123"
+                    duration: 831
                     released_at: "2021-03-23T16:13:08.489+01:00"
                     is_explicit: true
                     is_abridged: true
-                    group_id: 654
+                    group_id: 806
                     type: "book"
-                    authors:
+                    contributors:
                       - public_id: "Lorem Ipsum"
-                        name: "John Doe"
-                        description: "Lorem ipsum dolor sit amet"
-                        image: "Lorem Ipsum"
-                        created_at: "2021-03-23T16:13:08.489+01:00"
-                        updated_at: "2021-03-23T16:13:08.489+01:00"
-                    narrators:
-                      - public_id: "Lorem Ipsum"
-                        name: "John Doe"
-                        description: "Lorem ipsum dolor sit amet"
-                        image: "Lorem Ipsum"
-                        created_at: "2021-03-23T16:13:08.489+01:00"
-                        updated_at: "2021-03-23T16:13:08.489+01:00"
-                        role: "Lorem Ipsum"
+                        name: "'J.K. Rowling'"
+                        description: "'British author, best known for the Harry Potter series'"
+                        image: "'https://example.com/contributor.jpg'"
+                        created_at: "'2023-01-01T00:00:00Z'"
+                        updated_at: "'2023-01-01T00:00:00Z'"
+                        role: "Harry Potter"
+                        type_string: "'author'"
                     genres:
                       - public_id: "Lorem Ipsum"
                         name: "John Doe"
@@ -2015,19 +2475,33 @@ paths:
                         name: "John Doe"
                         description: "Lorem ipsum dolor sit amet"
                         image: "Lorem Ipsum"
+                        language: "Lorem Ipsum"
                         created_at: "2021-03-23T16:13:08.489+01:00"
                         updated_at: "2021-03-23T16:13:08.489+01:00"
-                        position: 844
+                        position: 498
                     tracks:
                       - public_id: "Lorem Ipsum"
                         name: "John Doe"
-                        start: 867
-                        end: 55
+                        start: 475
+                        end: 742
                     group:
                       public_id: "Lorem Ipsum"
                       name: "John Doe"
                       created_at: "2021-03-23T16:13:08.489+01:00"
                       updated_at: "2021-03-23T16:13:08.489+01:00"
+                    public_publisher:
+                      id: 346
+                      public_id: "Lorem Ipsum"
+                      name: "John Doe"
+                      description: "Lorem ipsum dolor sit amet"
+                      created_at: "2021-03-23T16:13:08.489+01:00"
+                      updated_at: "2021-03-23T16:13:08.489+01:00"
+                    images:
+                      - id: 330
+                        image: "Lorem Ipsum"
+                        book_id: 852
+                        created_at: "2021-03-23T16:13:08.489+01:00"
+                        updated_at: "2021-03-23T16:13:08.489+01:00"
                     created_at: "2021-03-23T16:13:08.489+01:00"
                     updated_at: "2021-03-23T16:13:08.489+01:00"
                 meta:
@@ -2081,247 +2555,7 @@ paths:
               example:
                 errors:
                   - message: "Lorem Ipsum"
-                    retryAfter: 413
-          description: "Returns **429** (Too Many Requests) as **application/json**"
-      security:
-        - BearerAuth:
-            - "access"
-  /narrator/{id}:
-    get:
-      summary: "Get an narrator by ID (get)"
-      description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/narrators_controller.ts_ - **get**"
-      operationId: "getNarrator"
-      parameters:
-        - in: "path"
-          name: "id"
-          schema:
-            type: "string"
-          required: true
-      tags:
-        - "NARRATOR"
-      responses:
-        200:
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Narrator"
-              example:
-                public_id: "Lorem Ipsum"
-                name: "John Doe"
-                description: "Lorem ipsum dolor sit amet"
-                image: "Lorem Ipsum"
-                identifiers:
-                  - public_id: "Lorem Ipsum"
-                    value: "Lorem Ipsum"
-                    created_at: "2021-03-23T16:13:08.489+01:00"
-                    updated_at: "2021-03-23T16:13:08.489+01:00"
-                created_at: "2021-03-23T16:13:08.489+01:00"
-                updated_at: "2021-03-23T16:13:08.489+01:00"
-                role: "Lorem Ipsum"
-          description: "Returns **200** (OK) as **application/json**"
-          headers:
-            x-ratelimit-limit:
-              description: "Total amount of requests"
-              schema:
-                type: "integer"
-                example: 150
-            x-ratelimit-remaining:
-              description: "Remaining amount of requests"
-              schema:
-                type: "integer"
-                example: 100
-            x-request-id:
-              description: "Request ID"
-              schema:
-                type: "string"
-                example: "1234567890"
-        401:
-          description: "Returns **401** (Unauthorized)"
-        403:
-          description: "Returns **403** (Forbidden)"
-        422:
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ValidationInterface"
-              example:
-                errors:
-                  - field: "Lorem Ipsum"
-                    rule: "Lorem Ipsum"
-                    message: "Lorem Ipsum"
-          description: "Returns **422** (Unprocessable Entity) as **application/json**"
-        429:
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TooManyRequests"
-              example:
-                errors:
-                  - message: "Lorem Ipsum"
-                    retryAfter: 413
-          description: "Returns **429** (Too Many Requests) as **application/json**"
-      security:
-        - BearerAuth:
-            - "access"
-  /narrator/books/{id}:
-    get:
-      summary: "Get books by narrator ID (books)"
-      description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/narrators_controller.ts_ - **books**"
-      operationId: "getBooksByNarrator"
-      parameters:
-        - name: "page"
-          in: "query"
-          description: "Page number"
-          required: false
-          minimum: 1
-          maximum: 10
-          schema:
-            type: "integer"
-            default: 1
-        - name: "limit"
-          in: "query"
-          description: "Number of items per page"
-          required: false
-          minimum: 1
-          maximum: 50
-          schema:
-            type: "integer"
-            default: 10
-        - in: "path"
-          name: "id"
-          schema:
-            type: "string"
-          required: true
-      tags:
-        - "NARRATOR"
-      responses:
-        200:
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  data:
-                    type: "array"
-                    items:
-                      $ref: "#/components/schemas/Book"
-                  meta:
-                    $ref: "#/components/schemas/PaginationMeta"
-              example:
-                data:
-                  - public_id: "Lorem Ipsum"
-                    title: "Lorem Ipsum"
-                    subtitle: "Lorem Ipsum"
-                    summary: "Lorem Ipsum"
-                    description: "Lorem ipsum dolor sit amet"
-                    publisher: "Lorem Ipsum"
-                    image: "Lorem Ipsum"
-                    language: "Lorem Ipsum"
-                    copyright: "Lorem Ipsum"
-                    pages: 871
-                    duration: 285
-                    released_at: "2021-03-23T16:13:08.489+01:00"
-                    is_explicit: true
-                    is_abridged: true
-                    group_id: 654
-                    type: "book"
-                    authors:
-                      - public_id: "Lorem Ipsum"
-                        name: "John Doe"
-                        description: "Lorem ipsum dolor sit amet"
-                        image: "Lorem Ipsum"
-                        created_at: "2021-03-23T16:13:08.489+01:00"
-                        updated_at: "2021-03-23T16:13:08.489+01:00"
-                    narrators:
-                      - public_id: "Lorem Ipsum"
-                        name: "John Doe"
-                        description: "Lorem ipsum dolor sit amet"
-                        image: "Lorem Ipsum"
-                        created_at: "2021-03-23T16:13:08.489+01:00"
-                        updated_at: "2021-03-23T16:13:08.489+01:00"
-                        role: "Lorem Ipsum"
-                    genres:
-                      - public_id: "Lorem Ipsum"
-                        name: "John Doe"
-                        created_at: "2021-03-23T16:13:08.489+01:00"
-                        updated_at: "2021-03-23T16:13:08.489+01:00"
-                    identifiers:
-                      - public_id: "Lorem Ipsum"
-                        value: "Lorem Ipsum"
-                        created_at: "2021-03-23T16:13:08.489+01:00"
-                        updated_at: "2021-03-23T16:13:08.489+01:00"
-                    series:
-                      - public_id: "Lorem Ipsum"
-                        name: "John Doe"
-                        description: "Lorem ipsum dolor sit amet"
-                        image: "Lorem Ipsum"
-                        created_at: "2021-03-23T16:13:08.489+01:00"
-                        updated_at: "2021-03-23T16:13:08.489+01:00"
-                        position: 844
-                    tracks:
-                      - public_id: "Lorem Ipsum"
-                        name: "John Doe"
-                        start: 867
-                        end: 55
-                    group:
-                      public_id: "Lorem Ipsum"
-                      name: "John Doe"
-                      created_at: "2021-03-23T16:13:08.489+01:00"
-                      updated_at: "2021-03-23T16:13:08.489+01:00"
-                    created_at: "2021-03-23T16:13:08.489+01:00"
-                    updated_at: "2021-03-23T16:13:08.489+01:00"
-                meta:
-                  total: 100
-                  page: 2
-                  perPage: 10
-                  currentPage: 3
-                  lastPage: 10
-                  firstPage: 1
-                  lastPageUrl: "/?page=10"
-                  firstPageUrl: "/?page=1"
-                  nextPageUrl: "/?page=6"
-                  previousPageUrl: "/?page=5"
-          description: "Returns **200** (OK) as **application/json**"
-          headers:
-            x-ratelimit-limit:
-              description: "Total amount of requests"
-              schema:
-                type: "integer"
-                example: 150
-            x-ratelimit-remaining:
-              description: "Remaining amount of requests"
-              schema:
-                type: "integer"
-                example: 100
-            x-request-id:
-              description: "Request ID"
-              schema:
-                type: "string"
-                example: "1234567890"
-        401:
-          description: "Returns **401** (Unauthorized)"
-        403:
-          description: "Returns **403** (Forbidden)"
-        422:
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ValidationInterface"
-              example:
-                errors:
-                  - field: "Lorem Ipsum"
-                    rule: "Lorem Ipsum"
-                    message: "Lorem Ipsum"
-          description: "Returns **422** (Unprocessable Entity) as **application/json**"
-        429:
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TooManyRequests"
-              example:
-                errors:
-                  - message: "Lorem Ipsum"
-                    retryAfter: 413
+                    retryAfter: 864
           description: "Returns **429** (Too Many Requests) as **application/json**"
       security:
         - BearerAuth:
@@ -2350,6 +2584,7 @@ paths:
                 name: "John Doe"
                 description: "Lorem ipsum dolor sit amet"
                 image: "Lorem Ipsum"
+                language: "Lorem Ipsum"
                 identifiers:
                   - public_id: "Lorem Ipsum"
                     value: "Lorem Ipsum"
@@ -2357,7 +2592,7 @@ paths:
                     updated_at: "2021-03-23T16:13:08.489+01:00"
                 created_at: "2021-03-23T16:13:08.489+01:00"
                 updated_at: "2021-03-23T16:13:08.489+01:00"
-                position: 844
+                position: 498
           description: "Returns **200** (OK) as **application/json**"
           headers:
             x-ratelimit-limit:
@@ -2398,12 +2633,12 @@ paths:
               example:
                 errors:
                   - message: "Lorem Ipsum"
-                    retryAfter: 413
+                    retryAfter: 864
           description: "Returns **429** (Too Many Requests) as **application/json**"
       security:
         - BearerAuth:
             - "access"
-  /series/books/{id}:
+  /series/{id}/books:
     get:
       summary: "Get books by series ID (books)"
       description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/series_controller.ts_ - **books**"
@@ -2449,37 +2684,29 @@ paths:
                     $ref: "#/components/schemas/PaginationMeta"
               example:
                 data:
-                  - public_id: "Lorem Ipsum"
-                    title: "Lorem Ipsum"
-                    subtitle: "Lorem Ipsum"
-                    summary: "Lorem Ipsum"
-                    description: "Lorem ipsum dolor sit amet"
-                    publisher: "Lorem Ipsum"
-                    image: "Lorem Ipsum"
-                    language: "Lorem Ipsum"
+                  - title: "Harry Potter and the Philosopher's Stone"
+                    subtitle: "Harry Potter 1"
+                    summary: "Short summary of the book"
+                    description: "Longer more detailed description of the book"
+                    image: "https://example.com/image.jpg"
+                    language: "English"
                     copyright: "Lorem Ipsum"
-                    pages: 871
-                    duration: 285
+                    pages: "123"
+                    duration: 831
                     released_at: "2021-03-23T16:13:08.489+01:00"
                     is_explicit: true
                     is_abridged: true
-                    group_id: 654
+                    group_id: 806
                     type: "book"
-                    authors:
+                    contributors:
                       - public_id: "Lorem Ipsum"
-                        name: "John Doe"
-                        description: "Lorem ipsum dolor sit amet"
-                        image: "Lorem Ipsum"
-                        created_at: "2021-03-23T16:13:08.489+01:00"
-                        updated_at: "2021-03-23T16:13:08.489+01:00"
-                    narrators:
-                      - public_id: "Lorem Ipsum"
-                        name: "John Doe"
-                        description: "Lorem ipsum dolor sit amet"
-                        image: "Lorem Ipsum"
-                        created_at: "2021-03-23T16:13:08.489+01:00"
-                        updated_at: "2021-03-23T16:13:08.489+01:00"
-                        role: "Lorem Ipsum"
+                        name: "'J.K. Rowling'"
+                        description: "'British author, best known for the Harry Potter series'"
+                        image: "'https://example.com/contributor.jpg'"
+                        created_at: "'2023-01-01T00:00:00Z'"
+                        updated_at: "'2023-01-01T00:00:00Z'"
+                        role: "Harry Potter"
+                        type_string: "'author'"
                     genres:
                       - public_id: "Lorem Ipsum"
                         name: "John Doe"
@@ -2495,19 +2722,33 @@ paths:
                         name: "John Doe"
                         description: "Lorem ipsum dolor sit amet"
                         image: "Lorem Ipsum"
+                        language: "Lorem Ipsum"
                         created_at: "2021-03-23T16:13:08.489+01:00"
                         updated_at: "2021-03-23T16:13:08.489+01:00"
-                        position: 844
+                        position: 498
                     tracks:
                       - public_id: "Lorem Ipsum"
                         name: "John Doe"
-                        start: 867
-                        end: 55
+                        start: 475
+                        end: 742
                     group:
                       public_id: "Lorem Ipsum"
                       name: "John Doe"
                       created_at: "2021-03-23T16:13:08.489+01:00"
                       updated_at: "2021-03-23T16:13:08.489+01:00"
+                    public_publisher:
+                      id: 346
+                      public_id: "Lorem Ipsum"
+                      name: "John Doe"
+                      description: "Lorem ipsum dolor sit amet"
+                      created_at: "2021-03-23T16:13:08.489+01:00"
+                      updated_at: "2021-03-23T16:13:08.489+01:00"
+                    images:
+                      - id: 330
+                        image: "Lorem Ipsum"
+                        book_id: 852
+                        created_at: "2021-03-23T16:13:08.489+01:00"
+                        updated_at: "2021-03-23T16:13:08.489+01:00"
                     created_at: "2021-03-23T16:13:08.489+01:00"
                     updated_at: "2021-03-23T16:13:08.489+01:00"
                 meta:
@@ -2561,7 +2802,7 @@ paths:
               example:
                 errors:
                   - message: "Lorem Ipsum"
-                    retryAfter: 413
+                    retryAfter: 864
           description: "Returns **429** (Too Many Requests) as **application/json**"
       security:
         - BearerAuth:
@@ -2631,12 +2872,12 @@ paths:
               example:
                 errors:
                   - message: "Lorem Ipsum"
-                    retryAfter: 413
+                    retryAfter: 864
           description: "Returns **429** (Too Many Requests) as **application/json**"
       security:
         - BearerAuth:
             - "access"
-  /genre/books/{id}:
+  /genre/{id}/books:
     get:
       summary: "Get books by genre ID (books)"
       description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/genres_controller.ts_ - **books**"
@@ -2682,37 +2923,29 @@ paths:
                     $ref: "#/components/schemas/PaginationMeta"
               example:
                 data:
-                  - public_id: "Lorem Ipsum"
-                    title: "Lorem Ipsum"
-                    subtitle: "Lorem Ipsum"
-                    summary: "Lorem Ipsum"
-                    description: "Lorem ipsum dolor sit amet"
-                    publisher: "Lorem Ipsum"
-                    image: "Lorem Ipsum"
-                    language: "Lorem Ipsum"
+                  - title: "Harry Potter and the Philosopher's Stone"
+                    subtitle: "Harry Potter 1"
+                    summary: "Short summary of the book"
+                    description: "Longer more detailed description of the book"
+                    image: "https://example.com/image.jpg"
+                    language: "English"
                     copyright: "Lorem Ipsum"
-                    pages: 871
-                    duration: 285
+                    pages: "123"
+                    duration: 831
                     released_at: "2021-03-23T16:13:08.489+01:00"
                     is_explicit: true
                     is_abridged: true
-                    group_id: 654
+                    group_id: 806
                     type: "book"
-                    authors:
+                    contributors:
                       - public_id: "Lorem Ipsum"
-                        name: "John Doe"
-                        description: "Lorem ipsum dolor sit amet"
-                        image: "Lorem Ipsum"
-                        created_at: "2021-03-23T16:13:08.489+01:00"
-                        updated_at: "2021-03-23T16:13:08.489+01:00"
-                    narrators:
-                      - public_id: "Lorem Ipsum"
-                        name: "John Doe"
-                        description: "Lorem ipsum dolor sit amet"
-                        image: "Lorem Ipsum"
-                        created_at: "2021-03-23T16:13:08.489+01:00"
-                        updated_at: "2021-03-23T16:13:08.489+01:00"
-                        role: "Lorem Ipsum"
+                        name: "'J.K. Rowling'"
+                        description: "'British author, best known for the Harry Potter series'"
+                        image: "'https://example.com/contributor.jpg'"
+                        created_at: "'2023-01-01T00:00:00Z'"
+                        updated_at: "'2023-01-01T00:00:00Z'"
+                        role: "Harry Potter"
+                        type_string: "'author'"
                     genres:
                       - public_id: "Lorem Ipsum"
                         name: "John Doe"
@@ -2728,19 +2961,33 @@ paths:
                         name: "John Doe"
                         description: "Lorem ipsum dolor sit amet"
                         image: "Lorem Ipsum"
+                        language: "Lorem Ipsum"
                         created_at: "2021-03-23T16:13:08.489+01:00"
                         updated_at: "2021-03-23T16:13:08.489+01:00"
-                        position: 844
+                        position: 498
                     tracks:
                       - public_id: "Lorem Ipsum"
                         name: "John Doe"
-                        start: 867
-                        end: 55
+                        start: 475
+                        end: 742
                     group:
                       public_id: "Lorem Ipsum"
                       name: "John Doe"
                       created_at: "2021-03-23T16:13:08.489+01:00"
                       updated_at: "2021-03-23T16:13:08.489+01:00"
+                    public_publisher:
+                      id: 346
+                      public_id: "Lorem Ipsum"
+                      name: "John Doe"
+                      description: "Lorem ipsum dolor sit amet"
+                      created_at: "2021-03-23T16:13:08.489+01:00"
+                      updated_at: "2021-03-23T16:13:08.489+01:00"
+                    images:
+                      - id: 330
+                        image: "Lorem Ipsum"
+                        book_id: 852
+                        created_at: "2021-03-23T16:13:08.489+01:00"
+                        updated_at: "2021-03-23T16:13:08.489+01:00"
                     created_at: "2021-03-23T16:13:08.489+01:00"
                     updated_at: "2021-03-23T16:13:08.489+01:00"
                 meta:
@@ -2794,16 +3041,156 @@ paths:
               example:
                 errors:
                   - message: "Lorem Ipsum"
-                    retryAfter: 413
+                    retryAfter: 864
           description: "Returns **429** (Too Many Requests) as **application/json**"
       security:
         - BearerAuth:
             - "access"
   /track/{id}:
     get:
-      summary: "Get tracks for a book by ID (get)"
+      summary: "Get a track by ID (get)"
       description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/tracks_controller.ts_ - **get**"
-      operationId: "getTracksForBook"
+      operationId: "getTrack"
+      parameters:
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+      tags:
+        - "TRACK"
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Track"
+              example:
+                public_id: "Lorem Ipsum"
+                name: "John Doe"
+                start: 475
+                end: 742
+          description: "Returns **200** (OK) as **application/json**"
+          headers:
+            x-ratelimit-limit:
+              description: "Total amount of requests"
+              schema:
+                type: "integer"
+                example: 150
+            x-ratelimit-remaining:
+              description: "Remaining amount of requests"
+              schema:
+                type: "integer"
+                example: 100
+            x-request-id:
+              description: "Request ID"
+              schema:
+                type: "string"
+                example: "1234567890"
+        401:
+          description: "Returns **401** (Unauthorized)"
+        403:
+          description: "Returns **403** (Forbidden)"
+        422:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationInterface"
+              example:
+                errors:
+                  - field: "Lorem Ipsum"
+                    rule: "Lorem Ipsum"
+                    message: "Lorem Ipsum"
+          description: "Returns **422** (Unprocessable Entity) as **application/json**"
+        429:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TooManyRequests"
+              example:
+                errors:
+                  - message: "Lorem Ipsum"
+                    retryAfter: 864
+          description: "Returns **429** (Too Many Requests) as **application/json**"
+      security:
+        - BearerAuth:
+            - "access"
+  /publisher/{id}:
+    get:
+      summary: "Get a publisher by ID (get)"
+      description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/publishers_controller.ts_ - **get**"
+      operationId: "getPublisher"
+      parameters:
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+      tags:
+        - "PUBLISHER"
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Publisher"
+              example:
+                id: 346
+                public_id: "Lorem Ipsum"
+                name: "John Doe"
+                description: "Lorem ipsum dolor sit amet"
+                created_at: "2021-03-23T16:13:08.489+01:00"
+                updated_at: "2021-03-23T16:13:08.489+01:00"
+          description: "Returns **200** (OK) as **application/json**"
+          headers:
+            x-ratelimit-limit:
+              description: "Total amount of requests"
+              schema:
+                type: "integer"
+                example: 150
+            x-ratelimit-remaining:
+              description: "Remaining amount of requests"
+              schema:
+                type: "integer"
+                example: 100
+            x-request-id:
+              description: "Request ID"
+              schema:
+                type: "string"
+                example: "1234567890"
+        401:
+          description: "Returns **401** (Unauthorized)"
+        403:
+          description: "Returns **403** (Forbidden)"
+        422:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ValidationInterface"
+              example:
+                errors:
+                  - field: "Lorem Ipsum"
+                    rule: "Lorem Ipsum"
+                    message: "Lorem Ipsum"
+          description: "Returns **422** (Unprocessable Entity) as **application/json**"
+        429:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TooManyRequests"
+              example:
+                errors:
+                  - message: "Lorem Ipsum"
+                    retryAfter: 864
+          description: "Returns **429** (Too Many Requests) as **application/json**"
+      security:
+        - BearerAuth:
+            - "access"
+  /publisher/{id}/books:
+    get:
+      summary: "Get books for a publisher by ID (books)"
+      description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/publishers_controller.ts_ - **books**"
+      operationId: "getBooksForPublisher"
       parameters:
         - name: "page"
           in: "query"
@@ -2829,7 +3216,7 @@ paths:
             type: "string"
           required: true
       tags:
-        - "TRACK"
+        - "PUBLISHER"
       responses:
         200:
           content:
@@ -2840,15 +3227,78 @@ paths:
                   data:
                     type: "array"
                     items:
-                      $ref: "#/components/schemas/Track"
+                      $ref: "#/components/schemas/Book"
                   meta:
                     $ref: "#/components/schemas/PaginationMeta"
               example:
                 data:
-                  - public_id: "Lorem Ipsum"
-                    name: "John Doe"
-                    start: 867
-                    end: 55
+                  - title: "Harry Potter and the Philosopher's Stone"
+                    subtitle: "Harry Potter 1"
+                    summary: "Short summary of the book"
+                    description: "Longer more detailed description of the book"
+                    image: "https://example.com/image.jpg"
+                    language: "English"
+                    copyright: "Lorem Ipsum"
+                    pages: "123"
+                    duration: 831
+                    released_at: "2021-03-23T16:13:08.489+01:00"
+                    is_explicit: true
+                    is_abridged: true
+                    group_id: 806
+                    type: "book"
+                    contributors:
+                      - public_id: "Lorem Ipsum"
+                        name: "'J.K. Rowling'"
+                        description: "'British author, best known for the Harry Potter series'"
+                        image: "'https://example.com/contributor.jpg'"
+                        created_at: "'2023-01-01T00:00:00Z'"
+                        updated_at: "'2023-01-01T00:00:00Z'"
+                        role: "Harry Potter"
+                        type_string: "'author'"
+                    genres:
+                      - public_id: "Lorem Ipsum"
+                        name: "John Doe"
+                        created_at: "2021-03-23T16:13:08.489+01:00"
+                        updated_at: "2021-03-23T16:13:08.489+01:00"
+                    identifiers:
+                      - public_id: "Lorem Ipsum"
+                        value: "Lorem Ipsum"
+                        created_at: "2021-03-23T16:13:08.489+01:00"
+                        updated_at: "2021-03-23T16:13:08.489+01:00"
+                    series:
+                      - public_id: "Lorem Ipsum"
+                        name: "John Doe"
+                        description: "Lorem ipsum dolor sit amet"
+                        image: "Lorem Ipsum"
+                        language: "Lorem Ipsum"
+                        created_at: "2021-03-23T16:13:08.489+01:00"
+                        updated_at: "2021-03-23T16:13:08.489+01:00"
+                        position: 498
+                    tracks:
+                      - public_id: "Lorem Ipsum"
+                        name: "John Doe"
+                        start: 475
+                        end: 742
+                    group:
+                      public_id: "Lorem Ipsum"
+                      name: "John Doe"
+                      created_at: "2021-03-23T16:13:08.489+01:00"
+                      updated_at: "2021-03-23T16:13:08.489+01:00"
+                    public_publisher:
+                      id: 346
+                      public_id: "Lorem Ipsum"
+                      name: "John Doe"
+                      description: "Lorem ipsum dolor sit amet"
+                      created_at: "2021-03-23T16:13:08.489+01:00"
+                      updated_at: "2021-03-23T16:13:08.489+01:00"
+                    images:
+                      - id: 330
+                        image: "Lorem Ipsum"
+                        book_id: 852
+                        created_at: "2021-03-23T16:13:08.489+01:00"
+                        updated_at: "2021-03-23T16:13:08.489+01:00"
+                    created_at: "2021-03-23T16:13:08.489+01:00"
+                    updated_at: "2021-03-23T16:13:08.489+01:00"
                 meta:
                   total: 100
                   page: 2
@@ -2900,7 +3350,7 @@ paths:
               example:
                 errors:
                   - message: "Lorem Ipsum"
-                    retryAfter: 413
+                    retryAfter: 864
           description: "Returns **429** (Too Many Requests) as **application/json**"
       security:
         - BearerAuth:
@@ -3044,37 +3494,29 @@ paths:
                     $ref: "#/components/schemas/PaginationMeta"
               example:
                 data:
-                  - public_id: "Lorem Ipsum"
-                    title: "Lorem Ipsum"
-                    subtitle: "Lorem Ipsum"
-                    summary: "Lorem Ipsum"
-                    description: "Lorem ipsum dolor sit amet"
-                    publisher: "Lorem Ipsum"
-                    image: "Lorem Ipsum"
-                    language: "Lorem Ipsum"
+                  - title: "Harry Potter and the Philosopher's Stone"
+                    subtitle: "Harry Potter 1"
+                    summary: "Short summary of the book"
+                    description: "Longer more detailed description of the book"
+                    image: "https://example.com/image.jpg"
+                    language: "English"
                     copyright: "Lorem Ipsum"
-                    pages: 871
-                    duration: 285
+                    pages: "123"
+                    duration: 831
                     released_at: "2021-03-23T16:13:08.489+01:00"
                     is_explicit: true
                     is_abridged: true
-                    group_id: 654
+                    group_id: 806
                     type: "book"
-                    authors:
+                    contributors:
                       - public_id: "Lorem Ipsum"
-                        name: "John Doe"
-                        description: "Lorem ipsum dolor sit amet"
-                        image: "Lorem Ipsum"
-                        created_at: "2021-03-23T16:13:08.489+01:00"
-                        updated_at: "2021-03-23T16:13:08.489+01:00"
-                    narrators:
-                      - public_id: "Lorem Ipsum"
-                        name: "John Doe"
-                        description: "Lorem ipsum dolor sit amet"
-                        image: "Lorem Ipsum"
-                        created_at: "2021-03-23T16:13:08.489+01:00"
-                        updated_at: "2021-03-23T16:13:08.489+01:00"
-                        role: "Lorem Ipsum"
+                        name: "'J.K. Rowling'"
+                        description: "'British author, best known for the Harry Potter series'"
+                        image: "'https://example.com/contributor.jpg'"
+                        created_at: "'2023-01-01T00:00:00Z'"
+                        updated_at: "'2023-01-01T00:00:00Z'"
+                        role: "Harry Potter"
+                        type_string: "'author'"
                     genres:
                       - public_id: "Lorem Ipsum"
                         name: "John Doe"
@@ -3090,19 +3532,33 @@ paths:
                         name: "John Doe"
                         description: "Lorem ipsum dolor sit amet"
                         image: "Lorem Ipsum"
+                        language: "Lorem Ipsum"
                         created_at: "2021-03-23T16:13:08.489+01:00"
                         updated_at: "2021-03-23T16:13:08.489+01:00"
-                        position: 844
+                        position: 498
                     tracks:
                       - public_id: "Lorem Ipsum"
                         name: "John Doe"
-                        start: 867
-                        end: 55
+                        start: 475
+                        end: 742
                     group:
                       public_id: "Lorem Ipsum"
                       name: "John Doe"
                       created_at: "2021-03-23T16:13:08.489+01:00"
                       updated_at: "2021-03-23T16:13:08.489+01:00"
+                    public_publisher:
+                      id: 346
+                      public_id: "Lorem Ipsum"
+                      name: "John Doe"
+                      description: "Lorem ipsum dolor sit amet"
+                      created_at: "2021-03-23T16:13:08.489+01:00"
+                      updated_at: "2021-03-23T16:13:08.489+01:00"
+                    images:
+                      - id: 330
+                        image: "Lorem Ipsum"
+                        book_id: 852
+                        created_at: "2021-03-23T16:13:08.489+01:00"
+                        updated_at: "2021-03-23T16:13:08.489+01:00"
                     created_at: "2021-03-23T16:13:08.489+01:00"
                     updated_at: "2021-03-23T16:13:08.489+01:00"
                 meta:
@@ -3156,202 +3612,27 @@ paths:
               example:
                 errors:
                   - message: "Lorem Ipsum"
-                    retryAfter: 413
+                    retryAfter: 864
           description: "Returns **429** (Too Many Requests) as **application/json**"
       security:
         - BearerAuth:
             - "access"
-  /search/author:
+  /search/contributor:
     get:
-      summary: "Search for an author (author)"
-      description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/searches_controller.ts_ - **author**"
-      operationId: "searchAuthor"
-      parameters:
-        - in: "query"
-          name: "title"
-          description: "The title of the book to search for."
-          schema:
-            example: ""
-            type: "string"
-          required: false
-        - in: "query"
-          name: "subtitle"
-          description: "The subtitle of the book to search for."
-          schema:
-            example: ""
-            type: "string"
-          required: false
-        - in: "query"
-          name: "keywords"
-          description: "The keywords to search for to search an author. Takes description and name into account. Can find authors that are not close to your input"
-          schema:
-            example: ""
-            type: "string"
-          required: false
-        - in: "query"
-          name: "page"
-          description: "The page number to return."
-          schema:
-            example: ""
-            type: "number"
-          required: false
-        - in: "query"
-          name: "threshold"
-          description: "The threshold for the ranking score."
-          schema:
-            example: ""
-            type: "number"
-          required: false
-      tags:
-        - "SEARCH"
-      responses:
-        200:
-          content:
-            application/json:
-              schema:
-                type: "object"
-                properties:
-                  data:
-                    type: "array"
-                    items:
-                      $ref: "#/components/schemas/Book"
-                  meta:
-                    $ref: "#/components/schemas/PaginationMeta"
-              example:
-                data:
-                  - public_id: "Lorem Ipsum"
-                    title: "Lorem Ipsum"
-                    subtitle: "Lorem Ipsum"
-                    summary: "Lorem Ipsum"
-                    description: "Lorem ipsum dolor sit amet"
-                    publisher: "Lorem Ipsum"
-                    image: "Lorem Ipsum"
-                    language: "Lorem Ipsum"
-                    copyright: "Lorem Ipsum"
-                    pages: 871
-                    duration: 285
-                    released_at: "2021-03-23T16:13:08.489+01:00"
-                    is_explicit: true
-                    is_abridged: true
-                    group_id: 654
-                    type: "book"
-                    authors:
-                      - public_id: "Lorem Ipsum"
-                        name: "John Doe"
-                        description: "Lorem ipsum dolor sit amet"
-                        image: "Lorem Ipsum"
-                        created_at: "2021-03-23T16:13:08.489+01:00"
-                        updated_at: "2021-03-23T16:13:08.489+01:00"
-                    narrators:
-                      - public_id: "Lorem Ipsum"
-                        name: "John Doe"
-                        description: "Lorem ipsum dolor sit amet"
-                        image: "Lorem Ipsum"
-                        created_at: "2021-03-23T16:13:08.489+01:00"
-                        updated_at: "2021-03-23T16:13:08.489+01:00"
-                        role: "Lorem Ipsum"
-                    genres:
-                      - public_id: "Lorem Ipsum"
-                        name: "John Doe"
-                        created_at: "2021-03-23T16:13:08.489+01:00"
-                        updated_at: "2021-03-23T16:13:08.489+01:00"
-                    identifiers:
-                      - public_id: "Lorem Ipsum"
-                        value: "Lorem Ipsum"
-                        created_at: "2021-03-23T16:13:08.489+01:00"
-                        updated_at: "2021-03-23T16:13:08.489+01:00"
-                    series:
-                      - public_id: "Lorem Ipsum"
-                        name: "John Doe"
-                        description: "Lorem ipsum dolor sit amet"
-                        image: "Lorem Ipsum"
-                        created_at: "2021-03-23T16:13:08.489+01:00"
-                        updated_at: "2021-03-23T16:13:08.489+01:00"
-                        position: 844
-                    tracks:
-                      - public_id: "Lorem Ipsum"
-                        name: "John Doe"
-                        start: 867
-                        end: 55
-                    group:
-                      public_id: "Lorem Ipsum"
-                      name: "John Doe"
-                      created_at: "2021-03-23T16:13:08.489+01:00"
-                      updated_at: "2021-03-23T16:13:08.489+01:00"
-                    created_at: "2021-03-23T16:13:08.489+01:00"
-                    updated_at: "2021-03-23T16:13:08.489+01:00"
-                meta:
-                  total: 100
-                  page: 2
-                  perPage: 10
-                  currentPage: 3
-                  lastPage: 10
-                  firstPage: 1
-                  lastPageUrl: "/?page=10"
-                  firstPageUrl: "/?page=1"
-                  nextPageUrl: "/?page=6"
-                  previousPageUrl: "/?page=5"
-          description: "Returns **200** (OK) as **application/json**"
-          headers:
-            x-ratelimit-limit:
-              description: "Total amount of requests"
-              schema:
-                type: "integer"
-                example: 150
-            x-ratelimit-remaining:
-              description: "Remaining amount of requests"
-              schema:
-                type: "integer"
-                example: 100
-            x-request-id:
-              description: "Request ID"
-              schema:
-                type: "string"
-                example: "1234567890"
-        401:
-          description: "Returns **401** (Unauthorized)"
-        403:
-          description: "Returns **403** (Forbidden)"
-        422:
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ValidationInterface"
-              example:
-                errors:
-                  - field: "Lorem Ipsum"
-                    rule: "Lorem Ipsum"
-                    message: "Lorem Ipsum"
-          description: "Returns **422** (Unprocessable Entity) as **application/json**"
-        429:
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/TooManyRequests"
-              example:
-                errors:
-                  - message: "Lorem Ipsum"
-                    retryAfter: 413
-          description: "Returns **429** (Too Many Requests) as **application/json**"
-      security:
-        - BearerAuth:
-            - "access"
-  /search/narrator:
-    get:
-      summary: "Search for a narrator (narrator)"
-      description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/searches_controller.ts_ - **narrator**"
-      operationId: "searchNarrator"
+      summary: "Search for a contributor (contributor)"
+      description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/searches_controller.ts_ - **contributor**"
+      operationId: "searchContributor"
       parameters:
         - in: "query"
           name: "name"
-          description: "The name of the narrator to search for."
+          description: "The name of the contributor to search for."
           schema:
             example: ""
             type: "string"
           required: false
         - in: "query"
           name: "keywords"
-          description: "The keywords to search for a narrator."
+          description: "The keywords to search for a contributor."
           schema:
             example: ""
             type: "string"
@@ -3382,23 +3663,25 @@ paths:
                   data:
                     type: "array"
                     items:
-                      $ref: "#/components/schemas/Narrator"
+                      $ref: "#/components/schemas/Contributor"
                   meta:
                     $ref: "#/components/schemas/PaginationMeta"
               example:
                 data:
                   - public_id: "Lorem Ipsum"
-                    name: "John Doe"
-                    description: "Lorem ipsum dolor sit amet"
-                    image: "Lorem Ipsum"
+                    name: "'J.K. Rowling'"
+                    description: "'British author, best known for the Harry Potter series'"
+                    image: "'https://example.com/contributor.jpg'"
                     identifiers:
                       - public_id: "Lorem Ipsum"
                         value: "Lorem Ipsum"
                         created_at: "2021-03-23T16:13:08.489+01:00"
                         updated_at: "2021-03-23T16:13:08.489+01:00"
-                    created_at: "2021-03-23T16:13:08.489+01:00"
-                    updated_at: "2021-03-23T16:13:08.489+01:00"
-                    role: "Lorem Ipsum"
+                    created_at: "'2023-01-01T00:00:00Z'"
+                    updated_at: "'2023-01-01T00:00:00Z'"
+                    role: "Harry Potter"
+                    type: {}
+                    type_string: "'author'"
                 meta:
                   total: 100
                   page: 2
@@ -3450,7 +3733,7 @@ paths:
               example:
                 errors:
                   - message: "Lorem Ipsum"
-                    retryAfter: 413
+                    retryAfter: 864
           description: "Returns **429** (Too Many Requests) as **application/json**"
       security:
         - BearerAuth:
@@ -3565,7 +3848,7 @@ paths:
               example:
                 errors:
                   - message: "Lorem Ipsum"
-                    retryAfter: 413
+                    retryAfter: 864
           description: "Returns **429** (Too Many Requests) as **application/json**"
       security:
         - BearerAuth:
@@ -3625,6 +3908,7 @@ paths:
                     name: "John Doe"
                     description: "Lorem ipsum dolor sit amet"
                     image: "Lorem Ipsum"
+                    language: "Lorem Ipsum"
                     identifiers:
                       - public_id: "Lorem Ipsum"
                         value: "Lorem Ipsum"
@@ -3632,7 +3916,7 @@ paths:
                         updated_at: "2021-03-23T16:13:08.489+01:00"
                     created_at: "2021-03-23T16:13:08.489+01:00"
                     updated_at: "2021-03-23T16:13:08.489+01:00"
-                    position: 844
+                    position: 498
                 meta:
                   total: 100
                   page: 2
@@ -3684,7 +3968,7 @@ paths:
               example:
                 errors:
                   - message: "Lorem Ipsum"
-                    retryAfter: 413
+                    retryAfter: 864
           description: "Returns **429** (Too Many Requests) as **application/json**"
       security:
         - BearerAuth:
@@ -3733,37 +4017,29 @@ paths:
                     $ref: "#/components/schemas/PaginationMeta"
               example:
                 data:
-                  - public_id: "Lorem Ipsum"
-                    title: "Lorem Ipsum"
-                    subtitle: "Lorem Ipsum"
-                    summary: "Lorem Ipsum"
-                    description: "Lorem ipsum dolor sit amet"
-                    publisher: "Lorem Ipsum"
-                    image: "Lorem Ipsum"
-                    language: "Lorem Ipsum"
+                  - title: "Harry Potter and the Philosopher's Stone"
+                    subtitle: "Harry Potter 1"
+                    summary: "Short summary of the book"
+                    description: "Longer more detailed description of the book"
+                    image: "https://example.com/image.jpg"
+                    language: "English"
                     copyright: "Lorem Ipsum"
-                    pages: 871
-                    duration: 285
+                    pages: "123"
+                    duration: 831
                     released_at: "2021-03-23T16:13:08.489+01:00"
                     is_explicit: true
                     is_abridged: true
-                    group_id: 654
+                    group_id: 806
                     type: "book"
-                    authors:
+                    contributors:
                       - public_id: "Lorem Ipsum"
-                        name: "John Doe"
-                        description: "Lorem ipsum dolor sit amet"
-                        image: "Lorem Ipsum"
-                        created_at: "2021-03-23T16:13:08.489+01:00"
-                        updated_at: "2021-03-23T16:13:08.489+01:00"
-                    narrators:
-                      - public_id: "Lorem Ipsum"
-                        name: "John Doe"
-                        description: "Lorem ipsum dolor sit amet"
-                        image: "Lorem Ipsum"
-                        created_at: "2021-03-23T16:13:08.489+01:00"
-                        updated_at: "2021-03-23T16:13:08.489+01:00"
-                        role: "Lorem Ipsum"
+                        name: "'J.K. Rowling'"
+                        description: "'British author, best known for the Harry Potter series'"
+                        image: "'https://example.com/contributor.jpg'"
+                        created_at: "'2023-01-01T00:00:00Z'"
+                        updated_at: "'2023-01-01T00:00:00Z'"
+                        role: "Harry Potter"
+                        type_string: "'author'"
                     genres:
                       - public_id: "Lorem Ipsum"
                         name: "John Doe"
@@ -3779,19 +4055,33 @@ paths:
                         name: "John Doe"
                         description: "Lorem ipsum dolor sit amet"
                         image: "Lorem Ipsum"
+                        language: "Lorem Ipsum"
                         created_at: "2021-03-23T16:13:08.489+01:00"
                         updated_at: "2021-03-23T16:13:08.489+01:00"
-                        position: 844
+                        position: 498
                     tracks:
                       - public_id: "Lorem Ipsum"
                         name: "John Doe"
-                        start: 867
-                        end: 55
+                        start: 475
+                        end: 742
                     group:
                       public_id: "Lorem Ipsum"
                       name: "John Doe"
                       created_at: "2021-03-23T16:13:08.489+01:00"
                       updated_at: "2021-03-23T16:13:08.489+01:00"
+                    public_publisher:
+                      id: 346
+                      public_id: "Lorem Ipsum"
+                      name: "John Doe"
+                      description: "Lorem ipsum dolor sit amet"
+                      created_at: "2021-03-23T16:13:08.489+01:00"
+                      updated_at: "2021-03-23T16:13:08.489+01:00"
+                    images:
+                      - id: 330
+                        image: "Lorem Ipsum"
+                        book_id: 852
+                        created_at: "2021-03-23T16:13:08.489+01:00"
+                        updated_at: "2021-03-23T16:13:08.489+01:00"
                     created_at: "2021-03-23T16:13:08.489+01:00"
                     updated_at: "2021-03-23T16:13:08.489+01:00"
                 meta:
@@ -3845,7 +4135,7 @@ paths:
               example:
                 errors:
                   - message: "Lorem Ipsum"
-                    retryAfter: 413
+                    retryAfter: 864
           description: "Returns **429** (Too Many Requests) as **application/json**"
       security:
         - BearerAuth:
@@ -3907,7 +4197,7 @@ paths:
               example:
                 errors:
                   - message: "Lorem Ipsum"
-                    retryAfter: 413
+                    retryAfter: 864
           description: "Returns **429** (Too Many Requests) as **application/json**"
       security:
         - BearerAuth:
@@ -3918,26 +4208,145 @@ paths:
             schema:
               $ref: "#/components/schemas/indexRequestValidator"
             example: {}
+  /{model}/{id}/edit-history:
+    get:
+      summary: "Get edit history for a model by ID (getEditHistory)"
+      description: "Returns **200** (OK) as **application/json**\n\n _app/controllers/logs_controller.ts_ - **getEditHistory**"
+      operationId: "getEditHistoryForModel"
+      parameters:
+        - name: "page"
+          in: "query"
+          description: "Page number"
+          required: false
+          minimum: 1
+          maximum: 10
+          schema:
+            type: "integer"
+            default: 1
+        - name: "limit"
+          in: "query"
+          description: "Number of items per page"
+          required: false
+          minimum: 1
+          maximum: 50
+          schema:
+            type: "integer"
+            default: 10
+        - in: "path"
+          name: "model"
+          schema:
+            type: "string"
+          required: true
+        - in: "path"
+          name: "id"
+          schema:
+            type: "string"
+          required: true
+      tags:
+        - ":MODEL"
+      responses:
+        200:
+          content:
+            application/json:
+              schema:
+                type: "object"
+                properties:
+                  data:
+                    type: "array"
+                    items:
+                      $ref: "#/components/schemas/Log"
+                  meta:
+                    $ref: "#/components/schemas/PaginationMeta"
+              example:
+                data:
+                  - public_id: "Lorem Ipsum"
+                    action: {}
+                    model: {}
+                    model_id: "Lorem Ipsum"
+                    data: {}
+                    user_id: 643
+                    state: {}
+                    created_at: "2021-03-23T16:13:08.489+01:00"
+                    updated_at: "2021-03-23T16:13:08.489+01:00"
+                meta:
+                  total: 100
+                  page: 2
+                  perPage: 10
+                  currentPage: 3
+                  lastPage: 10
+                  firstPage: 1
+                  lastPageUrl: "/?page=10"
+                  firstPageUrl: "/?page=1"
+                  nextPageUrl: "/?page=6"
+                  previousPageUrl: "/?page=5"
+          description: "Returns **200** (OK) as **application/json**"
+          headers:
+            x-ratelimit-limit:
+              description: "Total amount of requests"
+              schema:
+                type: "integer"
+                example: 150
+            x-ratelimit-remaining:
+              description: "Remaining amount of requests"
+              schema:
+                type: "integer"
+                example: 100
+            x-request-id:
+              description: "Request ID"
+              schema:
+                type: "string"
+                example: "1234567890"
+        401:
+          description: "Returns **401** (Unauthorized)"
+        403:
+          description: "Returns **403** (Forbidden)"
+      security:
+        - BearerAuth:
+            - "access"
+  /tmp/{file}:
+    get:
+      summary: "route"
+      description: "\n\n __ - ****"
+      parameters:
+        - in: "path"
+          name: "file"
+          schema:
+            type: "string"
+          required: true
+      tags:
+        - "TMP"
+      responses:
+        200:
+          description: "OK"
+          content:
+            application/json: {}
+      security: []
 tags:
-  - name: "LOGIN"
-    description: "Everything related to LOGIN"
+  - name: "AUTH"
+    description: "Everything related to AUTH"
+  - name: "USER"
+    description: "Everything related to USER"
   - name: "BOOK"
     description: "Everything related to BOOK"
   - name: "BOOKS"
     description: "Everything related to BOOKS"
-  - name: "AUTHOR"
-    description: "Everything related to AUTHOR"
-  - name: "NARRATOR"
-    description: "Everything related to NARRATOR"
+  - name: "CONTRIBUTOR"
+    description: "Everything related to CONTRIBUTOR"
   - name: "SERIES"
     description: "Everything related to SERIES"
   - name: "GENRE"
     description: "Everything related to GENRE"
   - name: "TRACK"
     description: "Everything related to TRACK"
+  - name: "PUBLISHER"
+    description: "Everything related to PUBLISHER"
   - name: "SEARCH"
     description: "Everything related to SEARCH"
   - name: "CREATE"
     description: "Everything related to CREATE"
   - name: "REQUEST"
     description: "Everything related to REQUEST"
+  - name: ":MODEL"
+    description: "Everything related to :MODEL"
+  - name: "TMP"
+    description: "Everything related to TMP"

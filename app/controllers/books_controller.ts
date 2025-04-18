@@ -11,6 +11,7 @@ import { DateTime } from 'luxon'
 import {
   contributorValidator,
   genreValidator,
+  getIdPaginationValidator,
   publisherValidator,
   seriesValidator,
   trackValidator,
@@ -27,6 +28,8 @@ import app from '@adonisjs/core/services/app'
 import { cuid } from '@adonisjs/core/helpers'
 import Publisher from '#models/publisher'
 import { BookDto } from '#dtos/book'
+import Image from '#models/image'
+import { ImageBaseDto } from '#dtos/image'
 
 export default class BooksController {
   /**
@@ -289,5 +292,29 @@ export default class BooksController {
       .firstOrFail()
 
     return new BookDto(book)
+  }
+
+  /**
+   * @images
+   * @operationId getBookImages
+   * @summary Get all additional images for a book by ID
+   *
+   * @requestBody - <getIdPaginationValidator>
+   *
+   * @responseHeader 200 - @use(rate)
+   * @responseHeader 200 - @use(requestId)
+   *
+   * @responseBody 200 - <Image[]>.paginated()
+   * @responseBody 422 - <ValidationInterface>
+   * @responseBody 429 - <TooManyRequests>
+   */
+  async images({ params }: HttpContext) {
+    const payload = await getIdPaginationValidator.validate(params)
+
+    const images = await Image.query()
+      .preload('book', (q) => q.where('public_id', payload.id))
+      .paginate(payload.page ?? 1, payload.limit ?? 10)
+
+    return ImageBaseDto.fromPaginator(images)
   }
 }

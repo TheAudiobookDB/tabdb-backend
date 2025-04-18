@@ -42,7 +42,7 @@ export default class TracksController {
     return TrackBaseDto.fromPaginator(
       await Track.query()
         .preload('book', (q) => q.where('publicId', payload.id))
-        .paginate(payload.page, payload.limit)
+        .paginate(payload.page, 500)
     )
   }
 }

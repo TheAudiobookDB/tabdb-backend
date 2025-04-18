@@ -24,6 +24,7 @@ import { ImageExtension } from '../extensions/image_extension.js'
 import { compose } from '@adonisjs/core/helpers'
 import { LogState } from '../enum/log_enum.js'
 import { ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
+import Image from '#models/image'
 
 type Builder = ModelQueryBuilderContract<typeof Book>
 
@@ -123,6 +124,11 @@ export default class Book extends compose(LogExtension, ImageExtension) {
     foreignKey: 'publisher_id',
   })
   declare public publisher: BelongsTo<typeof Publisher>
+
+  @hasMany(() => Image, {
+    foreignKey: 'bookId',
+  })
+  declare images: HasMany<typeof Image>
 
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
@@ -250,6 +256,7 @@ export default class Book extends compose(LogExtension, ImageExtension) {
       .preload('genres', (q) => q.where('enabled', true))
       .preloadOnce('identifiers')
       .preloadOnce('group')
+      .preloadOnce('images')
   })
 
   static minimalContributors = scope((query: Builder) => {
