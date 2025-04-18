@@ -7,6 +7,7 @@ import {
   column,
   hasMany,
   manyToMany,
+  scope,
 } from '@adonisjs/lucid/orm'
 import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import Contributor from '#models/contributor'
@@ -22,6 +23,9 @@ import { LogExtension } from '../extensions/log_extension.js'
 import { ImageExtension } from '../extensions/image_extension.js'
 import { compose } from '@adonisjs/core/helpers'
 import { LogState } from '../enum/log_enum.js'
+import { ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
+
+type Builder = ModelQueryBuilderContract<typeof Book>
 
 export default class Book extends compose(LogExtension, ImageExtension) {
   @column({ isPrimary: true, serializeAs: null })
@@ -227,4 +231,42 @@ export default class Book extends compose(LogExtension, ImageExtension) {
       await publisher.saveWithLog(LogState.APPROVED)
     }
   }
+
+  static minimalAll = scope((query: Builder) => {
+    query
+      .withScopes((s) => s.minimalContributors())
+      .withScopes((s) => s.minimalSeries())
+      .withScopes((s) => s.minimalPublisher())
+      .preload('genres', (q) => q.where('enabled', true))
+      .preloadOnce('identifiers')
+      .preloadOnce('group')
+  })
+
+  static minimalContributors = scope((query: Builder) => {
+    query.preload('contributors', (q) =>
+      q.pivotColumns(['role', 'type']).withScopes((s) => s.minimal())
+    )
+  })
+
+  static fullContributors = scope((query: Builder) => {
+    query.preload('contributors', (q) =>
+      q.pivotColumns(['role', 'type']).withScopes((s) => s.full())
+    )
+  })
+
+  static minimalSeries = scope((query: Builder) => {
+    query.preload('series', (q) => q.pivotColumns(['position']).withScopes((s) => s.minimal()))
+  })
+
+  static fullSeries = scope((query: Builder) => {
+    query.preload('series', (q) => q.pivotColumns(['role']).withScopes((s) => s.full()))
+  })
+
+  static minimalPublisher = scope((query: Builder) => {
+    query.preload('publisher', (q) => q.withScopes((s) => s.minimal()))
+  })
+
+  static fullPublisher = scope((query: Builder) => {
+    query.preload('publisher', (q) => q.withScopes((s) => s.full()))
+  })
 }

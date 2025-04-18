@@ -184,13 +184,7 @@ export default class SearchesController {
     const bookIds = books.hits.map((book) => book.id)
 
     const bookResults = await Book.query()
-      .preload('contributors', (q) => q.pivotColumns(['role', 'type']))
-      .preload('genres')
-      .preload('identifiers')
-      .preload('series')
-      .preload('tracks')
-      .preload('group')
-      .preload('publisher')
+      .withScopes((s) => s.minimalAll())
       .where((builder) => {
         if (bookIds && bookIds.length > 0) {
           builder.whereIn('id', bookIds)

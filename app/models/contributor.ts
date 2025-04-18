@@ -1,5 +1,12 @@
 import { DateTime } from 'luxon'
-import { afterCreate, afterUpdate, beforeCreate, column, manyToMany } from '@adonisjs/lucid/orm'
+import {
+  afterCreate,
+  afterUpdate,
+  beforeCreate,
+  column,
+  manyToMany,
+  scope,
+} from '@adonisjs/lucid/orm'
 import Book from '#models/book'
 import type { ManyToMany } from '@adonisjs/lucid/types/relations'
 import Identifier from '#models/identifier'
@@ -14,6 +21,9 @@ import { assert } from '@japa/assert'
 import { LogExtension } from '../extensions/log_extension.js'
 import { ImageExtension } from '../extensions/image_extension.js'
 import { compose } from '@adonisjs/core/helpers'
+import { ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
+
+type Builder = ModelQueryBuilderContract<typeof Contributor>
 
 export default class Contributor extends compose(LogExtension, ImageExtension) {
   @column({ isPrimary: true, serializeAs: null })
@@ -133,4 +143,10 @@ export default class Contributor extends compose(LogExtension, ImageExtension) {
 
   // @enum('author', 'narrator', 'editor', 'translator', 'adapter', 'reader', 'performer')
   declare typeString: string
+
+  static minimal = scope((query: Builder) =>
+    query.select(['publicId', 'name', 'image', 'enabled']).where('enabled', true)
+  )
+
+  static full = scope((query: Builder) => query.where('enabled', true).preloadOnce('identifiers'))
 }

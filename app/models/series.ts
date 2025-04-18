@@ -1,5 +1,12 @@
 import { DateTime } from 'luxon'
-import { afterCreate, afterUpdate, beforeCreate, column, manyToMany } from '@adonisjs/lucid/orm'
+import {
+  afterCreate,
+  afterUpdate,
+  beforeCreate,
+  column,
+  manyToMany,
+  scope,
+} from '@adonisjs/lucid/orm'
 import Book from '#models/book'
 import type { ManyToMany } from '@adonisjs/lucid/types/relations'
 import Identifier from '#models/identifier'
@@ -12,6 +19,9 @@ import { ModelHelper } from '../helpers/model_helper.js'
 import { LogExtension } from '../extensions/log_extension.js'
 import { ImageExtension } from '../extensions/image_extension.js'
 import { compose } from '@adonisjs/core/helpers'
+import { ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
+
+type Builder = ModelQueryBuilderContract<typeof Series>
 
 export default class Series extends compose(LogExtension, ImageExtension) {
   @column({ isPrimary: true, serializeAs: null })
@@ -124,6 +134,12 @@ export default class Series extends compose(LogExtension, ImageExtension) {
       position: this.$extras.pivot_position,
     }
   }
+
+  static minimal = scope((query: Builder) =>
+    query.select(['publicId', 'name', 'image', 'enabled']).where('enabled', true)
+  )
+
+  static full = scope((query: Builder) => query.where('enabled', true).preloadOnce('identifiers'))
 
   declare position: number | null
 }

@@ -1,5 +1,5 @@
 import { DateTime } from 'luxon'
-import { afterCreate, afterUpdate, beforeCreate, column, hasMany } from '@adonisjs/lucid/orm'
+import { afterCreate, afterUpdate, beforeCreate, column, hasMany, scope } from '@adonisjs/lucid/orm'
 import { nanoid } from '#config/app'
 import { publisherIndex } from '#config/meilisearch'
 import Book from '#models/book'
@@ -7,6 +7,9 @@ import type { HasMany } from '@adonisjs/lucid/types/relations'
 import { Infer } from '@vinejs/vine/types'
 import { publisherValidator } from '#validators/provider_validator'
 import { LogExtension } from '../extensions/log_extension.js'
+import { ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
+
+type Builder = ModelQueryBuilderContract<typeof Publisher>
 
 export default class Publisher extends LogExtension {
   @column({ isPrimary: true })
@@ -93,4 +96,13 @@ export default class Publisher extends LogExtension {
     }
     return undefined
   }
+
+  static minimal = scope((query: Builder) => {
+    query.select(['publicId', 'name', 'enabled']).where('enabled', true)
+  })
+
+  static full = scope((query: Builder) => {
+    // @ts-ignore
+    query
+  })
 }
