@@ -10,6 +10,7 @@ import { bookIndex, client, contributorIndex, genreIndex, seriesIndex } from '#c
 import Contributor from '#models/contributor'
 import Series from '#models/series'
 import { SearchEngineHelper } from '../helpers/search_engine.js'
+import { SearchBookDto } from '#dtos/book'
 
 export default class SearchesController {
   /**
@@ -208,7 +209,7 @@ export default class SearchesController {
       .orderByRaw(`CASE id ${bookIds.map((id, index) => `WHEN ${id} THEN ${index}`).join(' ')} END`)
       .paginate(1, limit)
 
-    const result = bookResults.serialize({})
+    const result = SearchBookDto.fromPaginator(bookResults)
 
     result.meta = SearchEngineHelper.buildPagination(page, books.totalHits, limit)
 
