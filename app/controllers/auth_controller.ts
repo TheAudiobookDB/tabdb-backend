@@ -23,13 +23,13 @@ export default class AuthController {
   async store({ request }: HttpContext) {
     await storeLoginValidator.validate(request.all())
 
-    const { email } = request.all()
+    const { email, username } = request.all()
 
     const url = router
       .builder()
       .prefixUrl(env.get('APP_URL'))
       .params({ email: email })
-      .qs({ uuid: randomUUID() })
+      .qs({ uuid: randomUUID(), ...(username ? { username: username } : {}) })
       .makeSigned('/auth/login', { expiresIn: '5m', purpose: 'login' })
 
     await mail.send((message) => {
@@ -58,13 +58,20 @@ export default class AuthController {
   async create({ request, response }: HttpContext) {
     if (request.hasValidSignature('login')) {
       const email = request.param('email')
-      const { uuid } = request.qs()
+      const { uuid, username } = request.qs()
 
       let user = await User.findBy('email', email)
 
       if (!user) {
+        if (!username) {
+          return response.badRequest({
+            message: 'Username is required for creating a new user',
+          })
+        }
         user = new User()
         user.email = email
+        user.username = username
+
         await user.save()
       }
 

@@ -77,8 +77,8 @@ router
   .get('/book/:id/tracks', [TracksController, 'getTracksForBook'])
   .use(middleware.relaxAuth())
   .use(r2Limiter)
-router.post('/books', [BooksController, 'create']).use(middleware.relaxAuth()).use(r3Limiter)
-router.post('/books/abs', [BooksController, 'abs']).use(middleware.auth()).use(r3Limiter)
+router.post('/book', [BooksController, 'create']).use(middleware.relaxAuth()).use(r3Limiter)
+router.post('/book/abs', [BooksController, 'abs']).use(middleware.auth()).use(r3Limiter)
 
 /**
  * Narrator

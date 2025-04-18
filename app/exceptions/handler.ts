@@ -18,7 +18,12 @@ export default class HttpExceptionHandler extends ExceptionHandler {
       return ctx.response.status(error.status).send(error.getResponseMessage(error, ctx))
     }
 
-    return super.handle(error, ctx)
+    return super.handle(
+      {
+        message: `Internal server error. (${ctx.request.id()})`,
+      },
+      ctx
+    )
   }
 
   /**
@@ -28,6 +33,8 @@ export default class HttpExceptionHandler extends ExceptionHandler {
    * @note You should not attempt to send a response from this method.
    */
   async report(error: unknown, ctx: HttpContext) {
+    // @ts-ignore
+    error.id = ctx.request.id()
     return super.report(error, ctx)
   }
 }
