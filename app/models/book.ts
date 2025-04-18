@@ -256,6 +256,7 @@ export default class Book extends compose(LogExtension, ImageExtension) {
       .preload('genres', (q) => q.where('enabled', true))
       .preloadOnce('identifiers')
       .preloadOnce('group')
+      .preloadOnce('tracks')
       .preloadOnce('images')
   })
 

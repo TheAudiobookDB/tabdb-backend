@@ -18,12 +18,7 @@ export default class HttpExceptionHandler extends ExceptionHandler {
       return ctx.response.status(error.status).send(error.getResponseMessage(error, ctx))
     }
 
-    return super.handle(
-      {
-        message: `Internal server error. (${ctx.request.id()})`,
-      },
-      ctx
-    )
+    return super.handle(error, ctx)
   }
 
   /**
