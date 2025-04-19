@@ -16,8 +16,9 @@ export class ContributorMinimalDto extends BaseModelDto {
     this.id = contributor.publicId
     this.name = contributor.name
     if (
-      contributor.$extras.pivot_type &&
-      contributor.$extras.pivot_type === ContributorType.NARRATOR
+      (contributor.$extras.pivot_type &&
+        contributor.$extras.pivot_type === ContributorType.NARRATOR) ||
+      (!contributor.$extras.pivot_type && contributor.$extras.pivot_role)
     ) {
       this.role = contributor.$extras.pivot_role
     }

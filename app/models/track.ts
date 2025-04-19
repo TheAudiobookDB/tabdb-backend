@@ -1,11 +1,13 @@
 import { DateTime } from 'luxon'
-import { beforeCreate, belongsTo, column, computed } from '@adonisjs/lucid/orm'
+import { beforeCreate, belongsTo, column, computed, hasMany, manyToMany } from '@adonisjs/lucid/orm'
 import Book from '#models/book'
-import type { BelongsTo } from '@adonisjs/lucid/types/relations'
+import type { BelongsTo, HasMany, ManyToMany } from '@adonisjs/lucid/types/relations'
 import { nanoid } from '#config/app'
 import { Infer } from '@vinejs/vine/types'
 import { trackValidator } from '#validators/provider_validator'
 import { LogExtension } from '../extensions/log_extension.js'
+import Contributor from '#models/contributor'
+import Image from '#models/image'
 
 export default class Track extends LogExtension {
   @column({ isPrimary: true, serializeAs: null })
@@ -33,6 +35,16 @@ export default class Track extends LogExtension {
 
   @belongsTo(() => Book)
   declare book: BelongsTo<typeof Book>
+
+  @manyToMany(() => Contributor, {
+    pivotColumns: ['role'],
+  })
+  declare contributors: ManyToMany<typeof Contributor>
+
+  @hasMany(() => Image, {
+    foreignKey: 'trackId',
+  })
+  declare images: HasMany<typeof Image>
 
   @column.dateTime({ autoCreate: true, serializeAs: null })
   declare createdAt: DateTime

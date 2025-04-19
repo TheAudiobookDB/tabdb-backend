@@ -61,6 +61,11 @@ export default class Contributor extends compose(LogExtension, ImageExtension) {
   })
   declare books: ManyToMany<typeof Book>
 
+  @manyToMany(() => Book, {
+    pivotColumns: ['role'],
+  })
+  declare tracks: ManyToMany<typeof Book>
+
   @manyToMany(() => Identifier)
   declare identifiers: ManyToMany<typeof Identifier>
 
