@@ -31,6 +31,7 @@ const roleAbilities = {
     'server:add',
     'server:edit',
     'server:delete',
+    'moderator',
   ],
   [UserRoles.ADMIN]: [
     'rate1:500',
@@ -45,6 +46,7 @@ const roleAbilities = {
     'server:add',
     'server:edit',
     'server:delete',
+    'moderator',
     'admin',
   ],
 }
@@ -56,6 +58,9 @@ export class UserAbilities {
   constructor(abilities?: string[], user?: User) {
     this.abilities = abilities ?? []
     this.user = user ?? null
+    if (user) {
+      this.getUserAbilities()
+    }
   }
 
   public hasAbility(ability: string): boolean {

@@ -5,10 +5,16 @@ import Log from '#models/log'
 import { nanoid } from '#config/app'
 import * as model_1 from '@adonisjs/lucid/types/model'
 import { LucidModel, ModelAssignOptions, ModelAttributes } from '@adonisjs/lucid/types/model'
+import { TransactionClientContract } from '@adonisjs/lucid/types/database'
 
 export class LogExtension extends BaseModel {
-  public async saveWithLog(logState?: LogState): Promise<this> {
+  public async saveWithLog(
+    logState?: LogState,
+    trx?: TransactionClientContract,
+    applyToModel: boolean = true
+  ): Promise<this> {
     const changedValues = { ...this.$dirty }
+    if (trx && applyToModel) this.useTransaction(trx)
     const result = await this.save()
 
     // If changedValues is empty, return
@@ -27,8 +33,12 @@ export class LogExtension extends BaseModel {
     // @ts-ignore
     log.data = result.$isLocal ? null : changedValues
     log.state = logState ?? LogState.PENDING
-
-    void log.save()
+    if (trx) {
+      log.useTransaction(trx)
+      await log.save()
+    } else {
+      void log.save()
+    }
 
     return result
   }

@@ -2,7 +2,6 @@ import vine from '@vinejs/vine'
 import { languageValidation, limitValidation, nanoIdValidation, pageValidation } from '#config/app'
 import { isLanguageRule } from '#start/rules/language'
 import { ContributorType } from '../enum/contributor_enum.js'
-import type { FieldContext } from '@vinejs/vine/types'
 
 export const asinValidation = vine
   .string()
@@ -13,6 +12,30 @@ export const imageValidation = vine.file({
   size: '3mb',
   extnames: ['jpg', 'jpeg', 'png', 'webp'],
 })
+
+export const contributorTypeValidation = vine
+  .number()
+  .parse((value) => {
+    console.log('value', value, typeof value)
+    console.log('value', value, typeof value)
+    console.log('value', value, typeof value)
+    console.log('value', value, typeof value)
+    console.log('value', value, typeof value)
+    console.log('value', value, typeof value)
+    if (typeof value === 'number' || typeof value === 'string') {
+      if (typeof value === 'string') {
+        value = Number.parseInt(value)
+      }
+      if (typeof value === 'number' && value in ContributorType) {
+        return value
+      }
+    }
+    const allowedTypes = Object.values(ContributorType).map((type) => type.toString())
+    throw new Error(`Invalid type. Allowed types are: ${allowedTypes.join(', ')}`)
+  })
+  .min(1)
+  .max(99)
+  .withoutDecimals()
 
 export const audiMetaBookValidator = vine.compile(
   vine.object({
@@ -185,25 +208,7 @@ export const contributorValidation = vine.object({
   birthdate: vine.date().optional(),
   country: vine.string().maxLength(2).minLength(2).optional(),
   website: vine.string().url().optional(),
-  type: vine
-    .number()
-    .parse((value, field: Pick<FieldContext, 'data' | 'parent' | 'meta'>) => {
-      if (typeof value === 'number') {
-        if (value in ContributorType) {
-          return value
-        }
-      }
-      const allowedTypes = Object.values(ContributorType).map((type) => type.toString())
-      const fieldContext = field as FieldContext
-      fieldContext.report(
-        'Invalid type. Allowed types are: ' + allowedTypes.join(', '),
-        'invalid_type',
-        fieldContext
-      )
-    })
-    .min(1)
-    .max(99)
-    .withoutDecimals(),
+  type: contributorTypeValidation,
   identifiers: vine.array(identifierValidation).maxLength(10).optional(),
 })
 export const contributorValidator = vine.compile(contributorValidation)

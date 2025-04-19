@@ -82,11 +82,11 @@ router
   .get('/book/:id/tracks', [TracksController, 'getTracksForBook'])
   .use(middleware.relaxAuth())
   .use(r2Limiter)
-router.post('/book', [BooksController, 'create']).use(middleware.relaxAuth()).use(r3Limiter)
+router.post('/book', [BooksController, 'create']).use(middleware.auth()).use(r3Limiter)
 router.post('/book/abs', [BooksController, 'abs']).use(middleware.auth()).use(r3Limiter)
 
 /**
- * Narrator
+ * Contributor
  */
 router
   .get('/contributor/:id', [ContributorsController, 'get'])
@@ -96,6 +96,14 @@ router
   .get('/contributor/:id/books', [ContributorsController, 'books'])
   .use(middleware.relaxAuth())
   .use(r2Limiter)
+router
+  .post('/contributor', [ContributorsController, 'create'])
+  .use(middleware.relaxAuth())
+  .use(r3Limiter)
+router
+  .patch('/contributor', [ContributorsController, 'update'])
+  .use(middleware.relaxAuth())
+  .use(r3Limiter)
 
 /**
  * Series
@@ -156,7 +164,7 @@ router
 /**
  * Confirm
  */
-router.get('/create/confirm', [ConfirmsController, 'create']).use(middleware.auth()).use(r1Limiter)
+router.get('/confirm/:id', [ConfirmsController, 'create']).use(middleware.auth()).use(r1Limiter)
 
 /**
  * Request

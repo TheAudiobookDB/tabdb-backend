@@ -45,4 +45,5 @@ router.use([
 export const middleware = router.named({
   auth: () => import('#middleware/auth_middleware'),
   relaxAuth: () => import('#middleware/relax_auth_middleware'),
+  moderatorAuth: () => import('#middleware/moderator_middleware'),
 })

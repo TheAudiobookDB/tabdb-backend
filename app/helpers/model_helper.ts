@@ -4,11 +4,14 @@ import { identifierValidation } from '#validators/provider_validator'
 import Identifier from '#models/identifier'
 import Book from '#models/book'
 import { Infer } from '@vinejs/vine/types'
+import { TransactionClientContract } from '@adonisjs/lucid/types/database'
 
 export class ModelHelper {
   static async addIdentifier(
     model: Book | Contributor | Series,
-    payloadObject?: Infer<typeof identifierValidation>[]
+    payloadObject?: Infer<typeof identifierValidation>[],
+    trx?: TransactionClientContract,
+    replace: boolean = false
   ) {
     if (payloadObject) {
       const identifiers = []
@@ -19,17 +22,38 @@ export class ModelHelper {
             identifiers.push(existingIdentifier)
           }
         } else if ('type' in identifier) {
-          const existingIdentifier = await Identifier.firstOrCreate({
-            type: identifier.type,
-            value: identifier.value,
-          })
+          const existingIdentifier = await Identifier.firstOrCreate(
+            {
+              type: identifier.type,
+              value: identifier.value,
+            },
+            {},
+            trx
+              ? {
+                  client: trx,
+                }
+              : undefined
+          )
           if (existingIdentifier) {
             identifiers.push(existingIdentifier)
           }
         }
       }
-      // @ts-ignore
-      await model.related('identifiers').saveMany(identifiers)
+      if (trx) model.useTransaction(trx)
+      model.$pushRelated('identifiers', identifiers)
+      if (replace) {
+        const syncData = identifiers.reduce<Record<string, {}>>((acc, identifier) => {
+          const key = identifier.id.toString()
+          acc[key] = {}
+          return acc
+        }, {})
+
+        // @ts-ignore
+        await model.related('identifiers').sync(syncData)
+      } else {
+        // @ts-ignore
+        await model.related('identifiers').saveMany(identifiers)
+      }
     }
   }
 

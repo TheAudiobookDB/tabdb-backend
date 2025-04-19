@@ -44,6 +44,15 @@ export default class Contributor extends compose(LogExtension, ImageExtension) {
   // @example('https://example.com/contributor.jpg')
   declare image: string | null
 
+  @column()
+  declare website: string | null
+
+  @column()
+  declare birthDate: DateTime | null
+
+  @column()
+  declare country: string | null
+
   @column({ serializeAs: null })
   declare enabled: boolean
 
@@ -113,6 +122,8 @@ export default class Contributor extends compose(LogExtension, ImageExtension) {
         { name: contributor.name },
         {
           description: contributor.description,
+          website: contributor.website,
+          country: contributor.country,
         }
       )
       await ModelHelper.addIdentifier(currentContributor, contributor.identifiers)

@@ -6,6 +6,19 @@ import Contributor from '#models/contributor'
 import Book from '#models/book'
 import { BookDto } from '#dtos/book'
 import { ContributorFullDto } from '#dtos/contributor'
+import { FileHelper } from '../helpers/file_helper.js'
+import { DateTime } from 'luxon'
+import { LogState } from '../enum/log_enum.js'
+import { ModelHelper } from '../helpers/model_helper.js'
+import { contributorIndex } from '#config/meilisearch'
+import router from '@adonisjs/core/services/router'
+import { nanoid } from '#config/app'
+import {
+  contributorCreateValidator,
+  contributorUpdateValidator,
+} from '#validators/create_validator'
+import db from '@adonisjs/lucid/services/db'
+import { UserAbilities } from '../enum/user_enum.js'
 
 export default class NarratorsController {
   /**
@@ -58,5 +71,175 @@ export default class NarratorsController {
         })
         .paginate(payload.page, payload.limit)
     )
+  }
+
+  /**
+   * @create
+   * @operationId createContributor
+   * @summary Create a new contributor
+   * @description Create a new contributor
+   *
+   * @requestBody - <contributorCreateValidator>
+   *
+   * @responseHeader 201 - @use(rate)
+   * @responseHeader 201 - @use(requestId)
+   *
+   * @responseBody 201 - <Contributor>.with(relations).exclude(books)
+   */
+  async create({ request }: HttpContext) {
+    const payload = await contributorCreateValidator.validate(request.body())
+
+    const trx = await db.transaction()
+
+    try {
+      const existingContributor = await contributorIndex.search(payload.name, {
+        limit: 1,
+        attributesToRetrieve: ['id'],
+        rankingScoreThreshold: 0.95,
+      })
+      const exactContributor = await Contributor.query().whereILike('name', payload.name!).first()
+
+      let possibleDuplicate = false
+      if (existingContributor.hits.length > 0) {
+        possibleDuplicate = true
+      }
+      if (exactContributor) {
+        possibleDuplicate = true
+      }
+
+      const contributor = new Contributor()
+      contributor.publicId = nanoid()
+      contributor.name = payload.name!
+
+      contributor.birthDate = payload.birthdate ? DateTime.fromJSDate(payload.birthdate) : null
+      contributor.country = payload.country || null
+      contributor.description = payload.description || null
+      contributor.website = payload.website || null
+
+      contributor.useTransaction(trx)
+      await contributor.saveWithLog(
+        possibleDuplicate ? LogState.PENDING_DUPLICATE : LogState.PENDING,
+        trx
+      )
+
+      // To only upload the image if the contributor could be created
+      if (payload.image) {
+        const fileName = await FileHelper.saveFile(
+          payload.image,
+          'contributors',
+          contributor.publicId,
+          true
+        )
+        if (fileName) {
+          contributor.image = fileName
+          contributor.useTransaction(trx)
+          await contributor.save()
+        }
+      }
+
+      if (contributor.identifiers) {
+        await ModelHelper.addIdentifier(contributor, payload.identifiers, trx)
+      }
+
+      await trx.commit()
+
+      return {
+        message: possibleDuplicate
+          ? 'Contributor created with pending duplicate'
+          : 'Contributor created',
+        data: new ContributorFullDto(contributor),
+        ...(possibleDuplicate
+          ? {
+              activationLink: router
+                .builder()
+                .params({ id: contributor.publicId })
+                .disableRouteLookup()
+                .make('/confirm/contributor/:id'),
+            }
+          : {}),
+      }
+    } catch (e) {
+      await trx.rollback()
+
+      throw e
+    }
+  }
+
+  /**
+   * @update
+   * @operationId updateContributor
+   * @summary Update a contributor
+   * @description Update a contributor
+   *
+   * @requestBody - <contributorValidator>
+   *
+   * @responseHeader 201 - @use(rate)
+   * @responseHeader 201 - @use(requestId)
+   *
+   * @responseBody 201 - <Contributor>.with(relations).exclude(books)
+   */
+  async update({ request, auth }: HttpContext) {
+    const payload = await contributorUpdateValidator.validate(request.body())
+
+    const contributor = await Contributor.findByOrFail('publicId', payload.id)
+
+    const trx = await db.transaction()
+    const logTrx = await db.transaction()
+
+    const userPermissions = new UserAbilities(undefined, auth.user)
+    const instantUpdate = userPermissions.hasAbility('server:update')
+
+    try {
+      contributor.name = payload.name ?? contributor.name
+
+      contributor.birthDate = payload.birthdate
+        ? DateTime.fromJSDate(payload.birthdate)
+        : contributor.birthDate
+      contributor.country = payload.country ?? contributor.country
+      contributor.description = payload.description ?? contributor.description
+      contributor.website = payload.website ?? contributor.website
+      contributor.useTransaction(trx)
+
+      if (payload.image) {
+        const fileName = await FileHelper.saveFile(
+          payload.image,
+          'contributors',
+          contributor.publicId,
+          true,
+          contributor.image
+        )
+        if (fileName) {
+          contributor.image = fileName
+          contributor.useTransaction(trx)
+          await contributor.save()
+        }
+      }
+
+      if (payload.identifiers) {
+        await ModelHelper.addIdentifier(contributor, payload.identifiers, trx, true)
+      }
+
+      await contributor.saveWithLog(
+        instantUpdate ? LogState.APPROVED : LogState.PENDING,
+        logTrx,
+        false
+      )
+
+      if (instantUpdate) {
+        await trx.commit()
+      } else {
+        await trx.rollback()
+      }
+      await logTrx.commit()
+
+      return {
+        message: instantUpdate ? 'Contributor updated' : 'Contributor updated with pending',
+        data: new ContributorFullDto(contributor),
+      }
+    } catch (e) {
+      await trx.rollback()
+      await logTrx.rollback()
+      throw e
+    }
   }
 }

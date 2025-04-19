@@ -148,6 +148,7 @@ export default class BooksController {
         const genreModel = await Genre.findByModelOrCreate(genre)
         if (genreModel) genres.push(genreModel)
       }
+      book.$pushRelated('genres', genres)
       await book.related('genres').saveMany(genres)
     }
   }
@@ -229,6 +230,7 @@ export default class BooksController {
           tracks.push(trackModel)
         }
       }
+      book.$pushRelated('tracks', tracks)
       await book.related('tracks').saveMany(tracks)
     }
   }
@@ -242,6 +244,7 @@ export default class BooksController {
       if (book.publisher_id && !replace) return
       const publisherModel = await Publisher.findByModelOrCreate(publisher)
       if (publisherModel) {
+        book.$setRelated('publisher', publisherModel)
         await book.related('publisher').associate(publisherModel)
       }
     }
