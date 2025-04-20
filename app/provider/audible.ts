@@ -7,6 +7,7 @@ import {
   audiMetaTrackValidator,
   contributorValidator,
   publisherValidator,
+  seriesValidator,
 } from '#validators/provider_validator'
 import { DateTime } from 'luxon'
 import BooksController from '#controllers/books_controller'
@@ -20,6 +21,11 @@ import logger from '@adonisjs/core/services/logger'
 import { LogState } from '../enum/log_enum.js'
 import { FileHelper } from '../helpers/file_helper.js'
 import { nanoid } from '#config/app'
+import { HttpContext } from '@adonisjs/core/http'
+import {
+  ProviderErrorException,
+  ProviderNotFoundException,
+} from '#exceptions/provider_error_exception'
 
 export class Audible {
   static async fetchBook(identifier: string, language: string): Promise<Book> {
@@ -97,12 +103,12 @@ export class Audible {
     await BooksController.addContributorToBook(book, contributors)
 
     if (payload.series) {
-      const series: object[] = []
+      const series: Infer<typeof seriesValidator>[] = []
       for (const serie of payload.series) {
         series.push({
           name: serie.name,
           position: serie.position,
-          language: book.language,
+          language: book.language ?? undefined,
           identifiers: [
             {
               type: 'audible:asin',
@@ -180,17 +186,19 @@ export class Audible {
 
       return author
     } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 404) {
-        logger.warn(`Audible author ${identifier} not found`)
-        return undefined
-      }
+      const ctx = HttpContext.get()
 
-      logger.error(err)
+      if (axios.isAxiosError(err) && err.response?.status === 404) {
+        throw new ProviderNotFoundException()
+      }
+      if (!ctx) {
+        logger.error(err)
+      }
+      throw new ProviderErrorException(err.message)
     }
   }
 
   static async fetchTracks(identifier: string, language: string) {
-    console.log(`https://audimeta.de/chapters/${identifier}?region=${language}`)
     const result = await axios.get(`https://audimeta.de/chapters/${identifier}?region=${language}`)
 
     const response = result.data

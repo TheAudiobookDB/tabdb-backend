@@ -4,6 +4,7 @@ import {
   genreValidator,
   identifierValidator,
   publisherValidator,
+  seriesValidator,
 } from '#validators/provider_validator'
 import { ModelHelper } from '../helpers/model_helper.js'
 import Book from '#models/book'
@@ -73,11 +74,14 @@ export class Audiobookshelf {
     }
     await BooksController.addContributorToBook(book, contributors)
 
-    const series = []
+    const series: Infer<typeof seriesValidator>[] = []
     for (const serie of payload.series ?? []) {
       const [name, position] = serie.split(/#(.+)/)
 
-      series.push({ name: name.trim(), position: position?.trim() })
+      series.push({
+        name: name.trim(),
+        position: position?.trim(),
+      })
     }
     await BooksController.addSeriesToBook(book, series)
 

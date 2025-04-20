@@ -224,7 +224,7 @@ export const seriesValidation = vine.object({
   id: nanoIdValidation.optional().requiredIfMissing('name'),
   name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
   description: vine.string().optional(),
-  image: imageValidation,
+  image: imageValidation.optional(),
   position: vine.string().optional(),
   language: languageValidation.optional(),
   identifiers: vine.array(identifierValidation).maxLength(5).optional(),

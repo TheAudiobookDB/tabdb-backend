@@ -116,7 +116,6 @@ export class FileHelper {
 
       return `${env.get('CDN_SERVE_HOST')}/${subDirectory}/${fileName}.webp`
     } catch (error) {
-      logger.error(error)
       throw error
     } finally {
       try {
@@ -126,7 +125,11 @@ export class FileHelper {
           await FileHelper.deleteLocalFile(completeFileName)
         }
       } catch (e) {
-        logger.warn('Error deleting file:', e)
+        if (ctx) {
+          ctx.logger.error(e)
+        } else {
+          logger.error(e)
+        }
       }
     }
   }
