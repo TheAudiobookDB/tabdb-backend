@@ -162,6 +162,7 @@ export const identifierValidation = vine
       vine.object({
         type: vine.enum(['audible:asin', 'amazon:asin']),
         value: asinValidation,
+        extra: vine.string().optional(),
       })
     ),
     vine.union.if(
@@ -176,6 +177,7 @@ export const identifierValidation = vine
       vine.object({
         type: vine.enum(['isbn10']),
         value: vine.string().regex(RegExp('^\\d{9}[\\dX]$')),
+        extra: vine.string().optional(),
       })
     ),
     vine.union.if(
@@ -190,6 +192,7 @@ export const identifierValidation = vine
       vine.object({
         type: vine.enum(['isbn13', 'ean']),
         value: vine.string().regex(RegExp('^\\d{13}$')),
+        extra: vine.string().optional(),
       })
     ),
   ])

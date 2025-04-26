@@ -3,6 +3,7 @@ import axios from 'axios'
 import { Audible } from '../../app/provider/audible.js'
 import Book from '#models/book'
 import { ContributorType } from '../../app/enum/contributor_enum.js'
+import env from '#start/env'
 
 export default class extends BaseSeeder {
   async run() {
@@ -10,7 +11,7 @@ export default class extends BaseSeeder {
       return new Promise((resolve) => setTimeout(resolve, ms))
     }
 
-    for (let page = 1; page <= 10; page++) {
+    for (let page = 1; page < env.get('SEED_NUM', 5); page++) {
       const response = await axios.get('https://api.audible.com/1.0/catalog/products', {
         params: {
           num_results: 50,
@@ -25,7 +26,11 @@ export default class extends BaseSeeder {
       for (const product of products) {
         console.log(`Fetching book with ASIN: ${product.asin}`)
 
-        void Audible.fetchBook(product.asin, 'us')
+        try {
+          void Audible.fetchBook(product.asin, 'us')
+        } catch (e) {
+          console.error(`Error fetching book ${product.asin}:`, e.message)
+        }
 
         await sleep(401)
       }
@@ -33,7 +38,7 @@ export default class extends BaseSeeder {
       console.log(`Added 50 books from page ${page}`)
     }
 
-    for (let page = 1; page <= 10; page++) {
+    for (let page = 1; page < env.get('SEED_NUM', 5); page++) {
       const response = await axios.get('https://api.audible.de/1.0/catalog/products', {
         params: {
           num_results: 50,
@@ -48,7 +53,11 @@ export default class extends BaseSeeder {
       for (const product of products) {
         console.log(`Fetching book with ASIN: ${product.asin}`)
 
-        void Audible.fetchBook(product.asin, 'de')
+        try {
+          void Audible.fetchBook(product.asin, 'de')
+        } catch (e) {
+          console.error(`Error fetching book ${product.asin}:`, e.message)
+        }
 
         await sleep(401)
       }
@@ -56,12 +65,14 @@ export default class extends BaseSeeder {
       console.log(`Added 50 books from page ${page}`)
     }
 
-    const books = await Book.query().preload('contributors', (q) =>
-      q
-        .pivotColumns(['role', 'type'])
-        .preload('identifiers', (q2) => q2.where('type', 'audible:asin'))
-        .where('type', ContributorType.AUTHOR)
-    )
+    const books = await Book.query()
+      .preload('contributors', (q) =>
+        q
+          .pivotColumns(['role', 'type'])
+          .preload('identifiers', (q2) => q2.where('type', 'audible:asin'))
+          .where('type', ContributorType.AUTHOR)
+      )
+      .orderByRaw('RANDOM()')
 
     const authors: string[] = []
 
@@ -78,10 +89,14 @@ export default class extends BaseSeeder {
     const authorsSet = new Set(authors)
     let authorsArray = Array.from(authorsSet)
 
-    authorsArray = authorsArray.slice(0, 50)
+    authorsArray = authorsArray.slice(0, env.get('SEED_NUM', 5) * 10)
 
     for (const author of authorsArray) {
-      void Audible.fetchAuthor(author, 'us')
+      try {
+        await Audible.fetchAuthor(author, 'us')
+      } catch (e) {
+        console.error(`Error fetching author ${author}:`, e.message)
+      }
 
       await sleep(401)
     }

@@ -16,10 +16,13 @@ export class IdentifierMinimalDto extends BaseModelDto {
   }
 }
 
-// Filler class
 export class IdentifierBaseDto extends IdentifierMinimalDto {
+  declare extra: string | null
+
   constructor(identifier?: Identifier) {
     super(identifier)
+    if (!identifier) return
+    this.extra = identifier.extra
   }
 }
 

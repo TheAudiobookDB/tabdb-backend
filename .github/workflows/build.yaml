@@ -29,6 +29,9 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Extract metadata (tags, labels) for Docker
         id: meta
         uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
@@ -41,6 +44,6 @@ jobs:
         with:
           context: .
           push: false
-          platforms: linux/arm64
+          platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

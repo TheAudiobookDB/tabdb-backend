@@ -82,5 +82,7 @@ export default await Env.create(new URL('../', import.meta.url), {
 
   CF_AUTH: Env.schema.string(),
 
-  CF_EMAIL: Env.schema.string()
+  CF_EMAIL: Env.schema.string(),
+
+  SEED_NUM: Env.schema.number.optional(),
 })

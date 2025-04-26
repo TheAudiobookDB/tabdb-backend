@@ -27,6 +27,7 @@ const loggerConfig = defineConfig({
       level: 'debug',
       transport: {
         targets: [
+          ...targets().pushIf(!app.inProduction, targets.pretty()).toArray(),
           ...(env.get('AXIOM_DATASET') && env.get('AXIOM_TOKEN')
             ? [
                 {

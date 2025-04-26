@@ -18,6 +18,9 @@ export default class Identifier extends LogExtension {
   @column()
   declare type: 'audible:asin' | 'amazon:asin' | 'isbn10' | 'isbn13' | 'ean'
 
+  @column()
+  declare extra: string | null
+
   @manyToMany(() => Book)
   declare books: ManyToMany<typeof Book>
 

@@ -27,7 +27,9 @@ export class ModelHelper {
               type: identifier.type,
               value: identifier.value,
             },
-            {},
+            {
+              extra: identifier.extra,
+            },
             trx
               ? {
                   client: trx,

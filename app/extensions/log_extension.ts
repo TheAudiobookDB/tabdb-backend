@@ -26,7 +26,7 @@ export class LogExtension extends BaseModel {
     const ctx = HttpContext.get()
 
     const log = new Log()
-    log.userId = ctx ? ctx.auth.user!.id : 1
+    log.userId = ctx?.auth?.user ? ctx.auth.user!.id : 1
     log.action = result.$isLocal ? LogAction.CREATE : LogAction.UPDATE
     log.model = this.constructor.name as LogModel
     log.modelId = this.publicId

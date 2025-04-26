@@ -22,10 +22,7 @@ import { LogState } from '../enum/log_enum.js'
 import { FileHelper } from '../helpers/file_helper.js'
 import { nanoid } from '#config/app'
 import { HttpContext } from '@adonisjs/core/http'
-import {
-  ProviderErrorException,
-  ProviderNotFoundException,
-} from '#exceptions/provider_error_exception'
+import { ProviderNotFoundException } from '#exceptions/provider_error_exception'
 
 export class Audible {
   static async fetchBook(identifier: string, language: string): Promise<Book> {
@@ -43,7 +40,7 @@ export class Audible {
       book = new Book()
     }
 
-    book.publicId = nanoid()
+    book.publicId = book.publicId ?? nanoid()
     book.title = payload.title
     book.subtitle = book.subtitle ?? payload.subtitle ?? null
     book.description = book.description ?? payload.summary ?? null
@@ -84,6 +81,7 @@ export class Audible {
                 {
                   type: 'audible:asin',
                   value: author.asin,
+                  extra: language,
                 },
               ]
             : undefined,
@@ -113,6 +111,7 @@ export class Audible {
             {
               type: 'audible:asin',
               value: serie.asin,
+              extra: language,
             },
           ],
         })
@@ -153,7 +152,9 @@ export class Audible {
 
   static async fetchAuthor(identifier: string, language: string): Promise<Contributor | undefined> {
     try {
-      const result = await axios.get(`https://audimeta.de/author/${identifier}?region=${language}`)
+      const result = await axios.get(
+        `https://beta.audimeta.de/author/${identifier}?region=${language}`
+      )
       const response = result.data
 
       const payload = await audiMetaAuthorValidator.validate(response)
@@ -171,11 +172,26 @@ export class Audible {
         author = new Contributor()
       }
 
-      author.name = payload.name
-      author.description = payload.description ?? null
+      author.publicId = author.publicId ?? nanoid()
+      author.name = author.name ?? payload.name
+      author.description = author.description ?? payload.description ?? null
+
+      if (payload.image && payload.image !== '' && !author.image) {
+        const filePath = await FileHelper.saveFile(
+          payload.image,
+          'contributors',
+          author.publicId,
+          true,
+          author.image
+        )
+        if (filePath) {
+          author.image = filePath
+        }
+      }
+
       author.enabled = true
 
-      await author.saveWithLog(LogState.APPROVED)
+      author = await author.saveWithLog(LogState.APPROVED)
 
       await ModelHelper.addIdentifier(author, [
         {
@@ -194,7 +210,7 @@ export class Audible {
       if (!ctx) {
         logger.error(err)
       }
-      throw new ProviderErrorException(err.message)
+      throw err
     }
   }
 
