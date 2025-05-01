@@ -143,6 +143,12 @@ export default class Book extends compose(LogExtension, ImageExtension) {
       subtitle: book.subtitle,
       description: SearchEngineHelper.removeHtmlTags(book.summary),
       type: book.type,
+      duration: book.duration,
+      pages: book.pages,
+      releasedAt: book.releasedAt ? book.releasedAt.toUnixInteger() : null,
+      isExplicit: book.isExplicit,
+      isAbridged: book.isAbridged,
+      publisher: book.publisher,
       contributors: book.contributors
         ? book.contributors.map((contributor) => ({
             name: contributor.name,

@@ -20,7 +20,12 @@ await bookIndex.updateSettings({
     'series.name',
     'language.language',
     'language.code',
+    'isExplicit',
+    'isAbridged',
+    'releasedAt',
   ],
+  sortableAttributes: ['title', 'type', 'duration', 'pages', 'releasedAt', 'language.language'],
+  //rankingRules: ['sort', 'words', 'typo', 'proximity', 'attribute', 'exactness'],
 })
 
 await genreIndex.updateSettings({

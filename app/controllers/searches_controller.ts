@@ -17,7 +17,7 @@ import {
 import Contributor from '#models/contributor'
 import Series from '#models/series'
 import { SearchEngineHelper } from '../helpers/search_engine.js'
-import { SearchBookDto } from '#dtos/book'
+import { BookDto, SearchBookDto } from '#dtos/book'
 import { ContributorBaseDto } from '#dtos/contributor'
 import { SeriesBaseDto } from '#dtos/series'
 import Publisher from '#models/publisher'
@@ -61,6 +61,45 @@ export default class SearchesController {
     const queries = []
     const page = Number.parseInt(request.input('page', 1))
     const limit = payload.limit ?? 10
+
+    if (payload.sort && payload.sort.includes('random') && payload.sort.length > 1) {
+      throw Error('Random sort must be the only sort')
+    }
+    if (payload.sort && payload.sort.includes('random')) {
+      const allowedAttributes = [
+        'releasedAfter',
+        'releasedBefore',
+        'isExplicit',
+        'isAbridged',
+        'type',
+        'page',
+        'limit',
+        'sort',
+      ]
+      const otherAttributes = Object.keys(payload).filter(
+        (attr) => !allowedAttributes.includes(attr)
+      )
+      if (otherAttributes.length > 0) {
+        throw Error(
+          'Random sort can only include the following attributes: ' + allowedAttributes.join(', ')
+        )
+      }
+    }
+    if (payload.sort && payload.sort.includes('random')) {
+      return SearchBookDto.fromPaginator(
+        await Book.query()
+          .withScopes((s) => s.minimalAll())
+          .where((builder) => {
+            if (payload.releasedAfter) builder.where('releasedAt', '>=', payload.releasedAfter)
+            if (payload.releasedBefore) builder.where('releasedAt', '<=', payload.releasedBefore)
+            if (payload.isExplicit) builder.where('isExplicit', payload.isExplicit)
+            if (payload.isAbridged) builder.where('isAbridged', payload.isAbridged)
+            if (payload.type) builder.where('type', payload.type)
+          })
+          .orderByRaw(`RANDOM()`)
+          .paginate(page, limit)
+      )
+    }
 
     if (payload.author) {
       queries.push({
@@ -140,6 +179,15 @@ export default class SearchesController {
       }
     }
 
+    if (payload.publisher) {
+      const publisherResult = multiSearchResults.results.find(
+        (result) => result.indexUid === publisherIndex.uid
+      )
+      if (publisherResult && publisherResult.hits) {
+        seriesNames = publisherResult.hits.map((series) => series.name)
+      }
+    }
+
     const authorFilterExpression = `(contributors IN ["${authorNames.join('","')}"] AND contributors.type = 1)`
     const narratorFilterExpression = `(contributors IN ["${narratorNames.join('","')}"] AND contributors.type = 2)`
     const genreFilterExpression = `(genres IN ["${genreNames.join('","')}"])`
@@ -165,6 +213,32 @@ export default class SearchesController {
       filterExpression += filterExpression.length > 0 ? ' AND ' : ''
       filterExpression += `type = "${payload.type}"`
     }
+    if (payload.isExplicit) {
+      filterExpression += filterExpression.length > 0 ? ' AND ' : ''
+      filterExpression += `isExplicit = ${payload.isExplicit ? 'true' : 'false'}`
+    }
+    if (payload.isAbridged) {
+      filterExpression += filterExpression.length > 0 ? ' AND ' : ''
+      filterExpression += `isAbridged = ${payload.isAbridged ? 'true' : 'false'}`
+    }
+    if (payload.releasedAfter) {
+      filterExpression += filterExpression.length > 0 ? ' AND ' : ''
+      filterExpression += `releasedAt >= "${payload.releasedAfter.getTime()}" `
+    }
+    if (payload.releasedBefore) {
+      filterExpression += filterExpression.length > 0 ? ' AND ' : ''
+      filterExpression += `releasedAt <= "${payload.releasedBefore.getTime()}" `
+    }
+
+    let sortArray: string[] = []
+    if (payload.sort) {
+      sortArray = payload.sort.map((sort) => {
+        const isAsc: boolean = sort.startsWith('-')
+
+        return `${sort.replace('-', '')}:${isAsc ? 'desc' : 'asc'}`
+      })
+    }
+
     if (payload.language) {
       const [language, code] = payload.language.split('-')
       if (language && code) {
@@ -186,6 +260,7 @@ export default class SearchesController {
       filter: filterExpression,
       showRankingScore: true,
       rankingScoreThreshold: payload.threshold || 0.35,
+      ...(sortArray.length > 0 ? { sort: sortArray } : {}),
     })
     if (!books || !books.hits || books.hits.length <= 0) {
       return {
@@ -200,21 +275,6 @@ export default class SearchesController {
       .where((builder) => {
         if (bookIds && bookIds.length > 0) {
           builder.whereIn('id', bookIds)
-        }
-        if (payload.publisher) {
-          builder.where('publisher', payload.publisher)
-        }
-        if (payload.isExplicit) {
-          builder.where('is_explicit', payload.isExplicit)
-        }
-        if (payload.isAbridged) {
-          builder.where('is_abridged', payload.isAbridged)
-        }
-        if (payload.releasedAfter) {
-          builder.where('released_at', '>=', payload.releasedAfter)
-        }
-        if (payload.releasedBefore) {
-          builder.where('released_at', '<=', payload.releasedBefore)
         }
       })
       .orderByRaw(`CASE id ${bookIds.map((id, index) => `WHEN ${id} THEN ${index}`).join(' ')} END`)
