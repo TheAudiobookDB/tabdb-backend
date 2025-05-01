@@ -17,11 +17,13 @@ import {
 import Contributor from '#models/contributor'
 import Series from '#models/series'
 import { SearchEngineHelper } from '../helpers/search_engine.js'
-import { BookDto, SearchBookDto } from '#dtos/book'
+import { SearchBookDto } from '#dtos/book'
 import { ContributorBaseDto } from '#dtos/contributor'
 import { SeriesBaseDto } from '#dtos/series'
 import Publisher from '#models/publisher'
 import { PublisherMinimalDto } from '#dtos/publisher'
+import { GenreBaseDto } from '#dtos/genre'
+import Genre from '#models/genre'
 
 export default class SearchesController {
   /**
@@ -311,6 +313,18 @@ export default class SearchesController {
     const page = payload.page ?? 1
     const limit = payload.limit ?? 10
 
+    if (payload.sort && payload.sort.includes('random') && payload.sort.length > 1) {
+      throw Error('Random sort must be the only sort')
+    }
+    if (payload.sort && payload.sort.includes('random')) {
+      return ContributorBaseDto.fromPaginator(
+        await Contributor.query()
+          .preload('identifiers')
+          .orderByRaw(`RANDOM()`)
+          .paginate(page, limit)
+      )
+    }
+
     const contributors = await contributorIndex.search(payload.name || payload.keywords, {
       attributesToSearchOn: payload.keywords ? ['*'] : ['name'],
       hitsPerPage: limit,
@@ -364,6 +378,20 @@ export default class SearchesController {
     const page = payload.page ?? 1
     const limit = payload.limit ?? 10
 
+    if (payload.sort && payload.sort.includes('random') && payload.sort.length > 1) {
+      throw Error('Random sort must be the only sort')
+    }
+    if (payload.sort && payload.sort.includes('random')) {
+      return GenreBaseDto.fromPaginator(
+        await Genre.query()
+          .where((builder) => {
+            if (payload.type) builder.where('type', payload.type)
+          })
+          .orderByRaw(`RANDOM()`)
+          .paginate(page, limit)
+      )
+    }
+
     const genres = await genreIndex.search(payload.name, {
       attributesToSearchOn: ['name'],
       hitsPerPage: limit,
@@ -402,6 +430,21 @@ export default class SearchesController {
     const payload = await searchSeriesValidator.validate(request.all())
     const page = payload.page ?? 1
     const limit = payload.limit ?? 10
+
+    if (payload.sort && payload.sort.includes('random') && payload.sort.length > 1) {
+      throw Error('Random sort must be the only sort')
+    }
+    if (payload.sort && payload.sort.includes('random')) {
+      return SeriesBaseDto.fromPaginator(
+        await Series.query()
+          .preload('identifiers')
+          .where((builder) => {
+            if (payload.language) builder.where('language', payload.language)
+          })
+          .orderByRaw(`RANDOM()`)
+          .paginate(page, limit)
+      )
+    }
 
     const series = await seriesIndex.search(payload.name || payload.keywords, {
       attributesToSearchOn: payload.keywords ? ['*'] : ['name'],
@@ -454,6 +497,15 @@ export default class SearchesController {
     const payload = await searchSeriesValidator.validate(request.all())
     const page = payload.page ?? 1
     const limit = payload.limit ?? 10
+
+    if (payload.sort && payload.sort.includes('random') && payload.sort.length > 1) {
+      throw Error('Random sort must be the only sort')
+    }
+    if (payload.sort && payload.sort.includes('random')) {
+      return PublisherMinimalDto.fromPaginator(
+        await Publisher.query().orderByRaw(`RANDOM()`).paginate(page, limit)
+      )
+    }
 
     const publishers = await publisherIndex.search(payload.name, {
       attributesToSearchOn: ['name'],

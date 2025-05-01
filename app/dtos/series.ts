@@ -20,14 +20,12 @@ export class SeriesMinimalDto extends BaseModelDto {
 }
 
 export class SeriesBaseDto extends SeriesMinimalDto {
-  declare description: string | null
   declare image: object | null
   declare language: string | null
 
   constructor(series?: Series) {
     super(series)
     if (!series) return
-    this.description = series.description
     this.image = series.imageUrl
     this.language = series.language
   }
@@ -38,10 +36,12 @@ export class SeriesFullDto extends SeriesBaseDto {
   declare createdAt: string
   declare updatedAt: string
   declare enabled: boolean
+  declare description: string | null
 
   constructor(series?: Series) {
     super(series)
     if (!series) return
+    this.description = series.description
     this.identifiers = IdentifierFullDto.fromArray(series.identifiers)
     this.createdAt = series.createdAt.toISO()!
     this.updatedAt = series.updatedAt.toISO()!
