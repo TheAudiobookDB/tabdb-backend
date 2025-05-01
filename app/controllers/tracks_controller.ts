@@ -5,6 +5,7 @@ import { getIdPaginationValidator, getIdValidator } from '#validators/provider_v
 import Track from '#models/track'
 import { TrackBaseDto, TrackFullDto } from '#dtos/track'
 import Book from '#models/book'
+import { getIdsValidator } from '#validators/common_validator'
 
 export default class TracksController {
   /**
@@ -51,5 +52,15 @@ export default class TracksController {
         .orderBy('start')
         .paginate(payload.page, 500)
     )
+  }
+
+  async getMultiple({ request }: HttpContext) {
+    const payload = await getIdsValidator.validate(request.qs())
+
+    const tracks: Track[] = await Track.query().whereIn('public_id', payload.ids)
+
+    if (!tracks || tracks.length === 0) throw new Error('No data found')
+
+    return TrackFullDto.fromArray(tracks)
   }
 }

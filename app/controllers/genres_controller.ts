@@ -6,6 +6,7 @@ import Genre from '#models/genre'
 import Book from '#models/book'
 import { GenreFullDto } from '#dtos/genre'
 import { BookDto } from '#dtos/book'
+import { getIdsValidator } from '#validators/common_validator'
 
 export default class GenresController {
   /**
@@ -57,5 +58,15 @@ export default class GenresController {
         })
         .paginate(payload.page, payload.limit)
     )
+  }
+
+  async getMultiple({ request }: HttpContext) {
+    const payload = await getIdsValidator.validate(request.qs())
+
+    const genres: Genre[] = await Genre.query().whereIn('public_id', payload.ids)
+
+    if (!genres || genres.length === 0) throw new Error('No data found')
+
+    return GenreFullDto.fromArray(genres)
   }
 }

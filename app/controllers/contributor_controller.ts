@@ -19,6 +19,7 @@ import {
 } from '#validators/create_validator'
 import db from '@adonisjs/lucid/services/db'
 import { UserAbilities } from '../enum/user_enum.js'
+import { getIdsValidator } from '#validators/common_validator'
 
 export default class NarratorsController {
   /**
@@ -241,5 +242,17 @@ export default class NarratorsController {
       await logTrx.rollback()
       throw e
     }
+  }
+
+  async getMultiple({ request }: HttpContext) {
+    const payload = await getIdsValidator.validate(request.qs())
+
+    const contributors: Contributor[] = await Contributor.query()
+      .whereIn('public_id', payload.ids)
+      .preload('identifiers')
+
+    if (!contributors || contributors.length === 0) throw new Error('No data found')
+
+    return ContributorFullDto.fromArray(contributors)
   }
 }

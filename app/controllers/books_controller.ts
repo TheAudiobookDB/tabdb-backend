@@ -30,6 +30,7 @@ import Publisher from '#models/publisher'
 import { BookDto } from '#dtos/book'
 import Image from '#models/image'
 import { ImageBaseDto } from '#dtos/image'
+import { getIdsValidator } from '#validators/common_validator'
 
 export default class BooksController {
   /**
@@ -295,6 +296,18 @@ export default class BooksController {
       .firstOrFail()
 
     return new BookDto(book)
+  }
+
+  async getMultiple({ request }: HttpContext) {
+    const payload = await getIdsValidator.validate(request.qs())
+
+    const book: Book[] = await Book.query()
+      .whereIn('public_id', payload.ids)
+      .withScopes((s) => s.fullAll())
+
+    if (!book || book.length === 0) throw new Error('No data found')
+
+    return BookDto.fromArray(book)
   }
 
   /**

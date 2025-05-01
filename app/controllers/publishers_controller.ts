@@ -6,6 +6,7 @@ import Publisher from '#models/publisher'
 import Book from '#models/book'
 import { PublisherFullDto } from '#dtos/publisher'
 import { BookDto } from '#dtos/book'
+import { getIdsValidator } from '#validators/common_validator'
 
 export default class PublishersController {
   /**
@@ -54,5 +55,15 @@ export default class PublishersController {
         })
         .paginate(payload.page, payload.limit)
     )
+  }
+
+  async getMultiple({ request }: HttpContext) {
+    const payload = await getIdsValidator.validate(request.qs())
+
+    const publishers: Publisher[] = await Publisher.query().whereIn('public_id', payload.ids)
+
+    if (!publishers || publishers.length === 0) throw new Error('No data found')
+
+    return PublisherFullDto.fromArray(publishers)
   }
 }

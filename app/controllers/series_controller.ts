@@ -6,6 +6,7 @@ import Series from '#models/series'
 import Book from '#models/book'
 import { SeriesFullDto } from '#dtos/series'
 import { BookDto } from '#dtos/book'
+import { getIdsValidator } from '#validators/common_validator'
 
 export default class SeriesController {
   /**
@@ -58,5 +59,17 @@ export default class SeriesController {
         })
         .paginate(payload.page, payload.limit)
     )
+  }
+
+  async getMultiple({ request }: HttpContext) {
+    const payload = await getIdsValidator.validate(request.qs())
+
+    const series: Series[] = await Series.query()
+      .whereIn('public_id', payload.ids)
+      .preload('identifiers')
+
+    if (!series || series.length === 0) throw new Error('No data found')
+
+    return SeriesFullDto.fromArray(series)
   }
 }
