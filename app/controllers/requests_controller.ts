@@ -32,13 +32,13 @@ export default class RequestsController {
 
         switch (payload.type) {
           case 'book':
-            const result = await Audible.fetchBook(payload.identifier, payload.language)
+            const result = await Audible.fetchBook(payload.identifier, payload.data)
             return {
               message: `Request for book ${payload.identifier} from provider ${payload.provider} successful`,
               id: result.publicId,
             }
           case 'author':
-            const authorResult = await Audible.fetchAuthor(payload.identifier, payload.language)
+            const authorResult = await Audible.fetchAuthor(payload.identifier, payload.data)
             if (!authorResult) {
               return response.status(404).send({
                 message: `No author found or an error occurred while fetching author ${payload.identifier} from provider ${payload.provider}. If you think this is`,
@@ -50,13 +50,13 @@ export default class RequestsController {
               id: authorResult.publicId,
             }
           case 'tracks':
-            const trackBookResult = await Audible.fetchTracks(payload.identifier, payload.language)
+            const trackBookResult = await Audible.fetchTracks(payload.identifier, payload.data)
             return {
               message: `Request for tracks ${payload.identifier} from provider ${payload.provider} successful`,
               id: trackBookResult.id,
             }
           case 'series':
-            const seriesResult = await Audible.fetchSeries(payload.identifier, payload.language)
+            const seriesResult = await Audible.fetchSeries(payload.identifier, payload.data)
             return {
               message: `Request for series ${payload.identifier} from provider ${payload.provider} successful`,
               id: seriesResult.publicId,

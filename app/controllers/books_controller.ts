@@ -301,13 +301,17 @@ export default class BooksController {
   async getMultiple({ request }: HttpContext) {
     const payload = await getIdsValidator.validate(request.qs())
 
-    const book: Book[] = await Book.query()
+    const books: Book[] = await Book.query()
       .whereIn('public_id', payload.ids)
       .withScopes((s) => s.fullAll())
 
-    if (!book || book.length === 0) throw new Error('No data found')
+    books.forEach((book) => {
+      void Book.afterFindHook(book)
+    })
 
-    return BookDto.fromArray(book)
+    if (!books || books.length === 0) throw new Error('No data found')
+
+    return BookDto.fromArray(books)
   }
 
   /**
