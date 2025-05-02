@@ -159,10 +159,12 @@ export class Audible {
 
       const payload = await audiMetaAuthorValidator.validate(response)
 
+      if (!payload.asin) new Error('ASIN is required for author')
+
       let author: Contributor
       const foundAuthors = await ModelHelper.findByIdentifier(
         Contributor,
-        payload.asin,
+        payload.asin!,
         'audible:asin'
       )
       if (foundAuthors && foundAuthors.length > 0) {
@@ -196,7 +198,7 @@ export class Audible {
       await ModelHelper.addIdentifier(author, [
         {
           type: 'audible:asin',
-          value: payload.asin,
+          value: payload.asin!,
         },
       ])
 

@@ -65,15 +65,19 @@ export const audiMetaBookValidator = vine.compile(
     authors: vine
       .array(
         vine.object({
-          asin: vine.any().transform((value) => {
-            if (
-              typeof value === 'string' &&
-              RegExp('^[0-9a-zA-Z]{10}$|^[0-9]{11,12}$').test(value)
-            ) {
-              return value
-            }
-            return null
-          }),
+          asin: vine
+            .any()
+            .transform((value) => {
+              if (
+                typeof value === 'string' &&
+                RegExp('^[0-9a-zA-Z]{10}$|^[0-9]{11,12}$').test(value)
+              ) {
+                return value
+              }
+              return null
+            })
+            .nullable()
+            .optional(),
           name: vine.string().minLength(3).maxLength(255),
         })
       )
@@ -109,7 +113,7 @@ export const audiMetaBookValidator = vine.compile(
 
 export const audiMetaAuthorValidator = vine.compile(
   vine.object({
-    asin: asinValidation,
+    asin: asinValidation.optional().nullable(),
     name: vine.string().minLength(3).maxLength(255),
     description: vine.string().optional(),
     image: vine.string().url().optional(),
