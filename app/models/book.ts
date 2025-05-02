@@ -2,8 +2,6 @@ import { DateTime } from 'luxon'
 import {
   afterCreate,
   afterDelete,
-  afterFetch,
-  afterFind,
   afterUpdate,
   belongsTo,
   column,
@@ -212,14 +210,6 @@ export default class Book extends compose(LogExtension, ImageExtension) {
   public static async afterDeleteHook(book: Book) {
     void bookIndex.deleteDocument(book.id)
   }
-
-  @afterFind()
-  // @ts-ignore
-  public static async afterFindHook(book: Book) {}
-
-  @afterFetch()
-  // @ts-ignore
-  public static async afterFetchHook(book: Book) {}
 
   // Function to enable book and disabled relations
   public static async enableBookAndRelations(bookId: number): Promise<void> {

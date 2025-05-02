@@ -31,6 +31,8 @@ import { BookDto } from '#dtos/book'
 import Image from '#models/image'
 import { ImageBaseDto } from '#dtos/image'
 import { getIdsValidator } from '#validators/common_validator'
+import { inject } from '@adonisjs/core'
+import VisitTrackingService from '#services/visit_tracking_service'
 
 export default class BooksController {
   /**
@@ -287,7 +289,8 @@ export default class BooksController {
    * @responseBody 422 - <ValidationInterface>
    * @responseBody 429 - <TooManyRequests>
    */
-  async get({ params }: HttpContext) {
+  @inject()
+  async get({ params }: HttpContext, service: VisitTrackingService) {
     await getBookValidator.validate(params)
 
     const book: Book = await Book.query()
@@ -295,19 +298,28 @@ export default class BooksController {
       .withScopes((s) => s.fullAll())
       .firstOrFail()
 
+    void service.recordVisit({
+      type: 'book',
+      id: book.publicId,
+    })
+
     return new BookDto(book)
   }
 
-  async getMultiple({ request }: HttpContext) {
+  @inject()
+  async getMultiple({ request }: HttpContext, service: VisitTrackingService) {
     const payload = await getIdsValidator.validate(request.qs())
 
     const books: Book[] = await Book.query()
       .whereIn('public_id', payload.ids)
       .withScopes((s) => s.fullAll())
 
-    books.forEach((book) => {
-      void Book.afterFindHook(book)
-    })
+    void service.recordVisit(
+      books.map((book) => ({
+        type: 'book',
+        id: book.publicId,
+      }))
+    )
 
     if (!books || books.length === 0) throw new Error('No data found')
 

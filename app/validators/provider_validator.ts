@@ -16,12 +16,6 @@ export const imageValidation = vine.file({
 export const contributorTypeValidation = vine
   .number()
   .parse((value) => {
-    console.log('value', value, typeof value)
-    console.log('value', value, typeof value)
-    console.log('value', value, typeof value)
-    console.log('value', value, typeof value)
-    console.log('value', value, typeof value)
-    console.log('value', value, typeof value)
     if (typeof value === 'number' || typeof value === 'string') {
       if (typeof value === 'string') {
         value = Number.parseInt(value)
