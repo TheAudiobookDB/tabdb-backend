@@ -259,5 +259,44 @@ export default class NarratorsController {
   }
 
   @inject()
-  async popular({ params }: HttpContext, visitService: VisitTrackingService) {}
+  async popularByBooks({ params }: HttpContext) {
+    const bookVisitsSubquery = db
+      .from('books')
+      .select('books.id as book_id')
+      .select(db.raw('COALESCE(SUM(visits.visit_count), 0) as total_book_visits'))
+      .leftJoin('visits', (join) => {
+        join
+          .on('books.public_id', '=', 'visits.trackable_id')
+          .andOnVal('visits.trackable_type', '=', 'book')
+      })
+      .groupBy('books.id')
+
+    const subqueryCompiled = bookVisitsSubquery.toSQL()
+
+    const topContributorsQuery = Contributor.query()
+      .select('contributors.id', 'contributors.public_id')
+      .select(db.raw('AVG(??.??) as avg_visits_per_book', ['bv', 'total_book_visits']))
+      .innerJoin('book_contributor', 'contributors.id', 'book_contributor.contributor_id')
+      .joinRaw(`INNER JOIN (${subqueryCompiled.sql}) AS ?? ON ??.?? = ??.??`, [
+        // @ts-ignore
+        ...subqueryCompiled.bindings,
+        // @ts-ignore
+        'bv',
+        // @ts-ignore
+        'bv',
+        // @ts-ignore
+        'book_id',
+        // @ts-ignore
+        'book_contributor',
+        // @ts-ignore
+        'book_id',
+      ])
+      .groupBy('contributors.id', 'contributors.public_id')
+      .orderBy('avg_visits_per_book', 'desc')
+      .limit(10)
+
+    const results = await topContributorsQuery
+
+    return results
+  }
 }

@@ -91,9 +91,9 @@ router.post('/book', [BooksController, 'create']).use(middleware.auth()).use(r3L
  * Contributor
  */
 router
-  .get('/contributor/:id', [ContributorsController, 'get'])
+  .get('/contributor/popular', [ContributorsController, 'popular'])
   .use(middleware.relaxAuth())
-  .use(r1Limiter)
+  .use(r3Limiter)
 router
   .get('/contributor', [ContributorsController, 'getMultiple'])
   .use(middleware.relaxAuth())
@@ -110,6 +110,10 @@ router
   .patch('/contributor', [ContributorsController, 'update'])
   .use(middleware.relaxAuth())
   .use(r3Limiter)
+router
+  .get('/contributor/:id', [ContributorsController, 'get'])
+  .use(middleware.relaxAuth())
+  .use(r1Limiter)
 
 /**
  * Series
