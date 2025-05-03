@@ -46,8 +46,9 @@ export default defineConfig({
     () => import('@adonisjs/redis/redis_provider'),
     {
       file: () => import('adonisjs-scheduler/scheduler_provider'),
-      environment: ['console'],
+      environment: ['console', 'web'],
     },
+    () => import('#providers/scheduler_provider'),
   ],
 
   /*

@@ -27,12 +27,14 @@ import { Infer } from '@vinejs/vine/types'
 import app from '@adonisjs/core/services/app'
 import { cuid } from '@adonisjs/core/helpers'
 import Publisher from '#models/publisher'
-import { BookDto } from '#dtos/book'
+import { BookDto, SearchBookDto } from '#dtos/book'
 import Image from '#models/image'
 import { ImageBaseDto } from '#dtos/image'
 import { getIdsValidator } from '#validators/common_validator'
 import { inject } from '@adonisjs/core'
 import VisitTrackingService from '#services/visit_tracking_service'
+import db from '@adonisjs/lucid/services/db'
+import { visitBookValidator } from '#validators/visit_validator'
 
 export default class BooksController {
   /**
@@ -311,11 +313,11 @@ export default class BooksController {
 
     const books: Book[] = await Book.query()
       .whereIn('public_id', payload.ids)
-      .withScopes((s) => s.fullAll())
+      .withScopes((s) => s.minimalAll())
 
     if (!books || books.length === 0) throw new Error('No data found')
 
-    return BookDto.fromArray(books)
+    return SearchBookDto.fromArray(books)
   }
 
   /**
@@ -337,8 +339,45 @@ export default class BooksController {
 
     const images = await Image.query()
       .preload('book', (q) => q.where('public_id', payload.id))
-      .paginate(payload.page ?? 1, payload.limit ?? 10)
+      .paginate(payload.page, payload.limit)
 
     return ImageBaseDto.fromPaginator(images)
+  }
+
+  async visit({ params, request }: HttpContext) {
+    const payload = await visitBookValidator.validate({
+      ...params,
+      ...request.qs(),
+    })
+
+    const query = Book.query()
+      .select('books.public_id', 'books.id')
+      .select(db.raw('COALESCE(SUM(visits.visit_count), 0) as total_visit_count'))
+      .leftJoin('visits', 'books.public_id', 'visits.trackable_id')
+      .groupBy('books.id', 'books.public_id', 'books.language')
+      .orderBy('total_visit_count', 'desc')
+
+    if (payload.genre) {
+      query.whereHas('genres', (genreQuery) => {
+        genreQuery.where('public_id', payload.genre!)
+      })
+      query.preload('genres', (q) => q.where('public_id', payload.genre!))
+    }
+
+    if (payload.contributor) {
+      query.whereHas('contributors', (contributorQuery) => {
+        contributorQuery.where('public_id', payload.contributor!)
+        if (payload.contributorType) {
+          contributorQuery.where('type', payload.contributorType!)
+        }
+      })
+      query.preload('contributors', (q) => q.where('public_id', payload.contributor!))
+    }
+
+    if (payload.language) {
+      query.whereLike('books.language', `${payload.language}%`)
+    }
+
+    return await query.paginate(payload.page, payload.limit)
   }
 }

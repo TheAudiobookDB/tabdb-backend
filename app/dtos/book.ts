@@ -8,6 +8,7 @@ import { IdentifierBaseDto, IdentifierMinimalDto } from '#dtos/identifier'
 import { SeriesBaseDto, SeriesMinimalDto } from '#dtos/series'
 import { TrackBaseDto } from '#dtos/track'
 import { ImageBaseDto } from '#dtos/image'
+import { VisitMinimalDto } from '#dtos/visit'
 
 /**
  * Base class for common book fields.
@@ -77,6 +78,7 @@ export class BookDto extends BookBaseDto {
   declare createdAt: string
   declare updatedAt: string
   declare images: ImageBaseDto[]
+  declare visits: VisitMinimalDto[]
 
   constructor(book?: Book) {
     super(book)
@@ -94,6 +96,7 @@ export class BookDto extends BookBaseDto {
     this.tracks = TrackBaseDto.fromArray(book.tracks)
     this.createdAt = book.createdAt.toISO()!
     this.updatedAt = book.updatedAt.toISO()!
+    this.visits = book.visits && VisitMinimalDto.fromArray(book.visits)
   }
 }
 
