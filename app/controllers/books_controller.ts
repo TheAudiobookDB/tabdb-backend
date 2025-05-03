@@ -306,20 +306,12 @@ export default class BooksController {
     return new BookDto(book)
   }
 
-  @inject()
-  async getMultiple({ request }: HttpContext, service: VisitTrackingService) {
+  async getMultiple({ request }: HttpContext) {
     const payload = await getIdsValidator.validate(request.qs())
 
     const books: Book[] = await Book.query()
       .whereIn('public_id', payload.ids)
       .withScopes((s) => s.fullAll())
-
-    void service.recordVisit(
-      books.map((book) => ({
-        type: 'book',
-        id: book.publicId,
-      }))
-    )
 
     if (!books || books.length === 0) throw new Error('No data found')
 

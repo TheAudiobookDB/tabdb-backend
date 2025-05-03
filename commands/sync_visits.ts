@@ -2,9 +2,11 @@ import { BaseCommand } from '@adonisjs/core/ace'
 import type { CommandOptions } from '@adonisjs/core/types/ace'
 import { DateTime } from 'luxon'
 import redis from '@adonisjs/redis/services/main'
-import Visit from '#models/visit'
 import { IntervalType } from '../app/enum/interval_enum.js'
+import db from '@adonisjs/lucid/services/db'
+import { schedule } from 'adonisjs-scheduler'
 
+@schedule((s) => s.hourlyAt(0))
 export default class SyncVisits extends BaseCommand {
   static commandName = 'sync:visits'
   static description = ''
@@ -20,7 +22,7 @@ export default class SyncVisits extends BaseCommand {
   private redisPrefix = 'visits'
   private scanCount = 100
   private batchSize = 500
-  private targetIntervalType: IntervalType = IntervalType.DAILY
+  private targetIntervalType: IntervalType = IntervalType.WEEKLY
 
   private getIntervalStartDate(): string {
     const now = DateTime.now()
@@ -32,19 +34,6 @@ export default class SyncVisits extends BaseCommand {
     } else {
       // Monthly
       return now.startOf('month').toISODate()!
-    }
-  }
-
-  private isNextIntervalStart(): boolean {
-    const now = DateTime.now()
-    const nextHour = now.plus({ day: 1 })
-    if (this.targetIntervalType === IntervalType.DAILY) {
-      return nextHour.startOf('day').toISODate() !== now.toISODate()
-    } else if (this.targetIntervalType === IntervalType.WEEKLY) {
-      return nextHour.startOf('week').toISODate() !== now.toISODate()
-    } else {
-      // Monthly
-      return nextHour.startOf('month').toISODate() !== now.toISODate()
     }
   }
 
@@ -92,6 +81,8 @@ export default class SyncVisits extends BaseCommand {
         const recordsToUpsert: any[] = []
         let keysInPipeline = 0
 
+        const valuePlaceholders = []
+
         for (const [j, key] of batchKeys.entries()) {
           const countStr = counts[j]
 
@@ -111,27 +102,32 @@ export default class SyncVisits extends BaseCommand {
           }
           const [, type, idStr] = parts
 
-          recordsToUpsert.push({
-            trackableType: type,
-            trackableId: idStr,
-            intervalType: this.targetIntervalType,
-            intervalStartDate: intervalStartDate,
-            visitCount: count,
-          })
+          /**
+           *             trackable_type: type,
+           *             trackable_id: idStr,
+           *             interval_type: this.targetIntervalType,
+           *             interval_start_date: intervalStartDate,
+           *             visit_count: count,
+           */
+          recordsToUpsert.push(type, idStr, this.targetIntervalType, intervalStartDate, count)
+
+          const placeholders = []
+          for (let k = 0; k < 5; k++) {
+            placeholders.push(`?`)
+          }
+          valuePlaceholders.push(`(${placeholders.join(', ')})`)
 
           keysInPipeline++
         }
 
         if (recordsToUpsert.length > 0) {
-          await Visit.updateOrCreateMany(
-            ['trackableType', 'trackableId', 'intervalType', 'intervalStartDate'],
-            recordsToUpsert
-          )
+          const sql = `INSERT INTO visits (trackable_type,trackable_id,interval_type,interval_start_date,visit_count) VALUES ${valuePlaceholders.join(',')} ON CONFLICT (trackable_type, trackable_id, interval_type, interval_start_date) DO UPDATE SET visit_count = visits.visit_count + EXCLUDED.visit_count;`
+
+          await db.rawQuery(sql, recordsToUpsert)
+
           this.logger.debug(`Upsert successful (batch ${batchNumber}).`)
 
-          if (this.isNextIntervalStart()) {
-            redis.del(batchKeys)
-          }
+          redis.del(batchKeys)
         } else {
           this.logger.info(`No valid records to upsert in batch ${batchNumber}.`)
         }

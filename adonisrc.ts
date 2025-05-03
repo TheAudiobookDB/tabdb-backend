@@ -15,7 +15,8 @@ export default defineConfig({
     () => import('@adonisjs/lucid/commands'),
     () => import('@adonisjs/mail/commands'),
     () => import('@adonisjs/cache/commands'),
-    () => import('@adocasts.com/dto/commands')
+    () => import('@adocasts.com/dto/commands'),
+    () => import('adonisjs-scheduler/commands'),
   ],
 
   /*
@@ -43,6 +44,10 @@ export default defineConfig({
     () => import('@adonisjs/limiter/limiter_provider'),
     () => import('@adonisjs/cache/cache_provider'),
     () => import('@adonisjs/redis/redis_provider'),
+    {
+      file: () => import('adonisjs-scheduler/scheduler_provider'),
+      environment: ['console'],
+    },
   ],
 
   /*
@@ -53,7 +58,14 @@ export default defineConfig({
   | List of modules to import before starting the application.
   |
   */
-  preloads: [() => import('#start/routes'), () => import('#start/kernel')],
+  preloads: [
+    () => import('#start/routes'),
+    () => import('#start/kernel'),
+    {
+      file: () => import('#start/scheduler'),
+      environment: ['console'],
+    },
+  ],
 
   /*
   |--------------------------------------------------------------------------
