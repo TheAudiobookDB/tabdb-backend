@@ -20,6 +20,8 @@ import {
 import db from '@adonisjs/lucid/services/db'
 import { UserAbilities } from '../enum/user_enum.js'
 import { getIdsValidator } from '#validators/common_validator'
+import { inject } from '@adonisjs/core'
+import VisitTrackingService from '#services/visit_tracking_service'
 
 export default class NarratorsController {
   /**
@@ -255,4 +257,7 @@ export default class NarratorsController {
 
     return ContributorFullDto.fromArray(contributors)
   }
+
+  @inject()
+  async popular({ params }: HttpContext, visitService: VisitTrackingService) {}
 }

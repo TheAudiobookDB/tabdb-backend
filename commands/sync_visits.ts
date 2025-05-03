@@ -22,10 +22,10 @@ export default class SyncVisits extends BaseCommand {
   private redisPrefix = 'visits'
   private scanCount = 100
   private batchSize = 500
-  private targetIntervalType: IntervalType = IntervalType.WEEKLY
+  private static targetIntervalType: IntervalType = IntervalType.WEEKLY
 
-  private getIntervalStartDate(): string {
-    const now = DateTime.now()
+  public static getIntervalStartDate(dateTime?: DateTime): string {
+    let now = dateTime || DateTime.now()
     if (this.targetIntervalType === IntervalType.DAILY) {
       return now.toISODate()!
     } else if (this.targetIntervalType === IntervalType.WEEKLY) {
@@ -39,12 +39,12 @@ export default class SyncVisits extends BaseCommand {
 
   async run() {
     this.logger.info(
-      `Starting Redis to Postgres visit count sync for interval: ${this.targetIntervalType}`
+      `Starting Redis to Postgres visit count sync for interval: ${SyncVisits.targetIntervalType}`
     )
 
     let cursor = '0'
     const keysToProcess: string[] = []
-    const intervalStartDate = this.getIntervalStartDate()
+    const intervalStartDate = SyncVisits.getIntervalStartDate()
 
     this.logger.info(`Scanning Redis for keys matching '${this.redisPrefix}:*'`)
     try {
@@ -109,7 +109,7 @@ export default class SyncVisits extends BaseCommand {
            *             interval_start_date: intervalStartDate,
            *             visit_count: count,
            */
-          recordsToUpsert.push(type, idStr, this.targetIntervalType, intervalStartDate, count)
+          recordsToUpsert.push(type, idStr, SyncVisits.targetIntervalType, intervalStartDate, count)
 
           const placeholders = []
           for (let k = 0; k < 5; k++) {

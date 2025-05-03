@@ -35,6 +35,7 @@ import { inject } from '@adonisjs/core'
 import VisitTrackingService from '#services/visit_tracking_service'
 import db from '@adonisjs/lucid/services/db'
 import { visitBookValidator } from '#validators/visit_validator'
+import SyncVisits from '../../commands/sync_visits.js'
 
 export default class BooksController {
   /**
@@ -344,7 +345,7 @@ export default class BooksController {
     return ImageBaseDto.fromPaginator(images)
   }
 
-  async visit({ params, request }: HttpContext) {
+  async popular({ params, request }: HttpContext) {
     const payload = await visitBookValidator.validate({
       ...params,
       ...request.qs(),
@@ -354,7 +355,7 @@ export default class BooksController {
       .select('books.public_id', 'books.id')
       .select(db.raw('COALESCE(SUM(visits.visit_count), 0) as total_visit_count'))
       .leftJoin('visits', 'books.public_id', 'visits.trackable_id')
-      .groupBy('books.id', 'books.public_id', 'books.language')
+      .groupBy('books.id', 'books.public_id', 'books.language', 'visits.interval_start_date')
       .orderBy('total_visit_count', 'desc')
 
     if (payload.genre) {
@@ -372,6 +373,20 @@ export default class BooksController {
         }
       })
       query.preload('contributors', (q) => q.where('public_id', payload.contributor!))
+    }
+
+    if (payload.publisher) {
+      query.whereHas('publisher', (publisherQuery) => {
+        publisherQuery.where('public_id', payload.publisher!)
+      })
+      query.preload('publisher', (q) => q.where('public_id', payload.publisher!))
+    }
+
+    if (payload.fromDate) {
+      const dateString = SyncVisits.getIntervalStartDate(DateTime.fromJSDate(payload.fromDate))
+      query.whereHas('visits', (visitQuery) => {
+        visitQuery.where('interval_start_date', '>=', dateString)
+      })
     }
 
     if (payload.language) {
