@@ -91,6 +91,10 @@ router.post('/book', [BooksController, 'create']).use(middleware.auth()).use(r3L
  * Contributor
  */
 router
+  .get('/contributor/popularByBooks', [ContributorsController, 'popularByBooks'])
+  .use(middleware.relaxAuth())
+  .use(r3Limiter)
+router
   .get('/contributor/popular', [ContributorsController, 'popular'])
   .use(middleware.relaxAuth())
   .use(r3Limiter)

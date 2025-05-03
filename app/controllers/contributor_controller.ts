@@ -1,7 +1,11 @@
 // import type { HttpContext } from '@adonisjs/core/http'
 
 import { HttpContext } from '@adonisjs/core/http'
-import { getIdPaginationValidator, getIdValidator } from '#validators/provider_validator'
+import {
+  getIdPaginationValidator,
+  getIdValidator,
+  paginationValidator,
+} from '#validators/provider_validator'
 import Contributor from '#models/contributor'
 import Book from '#models/book'
 import { BookDto } from '#dtos/book'
@@ -38,11 +42,21 @@ export default class NarratorsController {
    * @responseBody 422 - <ValidationInterface>
    * @responseBody 429 - <TooManyRequests>
    */
-  async get({ params }: HttpContext) {
+  @inject()
+  async get({ params }: HttpContext, service: VisitTrackingService) {
     const payload = await getIdValidator.validate(params)
-    return new ContributorFullDto(
-      await Contributor.query().where('publicId', payload.id).preload('identifiers').firstOrFail()
-    )
+
+    const contributor = await Contributor.query()
+      .where('publicId', payload.id)
+      .preload('identifiers')
+      .firstOrFail()
+
+    void service.recordVisit({
+      type: 'contributor',
+      id: contributor.publicId,
+    })
+
+    return new ContributorFullDto(contributor)
   }
 
   /**
@@ -259,7 +273,7 @@ export default class NarratorsController {
   }
 
   @inject()
-  async popularByBooks({ params }: HttpContext) {
+  async popularByBooks() {
     const bookVisitsSubquery = db
       .from('books')
       .select('books.id as book_id')
@@ -298,5 +312,21 @@ export default class NarratorsController {
     const results = await topContributorsQuery
 
     return results
+  }
+
+  async popular({ params, request }: HttpContext) {
+    const payload = await paginationValidator.validate({
+      ...params,
+      ...request.qs(),
+    })
+
+    const query = Contributor.query()
+      .select('contributors.public_id', 'contributors.id')
+      .select(db.raw('COALESCE(SUM(visits.visit_count), 0) as total_visit_count'))
+      .leftJoin('visits', 'contributors.public_id', 'visits.trackable_id')
+      .groupBy('contributors.id', 'contributors.public_id', 'visits.interval_start_date')
+      .orderBy('total_visit_count', 'desc')
+
+    return await query.paginate(payload.page, payload.limit)
   }
 }

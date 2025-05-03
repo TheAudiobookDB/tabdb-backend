@@ -285,6 +285,13 @@ export const getIdValidator = vine.compile(
   })
 )
 
+export const paginationValidator = vine.compile(
+  vine.object({
+    page: pageValidation,
+    limit: limitValidation,
+  })
+)
+
 export const getIdPaginationValidator = vine.compile(
   vine.object({
     id: nanoIdValidation,
