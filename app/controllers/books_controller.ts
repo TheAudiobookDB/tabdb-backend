@@ -27,15 +27,10 @@ import { Infer } from '@vinejs/vine/types'
 import app from '@adonisjs/core/services/app'
 import { cuid } from '@adonisjs/core/helpers'
 import Publisher from '#models/publisher'
-import { BookDto, SearchBookDto } from '#dtos/book'
+import { BookDto } from '#dtos/book'
 import Image from '#models/image'
 import { ImageBaseDto } from '#dtos/image'
 import { getIdsValidator } from '#validators/common_validator'
-import { inject } from '@adonisjs/core'
-import VisitTrackingService from '#services/visit_tracking_service'
-import db from '@adonisjs/lucid/services/db'
-import { visitBookValidator } from '#validators/visit_validator'
-import SyncVisits from '../../commands/sync_visits.js'
 
 export default class BooksController {
   /**
@@ -292,19 +287,13 @@ export default class BooksController {
    * @responseBody 422 - <ValidationInterface>
    * @responseBody 429 - <TooManyRequests>
    */
-  @inject()
-  async get({ params }: HttpContext, service: VisitTrackingService) {
+  async get({ params }: HttpContext) {
     await getBookValidator.validate(params)
 
     const book: Book = await Book.query()
       .where('public_id', params.id)
       .withScopes((s) => s.fullAll())
       .firstOrFail()
-
-    void service.recordVisit({
-      type: 'book',
-      id: book.publicId,
-    })
 
     return new BookDto(book)
   }
@@ -314,11 +303,15 @@ export default class BooksController {
 
     const books: Book[] = await Book.query()
       .whereIn('public_id', payload.ids)
-      .withScopes((s) => s.minimalAll())
+      .withScopes((s) => s.fullAll())
+
+    books.forEach((book) => {
+      void Book.afterFindHook(book)
+    })
 
     if (!books || books.length === 0) throw new Error('No data found')
 
-    return SearchBookDto.fromArray(books)
+    return BookDto.fromArray(books)
   }
 
   /**
@@ -340,59 +333,8 @@ export default class BooksController {
 
     const images = await Image.query()
       .preload('book', (q) => q.where('public_id', payload.id))
-      .paginate(payload.page, payload.limit)
+      .paginate(payload.page ?? 1, payload.limit ?? 10)
 
     return ImageBaseDto.fromPaginator(images)
-  }
-
-  async popular({ params, request }: HttpContext) {
-    const payload = await visitBookValidator.validate({
-      ...params,
-      ...request.qs(),
-    })
-
-    const query = Book.query()
-      .select('books.public_id', 'books.id')
-      .select(db.raw('COALESCE(SUM(visits.visit_count), 0) as total_visit_count'))
-      .leftJoin('visits', 'books.public_id', 'visits.trackable_id')
-      .groupBy('books.id', 'books.public_id', 'books.language', 'visits.interval_start_date')
-      .orderBy('total_visit_count', 'desc')
-
-    if (payload.genre) {
-      query.whereHas('genres', (genreQuery) => {
-        genreQuery.where('public_id', payload.genre!)
-      })
-      query.preload('genres', (q) => q.where('public_id', payload.genre!))
-    }
-
-    if (payload.contributor) {
-      query.whereHas('contributors', (contributorQuery) => {
-        contributorQuery.where('public_id', payload.contributor!)
-        if (payload.contributorType) {
-          contributorQuery.where('type', payload.contributorType!)
-        }
-      })
-      query.preload('contributors', (q) => q.where('public_id', payload.contributor!))
-    }
-
-    if (payload.publisher) {
-      query.whereHas('publisher', (publisherQuery) => {
-        publisherQuery.where('public_id', payload.publisher!)
-      })
-      query.preload('publisher', (q) => q.where('public_id', payload.publisher!))
-    }
-
-    if (payload.fromDate) {
-      const dateString = SyncVisits.getIntervalStartDate(DateTime.fromJSDate(payload.fromDate))
-      query.whereHas('visits', (visitQuery) => {
-        visitQuery.where('interval_start_date', '>=', dateString)
-      })
-    }
-
-    if (payload.language) {
-      query.whereLike('books.language', `${payload.language}%`)
-    }
-
-    return await query.paginate(payload.page, payload.limit)
   }
 }

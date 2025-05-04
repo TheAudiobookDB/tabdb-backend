@@ -16,7 +16,12 @@ export const imageValidation = vine.file({
 export const contributorTypeValidation = vine
   .number()
   .parse((value) => {
-    if (!value) return undefined
+    console.log('value', value, typeof value)
+    console.log('value', value, typeof value)
+    console.log('value', value, typeof value)
+    console.log('value', value, typeof value)
+    console.log('value', value, typeof value)
+    console.log('value', value, typeof value)
     if (typeof value === 'number' || typeof value === 'string') {
       if (typeof value === 'string') {
         value = Number.parseInt(value)
@@ -282,13 +287,6 @@ export const typeValidation = vine.enum(['book', 'audiobook', 'podcast', 'e-book
 export const getIdValidator = vine.compile(
   vine.object({
     id: nanoIdValidation,
-  })
-)
-
-export const paginationValidator = vine.compile(
-  vine.object({
-    page: pageValidation,
-    limit: limitValidation,
   })
 )
 

@@ -2,6 +2,8 @@ import { DateTime } from 'luxon'
 import {
   afterCreate,
   afterDelete,
+  afterFetch,
+  afterFind,
   afterUpdate,
   belongsTo,
   column,
@@ -25,7 +27,6 @@ import { compose } from '@adonisjs/core/helpers'
 import { LogState } from '../enum/log_enum.js'
 import { ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
 import Image from '#models/image'
-import Visit from '#models/visit'
 
 type Builder = ModelQueryBuilderContract<typeof Book>
 
@@ -131,12 +132,6 @@ export default class Book extends compose(LogExtension, ImageExtension) {
   })
   declare images: HasMany<typeof Image>
 
-  @hasMany(() => Visit, {
-    localKey: 'publicId',
-    foreignKey: 'trackableId',
-  })
-  declare visits: HasMany<typeof Visit>
-
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 
@@ -218,6 +213,14 @@ export default class Book extends compose(LogExtension, ImageExtension) {
     void bookIndex.deleteDocument(book.id)
   }
 
+  @afterFind()
+  // @ts-ignore
+  public static async afterFindHook(book: Book) {}
+
+  @afterFetch()
+  // @ts-ignore
+  public static async afterFetchHook(book: Book) {}
+
   // Function to enable book and disabled relations
   public static async enableBookAndRelations(bookId: number): Promise<void> {
     const book = await Book.findOrFail(bookId)
@@ -266,7 +269,6 @@ export default class Book extends compose(LogExtension, ImageExtension) {
       .withScopes((s) => s.fullContributors())
       .withScopes((s) => s.fullSeries())
       .withScopes((s) => s.fullPublisher())
-      .withScopes((s) => s.minimalVisits())
       .preload('genres', (q) => q.where('enabled', true))
       .preloadOnce('identifiers')
       .preloadOnce('group')
@@ -300,13 +302,5 @@ export default class Book extends compose(LogExtension, ImageExtension) {
 
   static fullPublisher = scope((query: Builder) => {
     query.preload('publisher', (q) => q.withScopes((s) => s.full()))
-  })
-
-  static minimalVisits = scope((query: Builder) => {
-    query.preload('visits', (q) => q.withScopes((s) => s.minimal()))
-  })
-
-  static fullVisits = scope((query: Builder) => {
-    query.preload('visits', (q) => q.withScopes((s) => s.full()))
   })
 }

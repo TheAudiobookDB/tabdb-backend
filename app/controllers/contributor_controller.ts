@@ -1,11 +1,7 @@
 // import type { HttpContext } from '@adonisjs/core/http'
 
 import { HttpContext } from '@adonisjs/core/http'
-import {
-  getIdPaginationValidator,
-  getIdValidator,
-  paginationValidator,
-} from '#validators/provider_validator'
+import { getIdPaginationValidator, getIdValidator } from '#validators/provider_validator'
 import Contributor from '#models/contributor'
 import Book from '#models/book'
 import { BookDto } from '#dtos/book'
@@ -24,8 +20,6 @@ import {
 import db from '@adonisjs/lucid/services/db'
 import { UserAbilities } from '../enum/user_enum.js'
 import { getIdsValidator } from '#validators/common_validator'
-import { inject } from '@adonisjs/core'
-import VisitTrackingService from '#services/visit_tracking_service'
 
 export default class NarratorsController {
   /**
@@ -42,21 +36,11 @@ export default class NarratorsController {
    * @responseBody 422 - <ValidationInterface>
    * @responseBody 429 - <TooManyRequests>
    */
-  @inject()
-  async get({ params }: HttpContext, service: VisitTrackingService) {
+  async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
-
-    const contributor = await Contributor.query()
-      .where('publicId', payload.id)
-      .preload('identifiers')
-      .firstOrFail()
-
-    void service.recordVisit({
-      type: 'contributor',
-      id: contributor.publicId,
-    })
-
-    return new ContributorFullDto(contributor)
+    return new ContributorFullDto(
+      await Contributor.query().where('publicId', payload.id).preload('identifiers').firstOrFail()
+    )
   }
 
   /**
@@ -270,63 +254,5 @@ export default class NarratorsController {
     if (!contributors || contributors.length === 0) throw new Error('No data found')
 
     return ContributorFullDto.fromArray(contributors)
-  }
-
-  @inject()
-  async popularByBooks() {
-    const bookVisitsSubquery = db
-      .from('books')
-      .select('books.id as book_id')
-      .select(db.raw('COALESCE(SUM(visits.visit_count), 0) as total_book_visits'))
-      .leftJoin('visits', (join) => {
-        join
-          .on('books.public_id', '=', 'visits.trackable_id')
-          .andOnVal('visits.trackable_type', '=', 'book')
-      })
-      .groupBy('books.id')
-
-    const subqueryCompiled = bookVisitsSubquery.toSQL()
-
-    const topContributorsQuery = Contributor.query()
-      .select('contributors.id', 'contributors.public_id')
-      .select(db.raw('AVG(??.??) as avg_visits_per_book', ['bv', 'total_book_visits']))
-      .innerJoin('book_contributor', 'contributors.id', 'book_contributor.contributor_id')
-      .joinRaw(`INNER JOIN (${subqueryCompiled.sql}) AS ?? ON ??.?? = ??.??`, [
-        // @ts-ignore
-        ...subqueryCompiled.bindings,
-        // @ts-ignore
-        'bv',
-        // @ts-ignore
-        'bv',
-        // @ts-ignore
-        'book_id',
-        // @ts-ignore
-        'book_contributor',
-        // @ts-ignore
-        'book_id',
-      ])
-      .groupBy('contributors.id', 'contributors.public_id')
-      .orderBy('avg_visits_per_book', 'desc')
-      .limit(10)
-
-    const results = await topContributorsQuery
-
-    return results
-  }
-
-  async popular({ params, request }: HttpContext) {
-    const payload = await paginationValidator.validate({
-      ...params,
-      ...request.qs(),
-    })
-
-    const query = Contributor.query()
-      .select('contributors.public_id', 'contributors.id')
-      .select(db.raw('COALESCE(SUM(visits.visit_count), 0) as total_visit_count'))
-      .leftJoin('visits', 'contributors.public_id', 'visits.trackable_id')
-      .groupBy('contributors.id', 'contributors.public_id', 'visits.interval_start_date')
-      .orderBy('total_visit_count', 'desc')
-
-    return await query.paginate(payload.page, payload.limit)
   }
 }

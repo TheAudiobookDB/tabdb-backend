@@ -77,27 +77,22 @@ router.patch('/user', [UsersController, 'update']).use(middleware.auth()).use(r1
 /**
  * Book
  */
-router.get('/book', [BooksController, 'getMultiple']).use(middleware.relaxAuth()).use(r2Limiter)
-router.get('/book/popular', [BooksController, 'popular']).use(middleware.relaxAuth()).use(r2Limiter)
-router.post('/book/abs', [BooksController, 'abs']).use(middleware.auth()).use(r3Limiter)
 router.get('/book/:id', [BooksController, 'get']).use(middleware.relaxAuth()).use(r1Limiter)
+router.get('/book', [BooksController, 'getMultiple']).use(middleware.relaxAuth()).use(r2Limiter)
 router
   .get('/book/:id/tracks', [TracksController, 'getTracksForBook'])
   .use(middleware.relaxAuth())
   .use(r2Limiter)
 router.post('/book', [BooksController, 'create']).use(middleware.auth()).use(r3Limiter)
+router.post('/book/abs', [BooksController, 'abs']).use(middleware.auth()).use(r3Limiter)
 
 /**
  * Contributor
  */
 router
-  .get('/contributor/popularByBooks', [ContributorsController, 'popularByBooks'])
+  .get('/contributor/:id', [ContributorsController, 'get'])
   .use(middleware.relaxAuth())
-  .use(r3Limiter)
-router
-  .get('/contributor/popular', [ContributorsController, 'popular'])
-  .use(middleware.relaxAuth())
-  .use(r3Limiter)
+  .use(r1Limiter)
 router
   .get('/contributor', [ContributorsController, 'getMultiple'])
   .use(middleware.relaxAuth())
@@ -114,10 +109,6 @@ router
   .patch('/contributor', [ContributorsController, 'update'])
   .use(middleware.relaxAuth())
   .use(r3Limiter)
-router
-  .get('/contributor/:id', [ContributorsController, 'get'])
-  .use(middleware.relaxAuth())
-  .use(r1Limiter)
 
 /**
  * Series

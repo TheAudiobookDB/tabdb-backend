@@ -8,11 +8,11 @@ export function ImageExtension<TBase extends Constructor>(Base: TBase) {
   return class extends Base {
     // @ts-ignore
     @computed({ serializeAs: 'image' })
-    public get imageUrl(): Record<string, string> | null | undefined {
+    public get imageUrl(): Record<string, string> | null {
       // @ts-ignore
-      if (this.image === undefined) return undefined
-      // @ts-ignore
-      if (this.image === null) return null
+      if (!this.image) {
+        return null
+      }
       return imageTypes.reduce(
         (map, type) => {
           // @ts-ignore
