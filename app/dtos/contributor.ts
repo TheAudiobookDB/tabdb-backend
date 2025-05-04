@@ -1,7 +1,7 @@
 import { BaseModelDto } from '@adocasts.com/dto/base'
 import Contributor from '#models/contributor'
 import { BookDto } from '#dtos/book'
-import { IdentifierMinimalDto, IdentifierFullDto } from '#dtos/identifier'
+import { IdentifierFullDto, IdentifierBaseDto } from '#dtos/identifier'
 import { ContributorType } from '../enum/contributor_enum.js'
 
 export class ContributorMinimalDto extends BaseModelDto {
@@ -31,14 +31,14 @@ export class ContributorMinimalDto extends BaseModelDto {
 export class ContributorBaseDto extends ContributorMinimalDto {
   declare image: object | null
   declare description: string | null
-  declare identifiers: IdentifierMinimalDto[]
+  declare identifiers: IdentifierBaseDto[]
 
   constructor(contributor?: Contributor) {
     super(contributor)
     if (!contributor) return
     this.image = contributor.imageUrl
     this.description = contributor.description
-    this.identifiers = IdentifierMinimalDto.fromArray(contributor.identifiers)
+    this.identifiers = IdentifierBaseDto.fromArray(contributor.identifiers)
   }
 }
 

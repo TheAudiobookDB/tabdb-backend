@@ -10,6 +10,12 @@ export default class RequestValidationMiddleware {
       throw new InvalidUserAgentException()
     }
 
+    const authCookie = ctx.request.cookiesList()['Authorization']
+
+    if (authCookie && typeof authCookie === 'string') {
+      ctx.request.request.headers['authorization'] = 'Bearer ' + authCookie
+    }
+
     return await next()
   }
 }
