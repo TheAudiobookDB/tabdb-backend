@@ -68,12 +68,16 @@ router.patch('/user', [UsersController, 'update']).use(middleware.auth()).use(r1
 /**
  * Book
  */
-router.get('/book/:id', [BooksController, 'get']).use(middleware.relaxAuth()).use(r1Limiter)
 router.get('/book', [BooksController, 'getMultiple']).use(middleware.relaxAuth()).use(r2Limiter)
+router
+  .get('/book/:id/images', [BooksController, 'images'])
+  .use(middleware.relaxAuth())
+  .use(r2Limiter)
 router
   .get('/book/:id/tracks', [TracksController, 'getTracksForBook'])
   .use(middleware.relaxAuth())
   .use(r2Limiter)
+router.get('/book/:id', [BooksController, 'get']).use(middleware.relaxAuth()).use(r1Limiter)
 router.post('/book', [BooksController, 'create']).use(middleware.auth()).use(r3Limiter)
 router.post('/book/abs', [BooksController, 'abs']).use(middleware.auth()).use(r3Limiter)
 

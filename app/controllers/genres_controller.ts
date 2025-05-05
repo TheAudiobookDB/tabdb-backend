@@ -4,44 +4,50 @@ import { HttpContext } from '@adonisjs/core/http'
 import { getIdPaginationValidator, getIdValidator } from '#validators/provider_validator'
 import Genre from '#models/genre'
 import Book from '#models/book'
-import { GenreFullDto } from '#dtos/genre'
+import { GenreBaseDto, GenreFullDto } from '#dtos/genre'
 import { BookDto } from '#dtos/book'
 import { getIdsValidator } from '#validators/common_validator'
+import { ApiOperation, ApiResponse, ApiTags } from '@foadonis/openapi/decorators'
+import {
+  limitApiProperty,
+  limitApiQuery,
+  nanoIdApiPathParameter,
+  nanoIdsApiQuery,
+  pageApiQuery,
+  remainingApiProperty,
+  requestIdApiProperty,
+  tooManyRequestsApiResponse,
+  validationErrorApiResponse,
+} from '#config/openapi'
+import { BookDtoPaginated } from '#dtos/pagination'
 
+@ApiTags('Genre')
+@requestIdApiProperty()
+@limitApiProperty()
+@remainingApiProperty()
+@validationErrorApiResponse()
+@tooManyRequestsApiResponse()
 export default class GenresController {
-  /**
-   * @get
-   * @operationId getGenre
-   * @summary Get an genre by ID
-   *
-   * @requestBody - <getIdValidator>
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - <Genre>.with(relations).exclude(books)
-   * @responseBody 422 - <ValidationInterface>
-   * @responseBody 429 - <TooManyRequests>
-   */
+  @ApiOperation({
+    summary: 'Get an genre by ID',
+    operationId: 'getGenre',
+  })
+  @nanoIdApiPathParameter()
+  @ApiResponse({ type: GenreFullDto, status: 200 })
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
     return new GenreFullDto(await Genre.query().where('publicId', payload.id).firstOrFail())
   }
 
-  /**
-   * @books
-   * @operationId getBooksByGenre
-   * @summary Get books by genre ID
-   *
-   * @paramUse(pagination)
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - <Book[]>.with(relations).paginated()
-   * @responseBody 422 - <ValidationInterface>
-   * @responseBody 429 - <TooManyRequests>
-   */
+  @ApiOperation({
+    summary: 'Get books by genre ID',
+    operationId: 'getBooksByGenre',
+    tags: ['Book'],
+  })
+  @pageApiQuery()
+  @limitApiQuery()
+  @nanoIdApiPathParameter()
+  @ApiResponse({ type: [BookDtoPaginated], status: 200 })
   async books({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
     return BookDto.fromPaginator(
@@ -60,6 +66,14 @@ export default class GenresController {
     )
   }
 
+  @ApiOperation({
+    summary: 'Get multiple Books by IDs',
+    description:
+      'Gets multiple genres by IDs. This only returns minified versions. If you want the full version, use the `get` endpoint.',
+    operationId: 'getBooks',
+  })
+  @nanoIdsApiQuery()
+  @ApiResponse({ type: [GenreBaseDto], status: 200 })
   async getMultiple({ request }: HttpContext) {
     const payload = await getIdsValidator.validate(request.qs())
 
@@ -67,6 +81,6 @@ export default class GenresController {
 
     if (!genres || genres.length === 0) throw new Error('No data found')
 
-    return GenreFullDto.fromArray(genres)
+    return GenreBaseDto.fromArray(genres)
   }
 }

@@ -34,6 +34,8 @@ import {
   remainingApiProperty,
   requestIdApiProperty,
   thresholdApiQuery,
+  tooManyRequestsApiResponse,
+  validationErrorApiResponse,
 } from '#config/openapi'
 import {
   ContributorBaseDtoPaginated,
@@ -47,8 +49,8 @@ import {
 @requestIdApiProperty()
 @limitApiProperty()
 @remainingApiProperty()
-@ApiResponse({ status: 422, description: 'Validation error' })
-@ApiResponse({ status: 429, description: 'Too many requests' })
+@validationErrorApiResponse()
+@tooManyRequestsApiResponse()
 export default class SearchesController {
   @ApiQuery({
     name: 'title',
@@ -527,8 +529,6 @@ export default class SearchesController {
   @limitApiQuery()
   @thresholdApiQuery()
   @ApiResponse({ type: SeriesBaseDtoPaginated, status: 200 })
-  @ApiResponse({ status: 422, description: 'Validation error' })
-  @ApiResponse({ status: 429, description: 'Too many requests' })
   async series({ request }: HttpContext) {
     const payload = await searchSeriesValidator.validate(request.all())
     const page = payload.page ?? 1
@@ -589,8 +589,6 @@ export default class SearchesController {
   @limitApiQuery()
   @thresholdApiQuery()
   @ApiResponse({ type: PublisherMinimalDtoPaginated, status: 200 })
-  @ApiResponse({ status: 422, description: 'Validation error' })
-  @ApiResponse({ status: 429, description: 'Too many requests' })
   async publisher({ request }: HttpContext) {
     const payload = await searchSeriesValidator.validate(request.all())
     const page = payload.page ?? 1

@@ -5,7 +5,7 @@ import { getIdPaginationValidator, getIdValidator } from '#validators/provider_v
 import Contributor from '#models/contributor'
 import Book from '#models/book'
 import { BookDto } from '#dtos/book'
-import { ContributorFullDto } from '#dtos/contributor'
+import { ContributorBaseDto, ContributorFullDto } from '#dtos/contributor'
 import { FileHelper } from '../helpers/file_helper.js'
 import { DateTime } from 'luxon'
 import { LogState } from '../enum/log_enum.js'
@@ -20,7 +20,26 @@ import {
 import db from '@adonisjs/lucid/services/db'
 import { UserAbilities } from '../enum/user_enum.js'
 import { getIdsValidator } from '#validators/common_validator'
+import { ApiOperation, ApiResponse, ApiTags } from '@foadonis/openapi/decorators'
+import {
+  limitApiProperty,
+  limitApiQuery,
+  nanoIdApiPathParameter,
+  nanoIdsApiQuery,
+  pageApiQuery,
+  remainingApiProperty,
+  requestIdApiProperty,
+  tooManyRequestsApiResponse,
+  validationErrorApiResponse,
+} from '#config/openapi'
+import { BookDtoPaginated } from '#dtos/pagination'
 
+@ApiTags('Contributor')
+@requestIdApiProperty()
+@limitApiProperty()
+@remainingApiProperty()
+@validationErrorApiResponse()
+@tooManyRequestsApiResponse()
 export default class NarratorsController {
   /**
    * @get
@@ -36,6 +55,12 @@ export default class NarratorsController {
    * @responseBody 422 - <ValidationInterface>
    * @responseBody 429 - <TooManyRequests>
    */
+  @ApiOperation({
+    summary: 'Get a Contributor by ID',
+    operationId: 'getContributor',
+  })
+  @nanoIdApiPathParameter()
+  @ApiResponse({ type: ContributorFullDto, status: 200 })
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
     return new ContributorFullDto(
@@ -43,20 +68,15 @@ export default class NarratorsController {
     )
   }
 
-  /**
-   * @books
-   * @operationId getBooksByContributor
-   * @summary Get books by contributor ID
-   *
-   * @paramUse(pagination)
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - <Book[]>.with(relations).paginated()
-   * @responseBody 422 - <ValidationInterface>
-   * @responseBody 429 - <TooManyRequests>
-   */
+  @ApiOperation({
+    summary: 'Get books by contributor ID',
+    operationId: 'getBooksByContributor',
+    tags: ['Book'],
+  })
+  @pageApiQuery()
+  @limitApiQuery()
+  @nanoIdApiPathParameter()
+  @ApiResponse({ type: [BookDtoPaginated], status: 200 })
   async books({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
     return BookDto.fromPaginator(
@@ -244,6 +264,14 @@ export default class NarratorsController {
     }
   }
 
+  @ApiOperation({
+    summary: 'Get multiple Contributors by IDs',
+    description:
+      'Gets multiple contributors by IDs. This only returns minified versions. If you want the full version, use the `get` endpoint.',
+    operationId: 'getContributors',
+  })
+  @nanoIdsApiQuery()
+  @ApiResponse({ type: [ContributorBaseDto], status: 200 })
   async getMultiple({ request }: HttpContext) {
     const payload = await getIdsValidator.validate(request.qs())
 
@@ -253,6 +281,6 @@ export default class NarratorsController {
 
     if (!contributors || contributors.length === 0) throw new Error('No data found')
 
-    return ContributorFullDto.fromArray(contributors)
+    return ContributorBaseDto.fromArray(contributors)
   }
 }

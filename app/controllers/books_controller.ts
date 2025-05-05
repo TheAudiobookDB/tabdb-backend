@@ -31,9 +31,26 @@ import { BookDto, SearchBookDto } from '#dtos/book'
 import Image from '#models/image'
 import { ImageBaseDto } from '#dtos/image'
 import { getIdsValidator } from '#validators/common_validator'
-import { ApiOperation, ApiResponse } from '@foadonis/openapi/decorators'
-import { IdentifierMinimalDto } from '#dtos/identifier'
+import { ApiOperation, ApiResponse, ApiTags } from '@foadonis/openapi/decorators'
+import {
+  limitApiProperty,
+  limitApiQuery,
+  nanoIdApiPathParameter,
+  nanoIdsApiQuery,
+  pageApiQuery,
+  remainingApiProperty,
+  requestIdApiProperty,
+  tooManyRequestsApiResponse,
+  validationErrorApiResponse,
+} from '#config/openapi'
+import { ImageBaseDtoPaginated } from '#dtos/pagination'
 
+@ApiTags('Book')
+@requestIdApiProperty()
+@limitApiProperty()
+@remainingApiProperty()
+@validationErrorApiResponse()
+@tooManyRequestsApiResponse()
 export default class BooksController {
   /**
    * @create
@@ -274,31 +291,14 @@ export default class BooksController {
     return new BookDto(absBook)
   }
 
-  /**
-   * @get
-   * @operationId getBook
-   * @summary Get a book by ID
-   * @description Gets a book by ID and preloads its authors, narrators, genres, identifiers, series, tracks, and group.
-   *
-   * @requestBody - <getBookValidator>
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - <Book>.with(relations)
-   * @responseBody 422 - <ValidationInterface>
-   * @responseBody 429 - <TooManyRequests>
-   */
   @ApiOperation({
     summary: 'Get a Book by ID',
     description:
       'Gets a book by ID and preloads its authors, narrators, genres, identifiers, series, tracks, and group.',
     operationId: 'getBook',
-    tags: ['Book'],
   })
+  @nanoIdApiPathParameter()
   @ApiResponse({ type: BookDto, status: 200 })
-  @ApiResponse({ status: 422, description: 'Validation error' })
-  @ApiResponse({ status: 429, description: 'Too many requests' })
   async get({ params }: HttpContext) {
     await getBookValidator.validate(params)
 
@@ -310,8 +310,14 @@ export default class BooksController {
     return new BookDto(book)
   }
 
-  @ApiOperation({ summary: 'List all posts 2' })
-  @ApiResponse({ type: [IdentifierMinimalDto] })
+  @ApiOperation({
+    summary: 'Get multiple Books by IDs',
+    description:
+      'Gets multiple books by IDs. This only returns minified versions. If you want the full version, use the `get` endpoint.',
+    operationId: 'getBooks',
+  })
+  @nanoIdsApiQuery()
+  @ApiResponse({ type: [SearchBookDto], status: 200 })
   async getMultiple({ request }: HttpContext) {
     const payload = await getIdsValidator.validate(request.qs())
 
@@ -328,20 +334,16 @@ export default class BooksController {
     return SearchBookDto.fromArray(books)
   }
 
-  /**
-   * @images
-   * @operationId getBookImages
-   * @summary Get all additional images for a book by ID
-   *
-   * @requestBody - <getIdPaginationValidator>
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - <Image[]>.paginated()
-   * @responseBody 422 - <ValidationInterface>
-   * @responseBody 429 - <TooManyRequests>
-   */
+  @ApiOperation({
+    summary: 'Get all additional images for a book by ID',
+    description: 'Get all additional images for a book by ID',
+    operationId: 'getBookImages',
+    tags: ['Image'],
+  })
+  @nanoIdApiPathParameter()
+  @pageApiQuery()
+  @limitApiQuery()
+  @ApiResponse({ type: ImageBaseDtoPaginated, status: 200 })
   async images({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
 

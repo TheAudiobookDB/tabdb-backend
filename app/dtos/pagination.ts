@@ -1,9 +1,10 @@
 import { ApiProperty } from '@foadonis/openapi/decorators'
-import { SearchBookDto } from '#dtos/book'
+import { BookDto, SearchBookDto } from '#dtos/book'
 import { ContributorBaseDto } from '#dtos/contributor'
 import { GenreBaseDto } from '#dtos/genre'
 import { SeriesBaseDto } from '#dtos/series'
 import { PublisherMinimalDto } from '#dtos/publisher'
+import { ImageBaseDto } from '#dtos/image'
 
 export class PaginatedResponseMeta {
   @ApiProperty({
@@ -90,7 +91,7 @@ export default function PaginatedResponse<TItem extends object>(
     declare meta: PaginatedResponseMeta
 
     @ApiProperty({ type: [Item] })
-    declare items: TItem[]
+    declare data: TItem[]
   }
   return Pagination
 }
@@ -102,3 +103,5 @@ export class SeriesBaseDtoPaginated extends PaginatedResponse(SeriesBaseDto) {}
 export class GenreBaseDtoPaginated extends PaginatedResponse(GenreBaseDto) {}
 export class ContributorBaseDtoPaginated extends PaginatedResponse(ContributorBaseDto) {}
 export class PublisherMinimalDtoPaginated extends PaginatedResponse(PublisherMinimalDto) {}
+export class ImageBaseDtoPaginated extends PaginatedResponse(ImageBaseDto) {}
+export class BookDtoPaginated extends PaginatedResponse(BookDto) {}

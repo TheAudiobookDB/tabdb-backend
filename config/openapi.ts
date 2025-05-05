@@ -1,5 +1,12 @@
 import { defineConfig } from '@foadonis/openapi'
-import { ApiProperty, ApiPropertyOptional, ApiHeader, ApiQuery } from '@foadonis/openapi/decorators'
+import {
+  ApiProperty,
+  ApiPropertyOptional,
+  ApiHeader,
+  ApiQuery,
+  ApiResponse,
+  ApiParam,
+} from '@foadonis/openapi/decorators'
 
 export default defineConfig({
   ui: 'scalar',
@@ -88,12 +95,14 @@ export const limitApiProperty = () =>
     name: 'x-ratelimit-limit',
     description:
       'The number of requests you can make in the current time window (mostly 1 minute).',
+    example: 100,
   })
 
 export const remainingApiProperty = () =>
   ApiHeader({
     name: 'x-ratelimit-remaining',
     description: 'The number of requests you have left in the current time window.',
+    example: 100,
   })
 
 export const requestIdApiProperty = () =>
@@ -101,6 +110,7 @@ export const requestIdApiProperty = () =>
     name: 'x-request-id',
     description:
       'The unique identifier for the request. If you have any issues, please provide this ID to us.',
+    example: 'sbq3l6jl0a2fpqnkydlwl9mu',
   })
 
 export const pageApiQuery = () =>
@@ -164,4 +174,91 @@ export const nameApiQuery = () =>
     type: 'string',
     example: ['Simon Jäger', 'David Nathan', 'Sebastian Fitzek'],
     required: false,
+  })
+
+export const nanoIdsApiQuery = () =>
+  ApiQuery({
+    name: 'ids',
+    description:
+      'The unique identifiers of the resources. Is case sensitive. You can use the public ids or the internal ids.',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'string',
+        pattern: '^[a-z0-9]{16}$',
+      },
+    },
+    example: ['6pywk967huhwml9x', '7abcf123def456gh'],
+    required: true,
+    explode: false,
+  })
+
+export const nanoIdApiPathParameter = () =>
+  ApiParam({
+    name: 'id',
+    description:
+      'The unique identifier of the resource. Is case sensitive. You can use the public id or the internal id.',
+    type: 'string',
+    example: '6pywk967huhwml9x',
+    required: true,
+    schema: {
+      pattern: '^[a-z0-9]{16}$',
+    },
+  })
+
+//
+
+export const tooManyRequestsApiResponse = () =>
+  ApiResponse({
+    status: 429,
+    description: 'Too many requests',
+    mediaType: 'application/json',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: 'You have exceeded the rate limit. Please try again later.',
+        },
+        retryAfter: {
+          type: 'integer',
+          example: 60,
+        },
+      },
+    },
+  })
+
+export const validationErrorApiResponse = () =>
+  ApiResponse({
+    status: 422,
+    description: 'Validation error',
+    mediaType: 'application/json',
+    schema: {
+      type: 'object',
+      properties: {
+        errors: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              field: {
+                type: 'string',
+                example: 'name',
+                description: 'The name of the field that caused the error.',
+              },
+              message: {
+                type: 'string',
+                example: 'The name is required.',
+                description: 'The error message for that field.',
+              },
+              rule: {
+                type: 'string',
+                example: 'required',
+                description: 'The validation rule that failed.',
+              },
+            },
+          },
+        },
+      },
+    },
   })

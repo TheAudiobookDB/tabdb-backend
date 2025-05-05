@@ -62,14 +62,6 @@ export class ContributorBaseDto extends ContributorMinimalDto {
   declare image: object | null
 
   @ApiPropertyOptional({
-    type: 'string',
-    description: 'The description of the contributor.',
-    example: 'This is a sample description.',
-    nullable: true,
-  })
-  declare description: string | null
-
-  @ApiPropertyOptional({
     type: () => [IdentifierBaseDto],
     description: 'List of identifiers associated with the contributor.',
     nullable: true,
@@ -80,7 +72,6 @@ export class ContributorBaseDto extends ContributorMinimalDto {
     super(contributor)
     if (!contributor) return
     this.image = contributor.imageUrl
-    this.description = contributor.description
     this.identifiers = IdentifierBaseDto.fromArray(contributor.identifiers)
   }
 }
@@ -100,11 +91,20 @@ export class ContributorFullDto extends ContributorBaseDto {
   })
   declare identifiers: IdentifierFullDto[]
 
+  @ApiPropertyOptional({
+    type: 'string',
+    description: 'The description of the contributor.',
+    example: 'This is a sample description.',
+    nullable: true,
+  })
+  declare description: string | null
+
   constructor(contributor?: Contributor) {
     super(contributor)
     if (!contributor) return
     this.createdAt = contributor.createdAt.toISO()!
     this.updatedAt = contributor.updatedAt.toISO()!
+    this.description = contributor.description
     this.identifiers = IdentifierFullDto.fromArray(contributor.identifiers)
   }
 }

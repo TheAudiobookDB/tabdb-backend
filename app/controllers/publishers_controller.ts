@@ -4,42 +4,50 @@ import { HttpContext } from '@adonisjs/core/http'
 import { getIdPaginationValidator, getIdValidator } from '#validators/provider_validator'
 import Publisher from '#models/publisher'
 import Book from '#models/book'
-import { PublisherFullDto } from '#dtos/publisher'
+import { PublisherBaseDto, PublisherFullDto } from '#dtos/publisher'
 import { BookDto } from '#dtos/book'
 import { getIdsValidator } from '#validators/common_validator'
+import { ApiOperation, ApiResponse, ApiTags } from '@foadonis/openapi/decorators'
+import {
+  limitApiProperty,
+  limitApiQuery,
+  nanoIdApiPathParameter,
+  nanoIdsApiQuery,
+  pageApiQuery,
+  remainingApiProperty,
+  requestIdApiProperty,
+  tooManyRequestsApiResponse,
+  validationErrorApiResponse,
+} from '#config/openapi'
+import { BookDtoPaginated } from '#dtos/pagination'
 
+@ApiTags('Publisher')
+@requestIdApiProperty()
+@limitApiProperty()
+@remainingApiProperty()
+@validationErrorApiResponse()
+@tooManyRequestsApiResponse()
 export default class PublishersController {
-  /**
-   * @get
-   * @operationId getPublisher
-   * @summary Get a publisher by ID
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - <Publisher>.exclude(book)
-   * @responseBody 422 - <ValidationInterface>
-   * @responseBody 429 - <TooManyRequests>
-   */
+  @ApiOperation({
+    summary: 'Get a Publisher by ID',
+    operationId: 'getPublisher',
+  })
+  @nanoIdApiPathParameter()
+  @ApiResponse({ type: PublisherFullDto, status: 200 })
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
     return new PublisherFullDto(await Publisher.query().where('publicId', payload.id).firstOrFail())
   }
 
-  /**
-   * @books
-   * @operationId getBooksForPublisher
-   * @summary Get books for a publisher by ID
-   *
-   * @paramUse(pagination)
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - <Book[]>.with(relations).paginated()
-   * @responseBody 422 - <ValidationInterface>
-   * @responseBody 429 - <TooManyRequests>
-   */
+  @ApiOperation({
+    summary: 'Get books for publisher ID',
+    operationId: 'getBooksForPublisher',
+    tags: ['Book'],
+  })
+  @pageApiQuery()
+  @limitApiQuery()
+  @nanoIdApiPathParameter()
+  @ApiResponse({ type: [BookDtoPaginated], status: 200 })
   async books({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
     return BookDto.fromPaginator(
@@ -57,6 +65,15 @@ export default class PublishersController {
     )
   }
 
+  @ApiOperation({
+    summary: 'Get multiple Publisher by IDs',
+    description:
+      'Gets multiple publishers by IDs. This only returns minified versions. If you want the full version, use the `get` endpoint.',
+    operationId: 'getPublishers',
+    tags: ['Publisher'],
+  })
+  @nanoIdsApiQuery()
+  @ApiResponse({ type: [PublisherBaseDto], status: 200 })
   async getMultiple({ request }: HttpContext) {
     const payload = await getIdsValidator.validate(request.qs())
 
@@ -64,6 +81,6 @@ export default class PublishersController {
 
     if (!publishers || publishers.length === 0) throw new Error('No data found')
 
-    return PublisherFullDto.fromArray(publishers)
+    return PublisherBaseDto.fromArray(publishers)
   }
 }
