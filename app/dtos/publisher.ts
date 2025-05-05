@@ -1,9 +1,18 @@
 import { BaseModelDto } from '@adocasts.com/dto/base'
 import Publisher from '#models/publisher'
 import { BookDto } from '#dtos/book'
+import { createdAtApiProperty, nanoIdApiProperty, updatedAtApiProperty } from '#config/openapi'
+import { ApiProperty } from '@foadonis/openapi/decorators'
 
 export class PublisherMinimalDto extends BaseModelDto {
+  @nanoIdApiProperty()
   declare id: string
+
+  @ApiProperty({
+    type: 'string',
+    description: 'The name of the publisher.',
+    example: 'Sample Publisher',
+  })
   declare name: string
 
   constructor(publisher?: Publisher) {
@@ -15,6 +24,11 @@ export class PublisherMinimalDto extends BaseModelDto {
 }
 
 export class PublisherBaseDto extends PublisherMinimalDto {
+  @ApiProperty({
+    type: 'string',
+    description: 'Description of the publisher.',
+    example: 'Sample Publisher Description',
+  })
   declare description: string | null
 
   constructor(publisher?: Publisher) {
@@ -25,16 +39,17 @@ export class PublisherBaseDto extends PublisherMinimalDto {
 }
 
 export class PublisherFullDto extends PublisherBaseDto {
+  @createdAtApiProperty()
   declare createdAt: string
+
+  @updatedAtApiProperty()
   declare updatedAt: string
-  declare enabled: boolean
 
   constructor(publisher?: Publisher) {
     super(publisher)
     if (!publisher) return
     this.createdAt = publisher.createdAt.toISO()!
     this.updatedAt = publisher.updatedAt.toISO()!
-    this.enabled = publisher.enabled
   }
 }
 

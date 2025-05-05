@@ -24,40 +24,155 @@ import Publisher from '#models/publisher'
 import { PublisherMinimalDto } from '#dtos/publisher'
 import { GenreBaseDto } from '#dtos/genre'
 import Genre from '#models/genre'
+import { ApiOperation, ApiResponse, ApiTags, ApiQuery } from '@foadonis/openapi/decorators'
+import {
+  keywordApiQuery,
+  limitApiProperty,
+  limitApiQuery,
+  nameApiQuery,
+  pageApiQuery,
+  remainingApiProperty,
+  requestIdApiProperty,
+  thresholdApiQuery,
+} from '#config/openapi'
+import {
+  ContributorBaseDtoPaginated,
+  GenreBaseDtoPaginated,
+  PublisherMinimalDtoPaginated,
+  SearchBookDtoPaginated,
+  SeriesBaseDtoPaginated,
+} from '#dtos/pagination'
 
+@ApiTags('Search')
+@requestIdApiProperty()
+@limitApiProperty()
+@remainingApiProperty()
+@ApiResponse({ status: 422, description: 'Validation error' })
+@ApiResponse({ status: 429, description: 'Too many requests' })
 export default class SearchesController {
-  /**
-   * @book
-   * @operationId searchBook
-   * @summary Search for a book
-   * @description Search for a book by multiple criteria and return a paginated list of books.
-   *
-   * @paramQuery title - The title of the book to search for. - @type(string)
-   * @paramQuery subtitle - The subtitle of the book to search for. - @type(string)
-   * @paramQuery keywords - The keywords to search for in the book. Will return books that can be far away from the wanted results. Do not use keywords if you are using some kind of automatching. It will match to broadly. You can try to contain it with other paramters. Note: title will overwrite the keywords, but still searches more broadly. So do not use title and keywords together unless you know what you want - @type(string)
-   * @paramQuery author - The author of the book to search for. - @type(string)
-   * @paramQuery narrator - The narrator of the book to search for. - @type(string)
-   * @paramQuery genre - The genre of the book to search for. - @type(string)
-   * @paramQuery series - The series of the book to search for. - @type(string)
-   * @paramQuery publisher - The publisher of the book to search for. Note: This must be an exact match! - @type(string)
-   * @paramQuery language - The language of the book to search for. - @type(string)
-   * @paramQuery type - The type of the book to search for. - @enum(book, audiobook, podcast)
-   *
-   * @paramQuery isExplicit - Indicates whether to filter for explicit books. Note: This filter is applied *after* the search query is executed. If no results are returned, it means that no books matching both the search criteria and the explicit filter were found on that page. It does *not* imply that no such books exist at all. - @type(boolean)
-   * @paramQuery isAbridged - Indicates whether to filter for abridged books. Note: This filter is applied *after* the search query is executed. If no results are returned, it means that no books matching both the search criteria and the abridged filter were found on that page. It does *not* imply that no such books exist at all. - @type(boolean)
-   * @paramQuery releasedAfter - The date after which the book was released. Note: This filter is applied *after* the search query is executed. If no results are returned, it means that no books matching both the search criteria and the releasedAfter filter were found on that page. It does *not* imply that no such books exist at all. - @type(date)
-   * @paramQuery releasedBefore - The date before which the book was released. Note: This filter is applied *after* the search query is executed. If no results are returned, it means that no books matching both the search criteria and the releasedBefore filter were found on that page. It does *not* imply that no such books exist at all. - @type(date)
-   *
-   * @paramQuery page - The page number to return. - @type(number) @default(1)
-   * @paramQuery threshold - The threshold for the ranking score. - @type(number) @default(0.35)
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - <Book[]>.with(relations).paginated()
-   * @responseBody 422 - <ValidationInterface>
-   * @responseBody 429 - <TooManyRequests>
-   */
+  @ApiQuery({
+    name: 'title',
+    description: 'The title of the book to search for.',
+    type: 'string',
+    example: 'Sample Title',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'subtitle',
+    description: 'The subtitle of the book to search for.',
+    type: 'string',
+    example: 'Sample Subtitle',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'author',
+    description: 'The author of the book to search for. Allows typo',
+    type: 'string',
+    example: 'Sample Author',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'narrator',
+    description: 'The narrator of the book to search for. Allows typo',
+    type: 'string',
+    example: 'Sample Narrator',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'publisher',
+    description: 'The publisher of the book to search for.',
+    type: 'string',
+    example: 'Sample Publisher',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'language',
+    description: 'The language of the book to search for.',
+    type: 'string',
+    example: 'en-US',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'genre',
+    description: 'The genre of the book to search for.',
+    type: 'string',
+    example: 'Science Fiction',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'series',
+    description: 'The series of the book to search for.',
+    type: 'string',
+    example: 'Harry Potter',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'releasedAfter',
+    description: 'The date after which the book was released.',
+    type: 'string',
+    example: '2023-10-01T00:00:00Z',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'releasedBefore',
+    description: 'The date before which the book was released.',
+    type: 'string',
+    example: '2023-10-01T00:00:00Z',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'isExplicit',
+    description: 'Indicates whether to filter for explicit books.',
+    type: 'boolean',
+    example: false,
+    required: false,
+  })
+  @ApiQuery({
+    name: 'isAbridged',
+    description: 'Indicates whether to filter for abridged books.',
+    type: 'boolean',
+    example: false,
+    required: false,
+  })
+  @ApiQuery({
+    name: 'type',
+    description: 'The type of the book to search for.',
+    type: 'string',
+    enum: ['book', 'audiobook', 'podcast', 'e-book'],
+    example: 'audiobook',
+    required: false,
+  })
+  @ApiQuery({
+    name: 'sort',
+    description: 'Sort order for the results (e.g., title, -releasedAt).',
+    type: 'string',
+    enum: [
+      'title',
+      '-title',
+      'releasedAt',
+      '-releasedAt',
+      'type',
+      'duration',
+      '-duration',
+      'pages',
+      '-pages',
+      'language',
+      'random',
+    ],
+    required: false,
+    explode: false,
+  })
+  @ApiOperation({
+    summary: 'Search for a book',
+    description: 'Search for a book by multiple criteria and return a paginated list of books.',
+    operationId: 'searchBook',
+    tags: ['Book'],
+  })
+  @keywordApiQuery()
+  @pageApiQuery()
+  @limitApiQuery()
+  @thresholdApiQuery()
+  @ApiResponse({ type: SearchBookDtoPaginated, status: 200 })
   async book({ request }: HttpContext) {
     const payload = await searchBookValidator.validate(request.all())
     const queries = []
@@ -289,25 +404,18 @@ export default class SearchesController {
     return result
   }
 
-  /**
-   * @contributor
-   * @operationId searchContributor
-   * @summary Search for a contributor
-   * @description Search for a contributor by name or keywords and return a paginated list.
-   *
-   * @paramQuery name - The name of the contributor to search for. - @type(string)
-   * @paramQuery keywords - The keywords to search for a contributor. - @type(string)
-   *
-   * @paramQuery page - The page number to return. - @type(number) @default(1)
-   * @paramQuery threshold - The threshold for the ranking score. - @type(number) @default(0.35)
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - <Contributor[]>.with(identifiers).exclude(books).paginated()
-   * @responseBody 422 - <ValidationInterface>
-   * @responseBody 429 - <TooManyRequests>
-   */
+  @ApiOperation({
+    summary: 'Search for a contributor',
+    description: 'Search for a contributor by name or keywords and return a paginated list.',
+    operationId: 'searchContributor',
+    tags: ['Contributor'],
+  })
+  @nameApiQuery()
+  @keywordApiQuery()
+  @pageApiQuery()
+  @limitApiQuery()
+  @thresholdApiQuery()
+  @ApiResponse({ type: ContributorBaseDtoPaginated, status: 200 })
   async contributor({ request }: HttpContext) {
     const payload = await searchContributorValidator.validate(request.all())
     const page = payload.page ?? 1
@@ -354,25 +462,25 @@ export default class SearchesController {
     return result
   }
 
-  /**
-   * @genre
-   * @operationId searchGenre
-   * @summary Search for a genre
-   * @description Search for a genre by name or keywords and return a paginated list.
-   *
-   * @paramQuery name - The name of the genre to search for. - @type(string)
-   * @paramQuery type - The type of the genre to search for. - @enum(tag, genre)
-   *
-   * @paramQuery page - The page number to return. - @type(number) @default(1)
-   * @paramQuery threshold - The threshold for the ranking score. - @type(number) @default(0.35)
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - <Genre[]>.exclude(books).paginated()
-   * @responseBody 422 - <ValidationInterface>
-   * @responseBody 429 - <TooManyRequests>
-   */
+  @ApiOperation({
+    summary: 'Search for a genre',
+    description: 'Search for a genre by name or keywords and return a paginated list.',
+    operationId: 'searchGenre',
+    tags: ['Genre'],
+  })
+  @ApiQuery({
+    name: 'type',
+    description: 'The type of the genre to search for.',
+    type: 'string',
+    enum: ['tag', 'genre'],
+    example: 'tag',
+    required: false,
+  })
+  @nameApiQuery()
+  @pageApiQuery()
+  @limitApiQuery()
+  @thresholdApiQuery()
+  @ApiResponse({ type: GenreBaseDtoPaginated, status: 200 })
   async genre({ request }: HttpContext) {
     const payload = await searchGenreValidator.validate(request.all())
     const page = payload.page ?? 1
@@ -407,25 +515,20 @@ export default class SearchesController {
     }
   }
 
-  /**
-   * @series
-   * @operationId searchSeries
-   * @summary Search for a series
-   * @description Search for a series by name or keywords and return a paginated list.
-   *
-   * @paramQuery name - The name of the series to search for. - @type(string)
-   * @paramQuery keywords - The keywords to search for a series. - @type(string)
-   *
-   * @paramQuery page - The page number to return. - @type(number) @default(1)
-   * @paramQuery threshold - The threshold for the ranking score. - @type(number) @default(0.35)
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - <Series[]>.with(identifiers).exclude(books).paginated()
-   * @responseBody 422 - <ValidationInterface>
-   * @responseBody 429 - <TooManyRequests>
-   */
+  @ApiOperation({
+    summary: 'Search for a series',
+    description: 'Search for a series by name or keywords and return a paginated list.',
+    operationId: 'searchSeries',
+    tags: ['Series'],
+  })
+  @nameApiQuery()
+  @keywordApiQuery()
+  @pageApiQuery()
+  @limitApiQuery()
+  @thresholdApiQuery()
+  @ApiResponse({ type: SeriesBaseDtoPaginated, status: 200 })
+  @ApiResponse({ status: 422, description: 'Validation error' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async series({ request }: HttpContext) {
     const payload = await searchSeriesValidator.validate(request.all())
     const page = payload.page ?? 1
@@ -475,24 +578,19 @@ export default class SearchesController {
     return result
   }
 
-  /**
-   * @publisher
-   * @operationId searchPublisher
-   * @summary Search for a publisher
-   * @description Search for a publisher by name and return a paginated list.
-   *
-   * @paramQuery name - The name of the series to search for. - @type(string)
-   *
-   * @paramUse(pagination)
-   * @paramQuery threshold - The threshold for the ranking score. - @type(number) @default(0.35)
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - <Publisher[]>.exclude(books).paginated()
-   * @responseBody 422 - <ValidationInterface>
-   * @responseBody 429 - <TooManyRequests>
-   */
+  @ApiOperation({
+    summary: 'Search for a publisher',
+    description: 'Search for a publisher by name and return a paginated list.',
+    operationId: 'searchPublisher',
+    tags: ['Publisher'],
+  })
+  @nameApiQuery()
+  @pageApiQuery()
+  @limitApiQuery()
+  @thresholdApiQuery()
+  @ApiResponse({ type: PublisherMinimalDtoPaginated, status: 200 })
+  @ApiResponse({ status: 422, description: 'Validation error' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async publisher({ request }: HttpContext) {
     const payload = await searchSeriesValidator.validate(request.all())
     const page = payload.page ?? 1

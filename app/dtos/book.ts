@@ -8,11 +8,19 @@ import { IdentifierBaseDto, IdentifierMinimalDto } from '#dtos/identifier'
 import { SeriesBaseDto, SeriesMinimalDto } from '#dtos/series'
 import { TrackBaseDto } from '#dtos/track'
 import { ImageBaseDto } from '#dtos/image'
+import { ApiProperty, ApiPropertyOptional } from '@foadonis/openapi/decorators'
+import {
+  createdAtApiProperty,
+  languageApiProperty,
+  nanoIdApiProperty,
+  updatedAtApiProperty,
+} from '#config/openapi'
+import { DateTime } from 'luxon'
 
 /**
  * Base class for common book fields.
  */
-export abstract class BookBaseDto<
+export class BookBaseDto<
   TContributor = ContributorBaseDto,
   TGroup = BookGroupFullDto,
   TGenre = GenreBaseDto,
@@ -20,18 +28,80 @@ export abstract class BookBaseDto<
   TSeries = SeriesBaseDto,
   TPublisher = PublisherBaseDto,
 > extends BaseModelDto {
+  @nanoIdApiProperty()
   declare id: string
+
+  @ApiProperty({
+    type: 'string',
+    description: 'The title of the book.',
+    example: 'Sample Book Title',
+  })
   declare title: string
+
+  @ApiPropertyOptional({
+    type: 'string',
+    description: 'The subtitle of the book.',
+    example: 'Sample Book Subtitle',
+    nullable: true,
+  })
   declare subtitle: string | null
+
   declare image: object | null
+
+  @languageApiProperty()
   declare language: string | null
+
+  @ApiPropertyOptional({
+    type: 'number',
+    description: 'The number of pages in the book.',
+    example: 300,
+    nullable: true,
+  })
   declare pages: number | null
+
+  @ApiPropertyOptional({
+    type: 'number',
+    description: 'The duration of the book in seconds.',
+    example: 3600,
+    nullable: true,
+  })
   declare duration: number | null
+
+  @ApiPropertyOptional({
+    type: 'string',
+    format: 'date-time',
+    description: 'The release date of the book.',
+    example: '2023-10-01T00:00:00Z',
+    nullable: true,
+  })
   declare releasedAt: string | null
+
+  @ApiProperty({
+    type: 'boolean',
+    description: 'Whether the book is explicit or not.',
+    example: false,
+    nullable: false,
+    default: false,
+  })
   declare isExplicit: boolean
+
+  @ApiProperty({
+    type: 'boolean',
+    description: 'Whether the book is abridged or not.',
+    example: false,
+    nullable: false,
+    default: false,
+  })
   declare isAbridged: boolean | null
   declare groupId: number | null
   declare enabled: boolean
+
+  @ApiProperty({
+    description: 'The type of the book.',
+    enum: ['book', 'audiobook', 'podcast', 'e-book'],
+    example: 'audiobook',
+    nullable: false,
+  })
   declare type: 'book' | 'audiobook' | 'podcast' | 'e-book'
   declare contributors: TContributor[]
   declare genres: TGenre[]
@@ -71,11 +141,41 @@ export abstract class BookBaseDto<
  * specific to the full book representation.
  */
 export class BookDto extends BookBaseDto {
+  @ApiPropertyOptional({
+    type: 'string',
+    description: 'The summary of the book.',
+    example: 'This is a sample book summary.',
+    nullable: true,
+  })
   declare summary: string | null
+
+  @ApiPropertyOptional({
+    type: 'string',
+    description: 'The description of the book.',
+    example: 'This is a sample book description.',
+    nullable: true,
+  })
   declare description: string | null
+
+  @ApiPropertyOptional({
+    type: () => [TrackBaseDto],
+    description: 'List of tracks in the book.',
+    nullable: true,
+  })
   declare tracks: TrackBaseDto[]
+
+  @createdAtApiProperty()
   declare createdAt: string
+
+  @updatedAtApiProperty()
   declare updatedAt: string
+
+  @ApiPropertyOptional({
+    type: () => [ImageBaseDto],
+    description:
+      'List of images associated with the book. The cover image is excluded. Also the cover images is always returned. Additional images should be considered optional and only be loaded upon user-interaction.',
+    nullable: true,
+  })
   declare images: ImageBaseDto[]
 
   constructor(book?: Book) {
@@ -91,9 +191,9 @@ export class BookDto extends BookBaseDto {
     this.publisher = book.publisher && new PublisherBaseDto(book.publisher)
     this.summary = book.summary
     this.description = book.description
-    this.tracks = TrackBaseDto.fromArray(book.tracks)
-    this.createdAt = book.createdAt.toISO()!
-    this.updatedAt = book.updatedAt.toISO()!
+    this.tracks = book.tracks ? book.tracks.map((track) => new TrackBaseDto(track)) : []
+    this.createdAt = book.createdAt?.toISO() || DateTime.now().toISO()
+    this.updatedAt = book.updatedAt?.toISO() || DateTime.now().toISO()
   }
 }
 
@@ -114,6 +214,44 @@ export class SearchBookDto extends BookBaseDto<
   SeriesMinimalDto,
   PublisherMinimalDto
 > {
+  @ApiProperty({
+    type: [ContributorMinimalDto],
+    description: 'List of contributors associated with the book.',
+  })
+  declare contributors: ContributorMinimalDto[]
+
+  @ApiProperty({
+    type: [GenreMinimalDto],
+    description: 'List of genres associated with the book.',
+  })
+  declare genres: GenreMinimalDto[]
+
+  @ApiProperty({
+    type: [IdentifierMinimalDto],
+    description: 'List of identifiers associated with the book.',
+  })
+  declare identifiers: IdentifierMinimalDto[]
+
+  @ApiProperty({
+    type: [SeriesMinimalDto],
+    description: 'List of series associated with the book.',
+  })
+  declare series: SeriesMinimalDto[]
+
+  @ApiPropertyOptional({
+    type: () => BookGroupBaseDto,
+    description: 'The group associated with the book.',
+    nullable: true,
+  })
+  declare group: BookGroupBaseDto | null
+
+  @ApiPropertyOptional({
+    type: () => PublisherMinimalDto,
+    description: 'The publisher associated with the book.',
+    nullable: true,
+  })
+  declare publisher: PublisherMinimalDto | null
+
   constructor(book?: Book) {
     super(book)
 

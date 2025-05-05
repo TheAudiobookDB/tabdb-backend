@@ -27,10 +27,12 @@ import { Infer } from '@vinejs/vine/types'
 import app from '@adonisjs/core/services/app'
 import { cuid } from '@adonisjs/core/helpers'
 import Publisher from '#models/publisher'
-import { BookDto } from '#dtos/book'
+import { BookDto, SearchBookDto } from '#dtos/book'
 import Image from '#models/image'
 import { ImageBaseDto } from '#dtos/image'
 import { getIdsValidator } from '#validators/common_validator'
+import { ApiOperation, ApiResponse } from '@foadonis/openapi/decorators'
+import { IdentifierMinimalDto } from '#dtos/identifier'
 
 export default class BooksController {
   /**
@@ -287,6 +289,16 @@ export default class BooksController {
    * @responseBody 422 - <ValidationInterface>
    * @responseBody 429 - <TooManyRequests>
    */
+  @ApiOperation({
+    summary: 'Get a Book by ID',
+    description:
+      'Gets a book by ID and preloads its authors, narrators, genres, identifiers, series, tracks, and group.',
+    operationId: 'getBook',
+    tags: ['Book'],
+  })
+  @ApiResponse({ type: BookDto, status: 200 })
+  @ApiResponse({ status: 422, description: 'Validation error' })
+  @ApiResponse({ status: 429, description: 'Too many requests' })
   async get({ params }: HttpContext) {
     await getBookValidator.validate(params)
 
@@ -298,12 +310,14 @@ export default class BooksController {
     return new BookDto(book)
   }
 
+  @ApiOperation({ summary: 'List all posts 2' })
+  @ApiResponse({ type: [IdentifierMinimalDto] })
   async getMultiple({ request }: HttpContext) {
     const payload = await getIdsValidator.validate(request.qs())
 
     const books: Book[] = await Book.query()
       .whereIn('public_id', payload.ids)
-      .withScopes((s) => s.fullAll())
+      .withScopes((s) => s.minimalAll())
 
     books.forEach((book) => {
       void Book.afterFindHook(book)
@@ -311,7 +325,7 @@ export default class BooksController {
 
     if (!books || books.length === 0) throw new Error('No data found')
 
-    return BookDto.fromArray(books)
+    return SearchBookDto.fromArray(books)
   }
 
   /**

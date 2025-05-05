@@ -18,9 +18,11 @@ import {
   r3Limiter,
 } from '#start/limiter'
 import { middleware } from '#start/kernel'
-import AutoSwagger from 'adonis-autoswagger'
-import swagger from '#config/swagger'
 import app from '@adonisjs/core/services/app'
+import openapi from '@foadonis/openapi/services/main'
+
+openapi.registerRoutes()
+
 const RequestsController = () => import('#controllers/requests_controller')
 const ConfirmsController = () => import('#controllers/confirms_controller')
 const SearchesController = () => import('#controllers/searches_controller')
@@ -37,17 +39,6 @@ const LogsController = () => import('#controllers/logs_controller')
 /**
  * Swagger
  */
-
-router.get('/swagger', async () => {
-  return AutoSwagger.default.docs(router.toJSON(), swagger)
-})
-
-router.get('/docs', async () => {
-  return AutoSwagger.default.ui('/swagger')
-})
-router.get('/', async () => {
-  return AutoSwagger.default.scalar('/swagger')
-})
 
 /**
  * Auth
