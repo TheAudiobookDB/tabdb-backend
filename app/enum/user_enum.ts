@@ -7,7 +7,7 @@ export enum UserRoles {
   ADMIN = 99,
 }
 
-const roleAbilities = {
+export const roleAbilities = {
   [UserRoles.DEFAULT]: ['rate1:150', 'rate2:50', 'rate3:20', 'item:add'],
   [UserRoles.CONTRIBUTOR]: [
     'rate1:150',

@@ -93,20 +93,6 @@ export const languageApiProperty = () =>
   })
 
 const headers = {
-  'x-ratelimit-limit': {
-    description: 'The maximum number of requests you can make in the current time window.',
-    schema: {
-      type: 'integer',
-      example: 100,
-    },
-  },
-  'x-ratelimit-remaining': {
-    description: 'The number of requests you have left in the current time window.',
-    schema: {
-      type: 'integer',
-      example: 100,
-    },
-  },
   'x-request-id': {
     description:
       'A unique identifier for the request. If you have any issues, please provide this ID to us.',
@@ -126,10 +112,27 @@ const headers = {
   },
 }
 
+const rateLimitHeaders = {
+  'x-ratelimit-limit': {
+    description: 'The maximum number of requests you can make in the current time window.',
+    schema: {
+      type: 'integer',
+      example: 100,
+    },
+  },
+  'x-ratelimit-remaining': {
+    description: 'The number of requests you have left in the current time window.',
+    schema: {
+      type: 'integer',
+      example: 100,
+    },
+  },
+}
+
 export const successApiResponse = (options: ApiResponseOptions) =>
   ApiResponse({
     // @ts-ignore
-    headers: headers,
+    headers: { headers, ...rateLimitHeaders },
     status: 200,
     description: 'Success',
     ...options,
@@ -235,7 +238,7 @@ export const nanoIdApiPathParameter = () =>
 export const tooManyRequestsApiResponse = () =>
   ApiResponse({
     // @ts-ignore
-    headers: headers,
+    headers: { headers, ...rateLimitHeaders },
     status: 429,
     description: 'Too many requests',
     mediaType: 'application/json',
@@ -257,7 +260,7 @@ export const tooManyRequestsApiResponse = () =>
 export const validationErrorApiResponse = () =>
   ApiResponse({
     // @ts-ignore
-    headers: headers,
+    headers: { headers, ...rateLimitHeaders },
     status: 422,
     description: 'Validation error',
     mediaType: 'application/json',
@@ -294,7 +297,7 @@ export const validationErrorApiResponse = () =>
 export const notFoundApiResponse = () =>
   ApiResponse({
     // @ts-ignore
-    headers: headers,
+    headers: { headers, ...rateLimitHeaders },
     status: 404,
     description: 'Resource not found',
     mediaType: 'application/json',
@@ -352,6 +355,30 @@ export const forbiddenApiResponse = (message: string = 'A duplicate entry alread
         message: {
           type: 'string',
           example: 'Forbidden',
+        },
+        requestId: {
+          type: 'string',
+          example: 'sbq3l6jl0a2fpqnkydlwl9mu',
+          description:
+            'The unique identifier for the request. If you have any issues, please provide this ID to us.',
+        },
+      },
+    },
+  })
+
+export const badRequestApiResponse = () =>
+  ApiResponse({
+    // @ts-ignore
+    headers: headers,
+    status: 400,
+    description: 'Bad request',
+    mediaType: 'application/json',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: 'Bad request',
         },
         requestId: {
           type: 'string',
