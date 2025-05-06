@@ -1,38 +1,25 @@
 // import type { HttpContext } from '@adonisjs/core/http'
 
 import { HttpContext } from '@adonisjs/core/http'
-import { createBookValidator, getBookValidator } from '#validators/book_validator'
+import { getBookValidator } from '#validators/book_validator'
 import Book from '#models/book'
-import Genre from '#models/genre'
-import Contributor from '#models/contributor'
-import Track from '#models/track'
-import Series from '#models/series'
 import { DateTime } from 'luxon'
-import {
-  contributorValidator,
-  genreValidator,
-  getIdPaginationValidator,
-  publisherValidator,
-  seriesValidator,
-  trackValidator,
-} from '#validators/provider_validator'
-import { ModelObject } from '@adonisjs/lucid/types/model'
+import { getIdPaginationValidator } from '#validators/provider_validator'
 import { ModelHelper } from '../helpers/model_helper.js'
 import { Audiobookshelf } from '../provider/audiobookshelf.js'
 import { LogState } from '../enum/log_enum.js'
 import { bookIndex } from '#config/meilisearch'
 import router from '@adonisjs/core/services/router'
 import env from '#start/env'
-import { Infer } from '@vinejs/vine/types'
 import app from '@adonisjs/core/services/app'
 import { cuid } from '@adonisjs/core/helpers'
-import Publisher from '#models/publisher'
 import { BookDto, SearchBookDto } from '#dtos/book'
 import Image from '#models/image'
 import { ImageBaseDto } from '#dtos/image'
 import { getIdsValidator } from '#validators/common_validator'
-import { ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
+import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
+  forbiddenApiResponse,
   limitApiQuery,
   nanoIdApiPathParameter,
   nanoIdsApiQuery,
@@ -44,27 +31,30 @@ import {
 } from '#config/openapi'
 import { ImageBaseDtoPaginated } from '#dtos/pagination'
 import NotFoundException from '#exceptions/not_found_exception'
+import { createUpdateBookValidation } from '#validators/crud_validator'
+import { BooksHelper } from '../helpers/books_helper.js'
+import db from '@adonisjs/lucid/services/db'
+import { UserAbilities } from '../enum/user_enum.js'
 
 @ApiTags('Book')
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
 export default class BooksController {
-  /**
-   * @create
-   * @operationId createBook
-   * @summary Create a new book
-   * @description Creates a new book and (optionally) its relations (authors, narrators, genres, identifiers, series, tracks).
-   *
-   * @requestBody - <createBookValidator>
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 422 - <ValidationInterface>
-   * @responseBody 429 - <TooManyRequests>
-   */
+  @ApiOperation({
+    summary: 'Create a new Book',
+    description:
+      'Creates a new book and (optionally) its relations (authors, narrators, genres, identifiers, series, tracks).',
+    operationId: 'createBook',
+  })
+  @notFoundApiResponse()
+  @forbiddenApiResponse()
+  @ApiBody({ type: () => createUpdateBookValidation })
+  @successApiResponse({ type: BookDto, status: 201 })
   async create(context: HttpContext) {
-    const payload = await context.request.validateUsing(createBookValidator)
+    const payload = await context.request.validateUsing(createUpdateBookValidation)
+    const abilities = new UserAbilities(undefined, context.auth.user)
+
+    if (abilities.hasAbility('item:draft:add')) throw Error()
 
     const exactDuplicates = await Book.query()
       .where((builder) => {
@@ -79,7 +69,7 @@ export default class BooksController {
       .first()
 
     if (exactDuplicates) {
-      return context.response.status(422).send({
+      return context.response.status(403).send({
         message: 'A book with the same title, subtitle and language already exists.',
       })
     }
@@ -91,7 +81,7 @@ export default class BooksController {
         | null
 
       if (existingBooks && existingBooks.length > 0) {
-        return context.response.status(422).send({
+        return context.response.status(403).send({
           message: 'A book with at least one identifier already exists.',
         })
       }
@@ -105,7 +95,11 @@ export default class BooksController {
       rankingScoreThreshold: 0.8,
     })
 
+    const trx = await db.transaction()
+
     const book = new Book()
+
+    book.useTransaction(trx)
 
     book.title = payload.title
     book.subtitle = payload.subtitle ?? null
@@ -130,12 +124,18 @@ export default class BooksController {
 
     await book.saveWithLog(result.hits.length > 0 ? LogState.DUPLICATE_FOUND : LogState.PENDING)
 
-    await BooksController.addGenreToBook(book, payload.genres)
-    await ModelHelper.addIdentifier(book, payload.identifiers)
-    await BooksController.addContributorToBook(book, payload.contributors)
-    await BooksController.addTrackToBook(book, payload.tracks)
-    await BooksController.addSeriesToBook(book, payload.series)
-    await BooksController.addPublisherToBook(book, payload.publisher)
+    await BooksHelper.addGenreToBook(book, payload.genres)
+    await ModelHelper.addIdentifier(book, payload.identifiers, trx)
+    await BooksHelper.addContributorToBook(book, payload.contributors)
+    await BooksHelper.addTrackToBook(book, payload.tracks)
+    await BooksHelper.addSeriesToBook(book, payload.series)
+    await BooksHelper.addPublisherToBook(book, payload.publisher)
+
+    if (!abilities.hasAbility('item:add')) {
+      await trx.rollback()
+    } else {
+      await trx.commit()
+    }
 
     const bookDto = new BookDto(book)
 
@@ -158,130 +158,6 @@ export default class BooksController {
     return { book: bookDto, message: 'Book created successfully.', available: false }
   }
 
-  static async addGenreToBook(book: Book, payloadObject?: Infer<typeof genreValidator>[]) {
-    if (payloadObject) {
-      const genres = []
-      for (const genre of payloadObject) {
-        const genreModel = await Genre.findByModelOrCreate(genre)
-        if (genreModel) genres.push(genreModel)
-      }
-      book.$pushRelated('genres', genres)
-      await book.related('genres').saveMany(genres)
-    }
-  }
-
-  static async addContributorToBook(
-    book: Book,
-    payloadObject?: Infer<typeof contributorValidator>[]
-  ) {
-    if (payloadObject) {
-      const roles: Record<string, ModelObject> = {}
-
-      if (!book.contributors) {
-        await book.load('contributors', (q) => q.pivotColumns(['role', 'type']))
-      }
-      if (book.contributors && book.contributors.length > 0) {
-        for (const contributor of book.contributors) {
-          if (contributor.$extras.pivot_role) {
-            roles[contributor.id] = {
-              role: contributor.$extras.pivot_role,
-              type: contributor.$extras.pivot_type,
-            }
-          } else {
-            roles[contributor.id] = { type: contributor.$extras.pivot_type }
-          }
-        }
-      }
-
-      for (const narrator of payloadObject) {
-        const narratorModel = await Contributor.findByModelOrCreate(narrator)
-        const role = narrator.role
-        const type = narrator.type
-        if (role) {
-          roles[narratorModel.id] = { role, type }
-        } else {
-          roles[narratorModel.id] = { type }
-        }
-      }
-      await book.related('contributors').sync(roles)
-    }
-  }
-
-  static async addSeriesToBook(book: Book, payloadObject?: Infer<typeof seriesValidator>[]) {
-    if (payloadObject) {
-      const positions: Record<string, ModelObject> = {}
-
-      if (!book.series) {
-        await book.load('series', (q) => q.pivotColumns(['position']))
-      }
-      if (book.series && book.series.length > 0) {
-        for (const serie of book.series) {
-          if (serie.$extras.pivot_position) {
-            positions[serie.id] = { position: serie.$extras.pivot_position }
-          } else {
-            positions[serie.id] = {}
-          }
-        }
-      }
-
-      for (const serie of payloadObject) {
-        const serieModel = await Series.findByModelOrCreate(serie)
-
-        const position = serie.position
-        if (position) {
-          positions[serieModel.id] = { position }
-        } else {
-          positions[serieModel.id] = {}
-        }
-      }
-      await book.related('series').sync(positions)
-    }
-  }
-
-  static async addTrackToBook(book: Book, payloadObject?: Infer<typeof trackValidator>[]) {
-    if (payloadObject) {
-      const tracks = []
-      for (const track of payloadObject) {
-        const trackModel = await Track.findByModelOrCreate(track, book)
-        if (trackModel) {
-          tracks.push(trackModel)
-        }
-      }
-      book.$pushRelated('tracks', tracks)
-      await book.related('tracks').saveMany(tracks)
-    }
-  }
-
-  static async addPublisherToBook(
-    book: Book,
-    publisher?: Infer<typeof publisherValidator>,
-    replace = false
-  ) {
-    if (publisher) {
-      if (book.publisher_id && !replace) return
-      const publisherModel = await Publisher.findByModelOrCreate(publisher)
-      if (publisherModel) {
-        book.$setRelated('publisher', publisherModel)
-        await book.related('publisher').associate(publisherModel)
-      }
-    }
-  }
-
-  /**
-   * @abs
-   * @operationId createBookABS
-   * @summary Create a new book from ABS
-   * @description Creates a new book that supports the Audiobookshelf `metadata.json` format.
-   *
-   * @requestBody - <audiobookshelfValidator>
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - <Book>
-   * @responseBody 422 - <ValidationInterface>
-   * @responseBody 429 - <TooManyRequests>
-   */
   async abs({ request }: HttpContext) {
     const absBook = await Audiobookshelf.fetchBook(request.body())
 

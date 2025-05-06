@@ -16,12 +16,8 @@ export const imageValidation = vine.file({
 export const contributorTypeValidation = vine
   .number()
   .parse((value) => {
-    console.log('value', value, typeof value)
-    console.log('value', value, typeof value)
-    console.log('value', value, typeof value)
-    console.log('value', value, typeof value)
-    console.log('value', value, typeof value)
-    console.log('value', value, typeof value)
+    // Example to not throw an error for OpenAPI
+    if (!value || value === 'example') return value
     if (typeof value === 'number' || typeof value === 'string') {
       if (typeof value === 'string') {
         value = Number.parseInt(value)

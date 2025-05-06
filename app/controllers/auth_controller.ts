@@ -5,21 +5,47 @@ import User from '#models/user'
 import mail from '@adonisjs/mail/services/main'
 import env from '#start/env'
 import { randomUUID } from 'node:crypto'
+import {
+  notFoundApiResponse,
+  successApiResponse,
+  tooManyRequestsApiResponse,
+  unauthorizedApiResponse,
+  validationErrorApiResponse,
+} from '#config/openapi'
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiCookieAuth,
+  ApiOperation,
+  ApiTags,
+} from '@foadonis/openapi/decorators'
 
+@ApiTags('Auth')
+@validationErrorApiResponse()
+@tooManyRequestsApiResponse()
+@ApiBearerAuth()
+@ApiCookieAuth()
 export default class AuthController {
-  /**
-   * @store
-   * @operationId login
-   * @summary Sends an email to the user with a link to log in
-   * @description Sends an email to the user with a link to log in
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - {"message": "Email sent successfully"}
-   * @responseBody 422 - <ValidationInterface>
-   * @responseBody 429 - <TooManyRequests>
-   */
+  @ApiOperation({
+    summary: 'Send magic link',
+    description: 'Sends an email to the user with a link to log in',
+    operationId: 'login',
+  })
+  @notFoundApiResponse()
+  @unauthorizedApiResponse()
+  @ApiBody({ type: () => storeLoginValidator })
+  @successApiResponse({
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: 'Email sent successfully',
+        },
+      },
+    },
+    status: 200,
+  })
   async store({ request, response }: HttpContext) {
     await storeLoginValidator.validate(request.all())
 

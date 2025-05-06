@@ -338,3 +338,27 @@ export const unauthorizedApiResponse = () =>
       },
     },
   })
+
+export const forbiddenApiResponse = (message: string = 'A duplicate entry already exists') =>
+  ApiResponse({
+    // @ts-ignore
+    headers: headers,
+    status: 403,
+    description: `Forbidden - ${message}`,
+    mediaType: 'application/json',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: 'Forbidden',
+        },
+        requestId: {
+          type: 'string',
+          example: 'sbq3l6jl0a2fpqnkydlwl9mu',
+          description:
+            'The unique identifier for the request. If you have any issues, please provide this ID to us.',
+        },
+      },
+    },
+  })
