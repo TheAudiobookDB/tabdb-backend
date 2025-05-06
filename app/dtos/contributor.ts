@@ -5,7 +5,7 @@ import { IdentifierFullDto, IdentifierBaseDto } from '#dtos/identifier'
 import { ContributorType } from '../enum/contributor_enum.js'
 import { createdAtApiProperty, nanoIdApiProperty } from '#config/openapi'
 import { ApiProperty, ApiPropertyOptional } from '@foadonis/openapi/decorators'
-import { ImageBaseDto } from '#dtos/image'
+import { imageApiProperty } from '#dtos/image'
 
 export class ContributorMinimalDto extends BaseModelDto {
   @nanoIdApiProperty()
@@ -54,11 +54,7 @@ export class ContributorMinimalDto extends BaseModelDto {
 }
 
 export class ContributorBaseDto extends ContributorMinimalDto {
-  @ApiProperty({
-    type: () => ImageBaseDto,
-    description: 'Image of the contributor.',
-    nullable: true,
-  })
+  @imageApiProperty('Image of Contributor')
   declare image: object | null
 
   @ApiPropertyOptional({

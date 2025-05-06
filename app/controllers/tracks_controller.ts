@@ -3,10 +3,31 @@
 import { HttpContext } from '@adonisjs/core/http'
 import { getIdPaginationValidator, getIdValidator } from '#validators/provider_validator'
 import Track from '#models/track'
-import { TrackBaseDto, TrackFullDto } from '#dtos/track'
+import { TrackFullDto, TrackMinimalDto } from '#dtos/track'
 import Book from '#models/book'
 import { getIdsValidator } from '#validators/common_validator'
+import { ApiOperation, ApiResponse, ApiTags } from '@foadonis/openapi/decorators'
+import {
+  limitApiProperty,
+  limitApiQuery,
+  nanoIdApiPathParameter,
+  nanoIdsApiQuery,
+  notFoundApiResponse,
+  pageApiQuery,
+  remainingApiProperty,
+  requestIdApiProperty,
+  tooManyRequestsApiResponse,
+  validationErrorApiResponse,
+} from '#config/openapi'
+import { TrackFullDtoPaginated } from '#dtos/pagination'
+import NotFoundException from '#exceptions/not_found_exception'
 
+@ApiTags('Track')
+@requestIdApiProperty()
+@limitApiProperty()
+@remainingApiProperty()
+@validationErrorApiResponse()
+@tooManyRequestsApiResponse()
 export default class TracksController {
   /**
    * @get
@@ -20,6 +41,13 @@ export default class TracksController {
    * @responseBody 422 - <ValidationInterface>
    * @responseBody 429 - <TooManyRequests>
    */
+  @ApiOperation({
+    summary: 'Get a track by ID',
+    operationId: 'getTrack',
+  })
+  @nanoIdApiPathParameter()
+  @notFoundApiResponse()
+  @ApiResponse({ type: TrackFullDto, status: 200 })
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
     return new TrackFullDto(await Track.query().where('publicId', payload.id).firstOrFail())
@@ -39,28 +67,46 @@ export default class TracksController {
    * @responseBody 422 - <ValidationInterface>
    * @responseBody 429 - <TooManyRequests>
    */
+  @ApiOperation({
+    summary: 'Get tracks for a book by ID',
+    operationId: 'getTracksForBook',
+  })
+  @pageApiQuery()
+  @limitApiQuery(500)
+  @nanoIdApiPathParameter()
+  @notFoundApiResponse()
+  @ApiResponse({ type: [TrackFullDtoPaginated], status: 200 })
   async getTracksForBook({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
 
     const book = await Book.findByOrFail('publicId', payload.id)
 
-    return TrackBaseDto.fromPaginator(
+    return TrackFullDto.fromPaginator(
       await Track.query()
         .where('bookId', book?.id)
         .preload('contributors', (q) => q.withScopes((s) => s.minimal()).pivotColumns(['role']))
         .preload('images')
         .orderBy('start')
-        .paginate(payload.page, 500)
+        .paginate(payload.page, payload.limit)
     )
   }
 
+  @ApiOperation({
+    summary: 'Get multiple Tracks by IDs',
+    description:
+      'Gets multiple tracks by IDs. This only returns minified versions. If you want the full version, use the `get` endpoint.',
+    operationId: 'getTracks',
+  })
+  @nanoIdsApiQuery()
+  @notFoundApiResponse()
+  @ApiResponse({ type: [TrackMinimalDto], status: 200 })
   async getMultiple({ request }: HttpContext) {
     const payload = await getIdsValidator.validate(request.qs())
 
     const tracks: Track[] = await Track.query().whereIn('public_id', payload.ids)
 
-    if (!tracks || tracks.length === 0) throw new Error('No data found')
+    if (!tracks || tracks.length === 0) throw new NotFoundException()
 
-    return TrackFullDto.fromArray(tracks)
+    return TrackMinimalDto.fromArray(tracks)
   }
 }

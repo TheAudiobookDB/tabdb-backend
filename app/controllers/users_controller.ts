@@ -9,38 +9,49 @@ import { updateUserValidator } from '#validators/user_validator'
 import { FileHelper } from '../helpers/file_helper.js'
 import { UserBaseDto, UserFullDto, UserPublicDto } from '#dtos/user'
 import { LogBaseDto } from '#dtos/log'
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+} from '@foadonis/openapi/decorators'
+import {
+  limitApiProperty,
+  notFoundApiResponse,
+  remainingApiProperty,
+  requestIdApiProperty,
+  tooManyRequestsApiResponse,
+  unauthorizedApiResponse,
+  validationErrorApiResponse,
+} from '#config/openapi'
 
+@ApiTags('User')
+@requestIdApiProperty()
+@limitApiProperty()
+@remainingApiProperty()
+@validationErrorApiResponse()
+@tooManyRequestsApiResponse()
+@ApiBearerAuth()
 export default class UsersController {
-  /**
-   * @getMe
-   * @operationId getMe
-   * @summary Get the authenticated user
-   * @description This endpoint returns the authenticated user. It is used to get the user information after login.
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - <User>
-   * @responseBody 429 - <TooManyRequests>
-   */
+  @ApiOperation({
+    summary: 'Get the authenticated user',
+    operationId: 'getMe',
+  })
+  @notFoundApiResponse()
+  @unauthorizedApiResponse()
+  @ApiResponse({ type: UserBaseDto, status: 200 })
   async getMe({ auth }: HttpContext) {
     return new UserBaseDto(await auth.authenticate())
   }
 
-  /**
-   * @get
-   * @operationId getUser
-   * @summary Get a user by ID
-   *
-   * @requestBody - <getIdValidator>
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - <User>
-   * @responseBody 422 - <ValidationInterface>
-   * @responseBody 429 - <TooManyRequests>
-   */
+  @ApiOperation({
+    summary: 'Get the a User by ID',
+    operationId: 'getUser',
+  })
+  @notFoundApiResponse()
+  @unauthorizedApiResponse()
+  @ApiResponse({ type: UserPublicDto, status: 200 })
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
     return new UserPublicDto(await User.query().where('publicId', payload.id).firstOrFail())
@@ -80,16 +91,14 @@ export default class UsersController {
     )
   }
 
-  /**
-   * @update
-   * @operationId updateUser
-   * @summary Update current user
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - <User>
-   */
+  @ApiOperation({
+    summary: 'Update the authenticated user',
+    operationId: 'updateUser',
+  })
+  @notFoundApiResponse()
+  @unauthorizedApiResponse()
+  @ApiBody({ type: () => updateUserValidator })
+  @ApiResponse({ type: UserPublicDto, status: 200 })
   async update({ auth, request, response }: HttpContext) {
     const user = await auth.authenticate()
     if (user.updatedAt && user.updatedAt.diffNow().as('hours') >= -1) {

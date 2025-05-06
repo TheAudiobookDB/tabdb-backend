@@ -113,7 +113,7 @@ export const requestIdApiProperty = () =>
     example: 'sbq3l6jl0a2fpqnkydlwl9mu',
   })
 
-export const pageApiQuery = () =>
+export const pageApiQuery = (defaultNum: number = 1) =>
   ApiQuery({
     name: 'page',
     description: 'The page number to retrieve. You will only be able to get at most 500 books.',
@@ -122,11 +122,12 @@ export const pageApiQuery = () =>
     schema: {
       minimum: 1,
       maximum: 500,
+      default: defaultNum,
     },
     example: 1,
   })
 
-export const limitApiQuery = () =>
+export const limitApiQuery = (defaultNum: number = 10) =>
   ApiQuery({
     name: 'limit',
     description:
@@ -136,6 +137,7 @@ export const limitApiQuery = () =>
     schema: {
       minimum: 1,
       maximum: 500,
+      default: defaultNum,
     },
     example: 10,
   })
@@ -258,6 +260,50 @@ export const validationErrorApiResponse = () =>
               },
             },
           },
+        },
+      },
+    },
+  })
+
+export const notFoundApiResponse = () =>
+  ApiResponse({
+    status: 404,
+    description: 'Resource not found',
+    mediaType: 'application/json',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: 'Resource not found',
+        },
+        requestId: {
+          type: 'string',
+          example: 'sbq3l6jl0a2fpqnkydlwl9mu',
+          description:
+            'The unique identifier for the request. If you have any issues, please provide this ID to us.',
+        },
+      },
+    },
+  })
+
+export const unauthorizedApiResponse = () =>
+  ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    mediaType: 'application/json',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: 'Unauthorized',
+        },
+        requestId: {
+          type: 'string',
+          example: 'sbq3l6jl0a2fpqnkydlwl9mu',
+          description:
+            'The unique identifier for the request. If you have any issues, please provide this ID to us.',
         },
       },
     },

@@ -1,7 +1,22 @@
 import { HttpContext } from '@adonisjs/core/http'
 import { indexRequestValidator } from '#validators/request_validator'
 import { Audible } from '../provider/audible.js'
+import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@foadonis/openapi/decorators'
+import {
+  limitApiProperty,
+  nanoIdApiPathParameter,
+  remainingApiProperty,
+  requestIdApiProperty,
+  tooManyRequestsApiResponse,
+  validationErrorApiResponse,
+} from '#config/openapi'
 
+@ApiTags('Request')
+@requestIdApiProperty()
+@limitApiProperty()
+@remainingApiProperty()
+@validationErrorApiResponse()
+@tooManyRequestsApiResponse()
 export default class RequestsController {
   /**
    * @index
@@ -18,6 +33,30 @@ export default class RequestsController {
    * @responseBody 422 - <ValidationInterface>
    * @responseBody 429 - <TooManyRequests>
    */
+  @ApiOperation({
+    summary: 'Requests a new Model depending on the provider',
+    description:
+      '## Supported Providers and Types\n' +
+      '\n' +
+      '### Audible\n' +
+      '\n' +
+      '*   **Supported Types:** `book`, `author`, `tracks`, `series`\n' +
+      '*   **Identifier:** `ASIN` (10 characters long)\n' +
+      '*   **Required Data:** Region (`us`, `ca`, `uk`, `au`, `fr`, `de`, `jp`, `it`, `in`, `es`, `br`)\n',
+    operationId: 'getContributor',
+  })
+  @nanoIdApiPathParameter()
+  @ApiResponse({
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', description: 'Request message' },
+        id: { type: 'string', description: 'The ID of the created or updated model' },
+      },
+    },
+    status: 200,
+  })
+  @ApiBody({ type: () => indexRequestValidator })
   async index({ request, response }: HttpContext) {
     const payload = await request.validateUsing(indexRequestValidator)
 

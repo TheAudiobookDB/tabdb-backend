@@ -37,6 +37,7 @@ import {
   limitApiQuery,
   nanoIdApiPathParameter,
   nanoIdsApiQuery,
+  notFoundApiResponse,
   pageApiQuery,
   remainingApiProperty,
   requestIdApiProperty,
@@ -44,6 +45,7 @@ import {
   validationErrorApiResponse,
 } from '#config/openapi'
 import { ImageBaseDtoPaginated } from '#dtos/pagination'
+import NotFoundException from '#exceptions/not_found_exception'
 
 @ApiTags('Book')
 @requestIdApiProperty()
@@ -298,6 +300,7 @@ export default class BooksController {
     operationId: 'getBook',
   })
   @nanoIdApiPathParameter()
+  @notFoundApiResponse()
   @ApiResponse({ type: BookDto, status: 200 })
   async get({ params }: HttpContext) {
     await getBookValidator.validate(params)
@@ -317,6 +320,7 @@ export default class BooksController {
     operationId: 'getBooks',
   })
   @nanoIdsApiQuery()
+  @notFoundApiResponse()
   @ApiResponse({ type: [SearchBookDto], status: 200 })
   async getMultiple({ request }: HttpContext) {
     const payload = await getIdsValidator.validate(request.qs())
@@ -329,7 +333,7 @@ export default class BooksController {
       void Book.afterFindHook(book)
     })
 
-    if (!books || books.length === 0) throw new Error('No data found')
+    if (!books || books.length === 0) throw new NotFoundException()
 
     return SearchBookDto.fromArray(books)
   }
@@ -343,6 +347,7 @@ export default class BooksController {
   @nanoIdApiPathParameter()
   @pageApiQuery()
   @limitApiQuery()
+  @notFoundApiResponse()
   @ApiResponse({ type: ImageBaseDtoPaginated, status: 200 })
   async images({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
@@ -350,6 +355,8 @@ export default class BooksController {
     const images = await Image.query()
       .preload('book', (q) => q.where('public_id', payload.id))
       .paginate(payload.page ?? 1, payload.limit ?? 10)
+
+    if (!images || images.length === 0) throw new NotFoundException()
 
     return ImageBaseDto.fromPaginator(images)
   }

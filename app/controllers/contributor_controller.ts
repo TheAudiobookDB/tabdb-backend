@@ -26,6 +26,7 @@ import {
   limitApiQuery,
   nanoIdApiPathParameter,
   nanoIdsApiQuery,
+  notFoundApiResponse,
   pageApiQuery,
   remainingApiProperty,
   requestIdApiProperty,
@@ -33,6 +34,7 @@ import {
   validationErrorApiResponse,
 } from '#config/openapi'
 import { BookDtoPaginated } from '#dtos/pagination'
+import NotFoundException from '#exceptions/not_found_exception'
 
 @ApiTags('Contributor')
 @requestIdApiProperty()
@@ -41,25 +43,12 @@ import { BookDtoPaginated } from '#dtos/pagination'
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
 export default class NarratorsController {
-  /**
-   * @get
-   * @operationId getContributor
-   * @summary Get a contributor by ID
-   *
-   * @requestBody - <getIdValidator>
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - <Contributor>.with(relations).exclude(books)
-   * @responseBody 422 - <ValidationInterface>
-   * @responseBody 429 - <TooManyRequests>
-   */
   @ApiOperation({
     summary: 'Get a Contributor by ID',
     operationId: 'getContributor',
   })
   @nanoIdApiPathParameter()
+  @notFoundApiResponse()
   @ApiResponse({ type: ContributorFullDto, status: 200 })
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
@@ -76,6 +65,7 @@ export default class NarratorsController {
   @pageApiQuery()
   @limitApiQuery()
   @nanoIdApiPathParameter()
+  @notFoundApiResponse()
   @ApiResponse({ type: [BookDtoPaginated], status: 200 })
   async books({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
@@ -271,6 +261,7 @@ export default class NarratorsController {
     operationId: 'getContributors',
   })
   @nanoIdsApiQuery()
+  @notFoundApiResponse()
   @ApiResponse({ type: [ContributorBaseDto], status: 200 })
   async getMultiple({ request }: HttpContext) {
     const payload = await getIdsValidator.validate(request.qs())
@@ -279,7 +270,7 @@ export default class NarratorsController {
       .whereIn('public_id', payload.ids)
       .preload('identifiers')
 
-    if (!contributors || contributors.length === 0) throw new Error('No data found')
+    if (!contributors || contributors.length === 0) throw new NotFoundException()
 
     return ContributorBaseDto.fromArray(contributors)
   }

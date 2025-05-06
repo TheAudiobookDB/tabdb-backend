@@ -28,7 +28,7 @@ export default class User extends compose(BaseModel, AuthFinder) {
   declare email: string
 
   @column()
-  declare username: string | null
+  declare username: string
 
   @column()
   declare avatar: string | null

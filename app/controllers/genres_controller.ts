@@ -13,6 +13,7 @@ import {
   limitApiQuery,
   nanoIdApiPathParameter,
   nanoIdsApiQuery,
+  notFoundApiResponse,
   pageApiQuery,
   remainingApiProperty,
   requestIdApiProperty,
@@ -20,6 +21,7 @@ import {
   validationErrorApiResponse,
 } from '#config/openapi'
 import { BookDtoPaginated } from '#dtos/pagination'
+import NotFoundException from '#exceptions/not_found_exception'
 
 @ApiTags('Genre')
 @requestIdApiProperty()
@@ -33,6 +35,7 @@ export default class GenresController {
     operationId: 'getGenre',
   })
   @nanoIdApiPathParameter()
+  @notFoundApiResponse()
   @ApiResponse({ type: GenreFullDto, status: 200 })
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
@@ -47,6 +50,7 @@ export default class GenresController {
   @pageApiQuery()
   @limitApiQuery()
   @nanoIdApiPathParameter()
+  @notFoundApiResponse()
   @ApiResponse({ type: [BookDtoPaginated], status: 200 })
   async books({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
@@ -73,13 +77,14 @@ export default class GenresController {
     operationId: 'getBooks',
   })
   @nanoIdsApiQuery()
+  @notFoundApiResponse()
   @ApiResponse({ type: [GenreBaseDto], status: 200 })
   async getMultiple({ request }: HttpContext) {
     const payload = await getIdsValidator.validate(request.qs())
 
     const genres: Genre[] = await Genre.query().whereIn('public_id', payload.ids)
 
-    if (!genres || genres.length === 0) throw new Error('No data found')
+    if (!genres || genres.length === 0) throw new NotFoundException()
 
     return GenreBaseDto.fromArray(genres)
   }

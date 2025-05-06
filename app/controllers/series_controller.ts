@@ -4,25 +4,39 @@ import { HttpContext } from '@adonisjs/core/http'
 import { getIdPaginationValidator, getIdValidator } from '#validators/provider_validator'
 import Series from '#models/series'
 import Book from '#models/book'
-import { SeriesFullDto } from '#dtos/series'
+import { SeriesBaseDto, SeriesFullDto } from '#dtos/series'
 import { BookDto } from '#dtos/book'
 import { getIdsValidator } from '#validators/common_validator'
+import { ApiOperation, ApiResponse, ApiTags } from '@foadonis/openapi/decorators'
+import {
+  limitApiProperty,
+  limitApiQuery,
+  nanoIdApiPathParameter,
+  nanoIdsApiQuery,
+  notFoundApiResponse,
+  pageApiQuery,
+  remainingApiProperty,
+  requestIdApiProperty,
+  tooManyRequestsApiResponse,
+  validationErrorApiResponse,
+} from '#config/openapi'
+import { BookDtoPaginated } from '#dtos/pagination'
+import NotFoundException from '#exceptions/not_found_exception'
 
+@ApiTags('Series')
+@requestIdApiProperty()
+@limitApiProperty()
+@remainingApiProperty()
+@validationErrorApiResponse()
+@tooManyRequestsApiResponse()
 export default class SeriesController {
-  /**
-   * @get
-   * @operationId getSeries
-   * @summary Get a series by ID
-   *
-   * @requestBody - <getIdValidator>
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - <Series>.with(relations).exclude(books)
-   * @responseBody 422 - <ValidationInterface>
-   * @responseBody 429 - <TooManyRequests>
-   */
+  @ApiOperation({
+    summary: 'Get a Series by ID',
+    operationId: 'getSeries',
+  })
+  @nanoIdApiPathParameter()
+  @notFoundApiResponse()
+  @ApiResponse({ type: SeriesFullDto, status: 200 })
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
     return new SeriesFullDto(
@@ -30,20 +44,16 @@ export default class SeriesController {
     )
   }
 
-  /**
-   * @books
-   * @operationId getBooksBySeries
-   * @summary Get books by series ID
-   *
-   * @paramUse(pagination)
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - <Book[]>.with(relations).paginated()
-   * @responseBody 422 - <ValidationInterface>
-   * @responseBody 429 - <TooManyRequests>
-   */
+  @ApiOperation({
+    summary: 'Get books by series ID',
+    operationId: 'getBooksBySeries',
+    tags: ['Book'],
+  })
+  @pageApiQuery()
+  @limitApiQuery()
+  @nanoIdApiPathParameter()
+  @notFoundApiResponse()
+  @ApiResponse({ type: [BookDtoPaginated], status: 200 })
   async books({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
     return BookDto.fromPaginator(
@@ -61,6 +71,15 @@ export default class SeriesController {
     )
   }
 
+  @ApiOperation({
+    summary: 'Get multiple Series by IDs',
+    description:
+      'Gets multiple series by IDs. This only returns minified versions. If you want the full version, use the `get` endpoint.',
+    operationId: 'getMultipleSeries',
+  })
+  @nanoIdsApiQuery()
+  @notFoundApiResponse()
+  @ApiResponse({ type: [SeriesBaseDto], status: 200 })
   async getMultiple({ request }: HttpContext) {
     const payload = await getIdsValidator.validate(request.qs())
 
@@ -68,8 +87,8 @@ export default class SeriesController {
       .whereIn('public_id', payload.ids)
       .preload('identifiers')
 
-    if (!series || series.length === 0) throw new Error('No data found')
+    if (!series || series.length === 0) throw new NotFoundException()
 
-    return SeriesFullDto.fromArray(series)
+    return SeriesBaseDto.fromArray(series)
   }
 }

@@ -1,8 +1,8 @@
 import { BaseModelDto } from '@adocasts.com/dto/base'
 import Publisher from '#models/publisher'
 import { BookDto } from '#dtos/book'
-import { createdAtApiProperty, nanoIdApiProperty, updatedAtApiProperty } from '#config/openapi'
 import { ApiProperty } from '@foadonis/openapi/decorators'
+import { createdAtApiProperty, nanoIdApiProperty, updatedAtApiProperty } from '#config/openapi'
 
 export class PublisherMinimalDto extends BaseModelDto {
   @nanoIdApiProperty()

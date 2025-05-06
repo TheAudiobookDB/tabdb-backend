@@ -9,7 +9,7 @@ import {
   updatedAtApiProperty,
 } from '#config/openapi'
 import { ApiProperty } from '@foadonis/openapi/decorators'
-import { ImageBaseDto } from '#dtos/image'
+import { imageApiProperty } from '#dtos/image'
 
 export class SeriesMinimalDto extends BaseModelDto {
   @nanoIdApiProperty()
@@ -42,10 +42,7 @@ export class SeriesMinimalDto extends BaseModelDto {
 }
 
 export class SeriesBaseDto extends SeriesMinimalDto {
-  @ApiProperty({
-    type: ImageBaseDto,
-    description: 'The image of the series.',
-  })
+  @imageApiProperty('The image of the Series')
   declare image: object | null
 
   @languageApiProperty()

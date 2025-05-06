@@ -98,11 +98,11 @@ router
   .use(r2Limiter)
 router
   .post('/contributor', [ContributorsController, 'create'])
-  .use(middleware.relaxAuth())
+  .use(middleware.auth())
   .use(r3Limiter)
 router
   .patch('/contributor', [ContributorsController, 'update'])
-  .use(middleware.relaxAuth())
+  .use(middleware.auth())
   .use(r3Limiter)
 
 /**

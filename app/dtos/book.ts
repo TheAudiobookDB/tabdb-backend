@@ -7,7 +7,7 @@ import { GenreBaseDto, GenreMinimalDto } from '#dtos/genre'
 import { IdentifierBaseDto, IdentifierMinimalDto } from '#dtos/identifier'
 import { SeriesBaseDto, SeriesMinimalDto } from '#dtos/series'
 import { TrackBaseDto } from '#dtos/track'
-import { ImageBaseDto } from '#dtos/image'
+import { imageApiProperty, ImageBaseDto } from '#dtos/image'
 import { ApiProperty, ApiPropertyOptional } from '@foadonis/openapi/decorators'
 import {
   createdAtApiProperty,
@@ -46,6 +46,7 @@ export class BookBaseDto<
   })
   declare subtitle: string | null
 
+  @imageApiProperty('The avatar of the user.')
   declare image: object | null
 
   @languageApiProperty()

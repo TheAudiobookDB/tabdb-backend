@@ -5,6 +5,7 @@ import { GenreBaseDto } from '#dtos/genre'
 import { SeriesBaseDto } from '#dtos/series'
 import { PublisherMinimalDto } from '#dtos/publisher'
 import { ImageBaseDto } from '#dtos/image'
+import { TrackFullDto } from '#dtos/track'
 
 export class PaginatedResponseMeta {
   @ApiProperty({
@@ -105,3 +106,4 @@ export class ContributorBaseDtoPaginated extends PaginatedResponse(ContributorBa
 export class PublisherMinimalDtoPaginated extends PaginatedResponse(PublisherMinimalDto) {}
 export class ImageBaseDtoPaginated extends PaginatedResponse(ImageBaseDto) {}
 export class BookDtoPaginated extends PaginatedResponse(BookDto) {}
+export class TrackFullDtoPaginated extends PaginatedResponse(TrackFullDto) {}
