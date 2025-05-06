@@ -24,15 +24,13 @@ import Publisher from '#models/publisher'
 import { PublisherMinimalDto } from '#dtos/publisher'
 import { GenreBaseDto } from '#dtos/genre'
 import Genre from '#models/genre'
-import { ApiOperation, ApiResponse, ApiTags, ApiQuery } from '@foadonis/openapi/decorators'
+import { ApiOperation, ApiTags, ApiQuery } from '@foadonis/openapi/decorators'
 import {
   keywordApiQuery,
-  limitApiProperty,
   limitApiQuery,
   nameApiQuery,
   pageApiQuery,
-  remainingApiProperty,
-  requestIdApiProperty,
+  successApiResponse,
   thresholdApiQuery,
   tooManyRequestsApiResponse,
   validationErrorApiResponse,
@@ -46,9 +44,6 @@ import {
 } from '#dtos/pagination'
 
 @ApiTags('Search')
-@requestIdApiProperty()
-@limitApiProperty()
-@remainingApiProperty()
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
 export default class SearchesController {
@@ -174,7 +169,7 @@ export default class SearchesController {
   @pageApiQuery()
   @limitApiQuery()
   @thresholdApiQuery()
-  @ApiResponse({ type: SearchBookDtoPaginated, status: 200 })
+  @successApiResponse({ type: SearchBookDtoPaginated, status: 200 })
   async book({ request }: HttpContext) {
     const payload = await searchBookValidator.validate(request.all())
     const queries = []
@@ -417,7 +412,7 @@ export default class SearchesController {
   @pageApiQuery()
   @limitApiQuery()
   @thresholdApiQuery()
-  @ApiResponse({ type: ContributorBaseDtoPaginated, status: 200 })
+  @successApiResponse({ type: ContributorBaseDtoPaginated, status: 200 })
   async contributor({ request }: HttpContext) {
     const payload = await searchContributorValidator.validate(request.all())
     const page = payload.page ?? 1
@@ -482,7 +477,7 @@ export default class SearchesController {
   @pageApiQuery()
   @limitApiQuery()
   @thresholdApiQuery()
-  @ApiResponse({ type: GenreBaseDtoPaginated, status: 200 })
+  @successApiResponse({ type: GenreBaseDtoPaginated, status: 200 })
   async genre({ request }: HttpContext) {
     const payload = await searchGenreValidator.validate(request.all())
     const page = payload.page ?? 1
@@ -511,10 +506,14 @@ export default class SearchesController {
       rankingScoreThreshold: payload.threshold || 0.35,
     })
 
-    return {
-      hits: genres.hits,
-      meta: SearchEngineHelper.buildPagination(page, genres.totalHits, limit),
+    const result = {
+      data: genres.hits,
+      meta: {},
     }
+
+    result.meta = SearchEngineHelper.buildPagination(page, genres.totalHits, limit)
+
+    return result
   }
 
   @ApiOperation({
@@ -528,7 +527,7 @@ export default class SearchesController {
   @pageApiQuery()
   @limitApiQuery()
   @thresholdApiQuery()
-  @ApiResponse({ type: SeriesBaseDtoPaginated, status: 200 })
+  @successApiResponse({ type: SeriesBaseDtoPaginated, status: 200 })
   async series({ request }: HttpContext) {
     const payload = await searchSeriesValidator.validate(request.all())
     const page = payload.page ?? 1
@@ -588,7 +587,7 @@ export default class SearchesController {
   @pageApiQuery()
   @limitApiQuery()
   @thresholdApiQuery()
-  @ApiResponse({ type: PublisherMinimalDtoPaginated, status: 200 })
+  @successApiResponse({ type: PublisherMinimalDtoPaginated, status: 200 })
   async publisher({ request }: HttpContext) {
     const payload = await searchSeriesValidator.validate(request.all())
     const page = payload.page ?? 1

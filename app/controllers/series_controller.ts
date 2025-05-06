@@ -7,16 +7,14 @@ import Book from '#models/book'
 import { SeriesBaseDto, SeriesFullDto } from '#dtos/series'
 import { BookDto } from '#dtos/book'
 import { getIdsValidator } from '#validators/common_validator'
-import { ApiOperation, ApiResponse, ApiTags } from '@foadonis/openapi/decorators'
+import { ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
-  limitApiProperty,
   limitApiQuery,
   nanoIdApiPathParameter,
   nanoIdsApiQuery,
   notFoundApiResponse,
   pageApiQuery,
-  remainingApiProperty,
-  requestIdApiProperty,
+  successApiResponse,
   tooManyRequestsApiResponse,
   validationErrorApiResponse,
 } from '#config/openapi'
@@ -24,9 +22,6 @@ import { BookDtoPaginated } from '#dtos/pagination'
 import NotFoundException from '#exceptions/not_found_exception'
 
 @ApiTags('Series')
-@requestIdApiProperty()
-@limitApiProperty()
-@remainingApiProperty()
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
 export default class SeriesController {
@@ -36,7 +31,7 @@ export default class SeriesController {
   })
   @nanoIdApiPathParameter()
   @notFoundApiResponse()
-  @ApiResponse({ type: SeriesFullDto, status: 200 })
+  @successApiResponse({ type: SeriesFullDto, status: 200 })
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
     return new SeriesFullDto(
@@ -53,7 +48,7 @@ export default class SeriesController {
   @limitApiQuery()
   @nanoIdApiPathParameter()
   @notFoundApiResponse()
-  @ApiResponse({ type: [BookDtoPaginated], status: 200 })
+  @successApiResponse({ type: [BookDtoPaginated], status: 200 })
   async books({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
     return BookDto.fromPaginator(
@@ -79,7 +74,7 @@ export default class SeriesController {
   })
   @nanoIdsApiQuery()
   @notFoundApiResponse()
-  @ApiResponse({ type: [SeriesBaseDto], status: 200 })
+  @successApiResponse({ type: [SeriesBaseDto], status: 200 })
   async getMultiple({ request }: HttpContext) {
     const payload = await getIdsValidator.validate(request.qs())
 

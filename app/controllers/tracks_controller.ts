@@ -6,16 +6,14 @@ import Track from '#models/track'
 import { TrackFullDto, TrackMinimalDto } from '#dtos/track'
 import Book from '#models/book'
 import { getIdsValidator } from '#validators/common_validator'
-import { ApiOperation, ApiResponse, ApiTags } from '@foadonis/openapi/decorators'
+import { ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
-  limitApiProperty,
   limitApiQuery,
   nanoIdApiPathParameter,
   nanoIdsApiQuery,
   notFoundApiResponse,
   pageApiQuery,
-  remainingApiProperty,
-  requestIdApiProperty,
+  successApiResponse,
   tooManyRequestsApiResponse,
   validationErrorApiResponse,
 } from '#config/openapi'
@@ -23,9 +21,6 @@ import { TrackFullDtoPaginated } from '#dtos/pagination'
 import NotFoundException from '#exceptions/not_found_exception'
 
 @ApiTags('Track')
-@requestIdApiProperty()
-@limitApiProperty()
-@remainingApiProperty()
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
 export default class TracksController {
@@ -47,7 +42,7 @@ export default class TracksController {
   })
   @nanoIdApiPathParameter()
   @notFoundApiResponse()
-  @ApiResponse({ type: TrackFullDto, status: 200 })
+  @successApiResponse({ type: TrackFullDto, status: 200 })
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
     return new TrackFullDto(await Track.query().where('publicId', payload.id).firstOrFail())
@@ -75,7 +70,7 @@ export default class TracksController {
   @limitApiQuery(500)
   @nanoIdApiPathParameter()
   @notFoundApiResponse()
-  @ApiResponse({ type: [TrackFullDtoPaginated], status: 200 })
+  @successApiResponse({ type: [TrackFullDtoPaginated], status: 200 })
   async getTracksForBook({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
 
@@ -99,7 +94,7 @@ export default class TracksController {
   })
   @nanoIdsApiQuery()
   @notFoundApiResponse()
-  @ApiResponse({ type: [TrackMinimalDto], status: 200 })
+  @successApiResponse({ type: [TrackMinimalDto], status: 200 })
   async getMultiple({ request }: HttpContext) {
     const payload = await getIdsValidator.validate(request.qs())
 

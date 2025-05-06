@@ -1,20 +1,15 @@
 import { HttpContext } from '@adonisjs/core/http'
 import { indexRequestValidator } from '#validators/request_validator'
 import { Audible } from '../provider/audible.js'
-import { ApiBody, ApiOperation, ApiResponse, ApiTags } from '@foadonis/openapi/decorators'
+import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
-  limitApiProperty,
   nanoIdApiPathParameter,
-  remainingApiProperty,
-  requestIdApiProperty,
+  successApiResponse,
   tooManyRequestsApiResponse,
   validationErrorApiResponse,
 } from '#config/openapi'
 
 @ApiTags('Request')
-@requestIdApiProperty()
-@limitApiProperty()
-@remainingApiProperty()
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
 export default class RequestsController {
@@ -46,7 +41,7 @@ export default class RequestsController {
     operationId: 'getContributor',
   })
   @nanoIdApiPathParameter()
-  @ApiResponse({
+  @successApiResponse({
     schema: {
       type: 'object',
       properties: {

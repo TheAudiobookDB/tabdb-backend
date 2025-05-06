@@ -8,7 +8,7 @@ import {
   nanoIdApiProperty,
   updatedAtApiProperty,
 } from '#config/openapi'
-import { ApiProperty } from '@foadonis/openapi/decorators'
+import { ApiProperty, ApiPropertyOptional } from '@foadonis/openapi/decorators'
 import { imageApiProperty } from '#dtos/image'
 
 export class SeriesMinimalDto extends BaseModelDto {
@@ -22,7 +22,7 @@ export class SeriesMinimalDto extends BaseModelDto {
   })
   declare name: string
 
-  @ApiProperty({
+  @ApiPropertyOptional({
     type: 'string',
     description: 'The position of the series in the book. Is not numeric and can be any string.',
     example: '1',

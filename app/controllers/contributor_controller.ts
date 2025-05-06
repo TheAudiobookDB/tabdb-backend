@@ -20,16 +20,14 @@ import {
 import db from '@adonisjs/lucid/services/db'
 import { UserAbilities } from '../enum/user_enum.js'
 import { getIdsValidator } from '#validators/common_validator'
-import { ApiOperation, ApiResponse, ApiTags } from '@foadonis/openapi/decorators'
+import { ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
-  limitApiProperty,
   limitApiQuery,
   nanoIdApiPathParameter,
   nanoIdsApiQuery,
   notFoundApiResponse,
   pageApiQuery,
-  remainingApiProperty,
-  requestIdApiProperty,
+  successApiResponse,
   tooManyRequestsApiResponse,
   validationErrorApiResponse,
 } from '#config/openapi'
@@ -37,9 +35,6 @@ import { BookDtoPaginated } from '#dtos/pagination'
 import NotFoundException from '#exceptions/not_found_exception'
 
 @ApiTags('Contributor')
-@requestIdApiProperty()
-@limitApiProperty()
-@remainingApiProperty()
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
 export default class NarratorsController {
@@ -49,7 +44,7 @@ export default class NarratorsController {
   })
   @nanoIdApiPathParameter()
   @notFoundApiResponse()
-  @ApiResponse({ type: ContributorFullDto, status: 200 })
+  @successApiResponse({ type: ContributorFullDto, status: 200 })
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
     return new ContributorFullDto(
@@ -66,7 +61,7 @@ export default class NarratorsController {
   @limitApiQuery()
   @nanoIdApiPathParameter()
   @notFoundApiResponse()
-  @ApiResponse({ type: [BookDtoPaginated], status: 200 })
+  @successApiResponse({ type: [BookDtoPaginated], status: 200 })
   async books({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
     return BookDto.fromPaginator(
@@ -262,7 +257,7 @@ export default class NarratorsController {
   })
   @nanoIdsApiQuery()
   @notFoundApiResponse()
-  @ApiResponse({ type: [ContributorBaseDto], status: 200 })
+  @successApiResponse({ type: [ContributorBaseDto], status: 200 })
   async getMultiple({ request }: HttpContext) {
     const payload = await getIdsValidator.validate(request.qs())
 

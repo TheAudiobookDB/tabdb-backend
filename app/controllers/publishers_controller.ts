@@ -7,16 +7,14 @@ import Book from '#models/book'
 import { PublisherBaseDto, PublisherFullDto } from '#dtos/publisher'
 import { BookDto } from '#dtos/book'
 import { getIdsValidator } from '#validators/common_validator'
-import { ApiOperation, ApiResponse, ApiTags } from '@foadonis/openapi/decorators'
+import { ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
-  limitApiProperty,
   limitApiQuery,
   nanoIdApiPathParameter,
   nanoIdsApiQuery,
   notFoundApiResponse,
   pageApiQuery,
-  remainingApiProperty,
-  requestIdApiProperty,
+  successApiResponse,
   tooManyRequestsApiResponse,
   validationErrorApiResponse,
 } from '#config/openapi'
@@ -24,9 +22,6 @@ import { BookDtoPaginated } from '#dtos/pagination'
 import NotFoundException from '#exceptions/not_found_exception'
 
 @ApiTags('Publisher')
-@requestIdApiProperty()
-@limitApiProperty()
-@remainingApiProperty()
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
 export default class PublishersController {
@@ -36,7 +31,7 @@ export default class PublishersController {
   })
   @nanoIdApiPathParameter()
   @notFoundApiResponse()
-  @ApiResponse({ type: PublisherFullDto, status: 200 })
+  @successApiResponse({ type: PublisherFullDto, status: 200 })
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
     return new PublisherFullDto(await Publisher.query().where('publicId', payload.id).firstOrFail())
@@ -51,7 +46,7 @@ export default class PublishersController {
   @limitApiQuery()
   @nanoIdApiPathParameter()
   @notFoundApiResponse()
-  @ApiResponse({ type: [BookDtoPaginated], status: 200 })
+  @successApiResponse({ type: [BookDtoPaginated], status: 200 })
   async books({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
     return BookDto.fromPaginator(
@@ -78,7 +73,7 @@ export default class PublishersController {
   })
   @nanoIdsApiQuery()
   @notFoundApiResponse()
-  @ApiResponse({ type: [PublisherBaseDto], status: 200 })
+  @successApiResponse({ type: [PublisherBaseDto], status: 200 })
   async getMultiple({ request }: HttpContext) {
     const payload = await getIdsValidator.validate(request.qs())
 

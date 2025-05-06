@@ -2,10 +2,10 @@ import { defineConfig } from '@foadonis/openapi'
 import {
   ApiProperty,
   ApiPropertyOptional,
-  ApiHeader,
   ApiQuery,
   ApiResponse,
   ApiParam,
+  ApiResponseOptions,
 } from '@foadonis/openapi/decorators'
 
 export default defineConfig({
@@ -23,7 +23,7 @@ export default defineConfig({
       license: {
         name: 'https://beta.theaudiobookdb.com/about/api/terms-of-use',
       },
-      description: 'Example',
+      description: 'This API only includes sample data. Using is strictly prohibited.',
     },
     servers: [
       {
@@ -31,14 +31,16 @@ export default defineConfig({
         description: 'Public Instance',
       },
       {
-        url: 'http://localhost:3333',
+        url: 'http://dev.theaudiobookdb.com:3333',
         description: 'Local Dev',
       },
     ],
     security: [
-      {},
       {
-        Authorization: [],
+        BearerAuth: [],
+      },
+      {
+        CookieAuth: ['Authorization'],
       },
     ],
   },
@@ -90,27 +92,47 @@ export const languageApiProperty = () =>
     nullable: false,
   })
 
-export const limitApiProperty = () =>
-  ApiHeader({
-    name: 'x-ratelimit-limit',
-    description:
-      'The number of requests you can make in the current time window (mostly 1 minute).',
-    example: 100,
-  })
-
-export const remainingApiProperty = () =>
-  ApiHeader({
-    name: 'x-ratelimit-remaining',
+const headers = {
+  'x-ratelimit-limit': {
+    description: 'The maximum number of requests you can make in the current time window.',
+    schema: {
+      type: 'integer',
+      example: 100,
+    },
+  },
+  'x-ratelimit-remaining': {
     description: 'The number of requests you have left in the current time window.',
-    example: 100,
-  })
-
-export const requestIdApiProperty = () =>
-  ApiHeader({
-    name: 'x-request-id',
+    schema: {
+      type: 'integer',
+      example: 100,
+    },
+  },
+  'x-request-id': {
     description:
-      'The unique identifier for the request. If you have any issues, please provide this ID to us.',
-    example: 'sbq3l6jl0a2fpqnkydlwl9mu',
+      'A unique identifier for the request. If you have any issues, please provide this ID to us.',
+    schema: {
+      type: 'string',
+      pattern: '^[a-z0-9]{24}$',
+      example: 'e667bhmtdw07kop6irbg2m9y',
+    },
+  },
+  'Date': {
+    description: 'The date and time when the response was generated.',
+    schema: {
+      type: 'string',
+      format: 'date-time',
+      example: 'Tue, 06 May 2025 07:19:09 GMTZ',
+    },
+  },
+}
+
+export const successApiResponse = (options: ApiResponseOptions) =>
+  ApiResponse({
+    // @ts-ignore
+    headers: headers,
+    status: 200,
+    description: 'Success',
+    ...options,
   })
 
 export const pageApiQuery = (defaultNum: number = 1) =>
@@ -212,6 +234,8 @@ export const nanoIdApiPathParameter = () =>
 
 export const tooManyRequestsApiResponse = () =>
   ApiResponse({
+    // @ts-ignore
+    headers: headers,
     status: 429,
     description: 'Too many requests',
     mediaType: 'application/json',
@@ -232,6 +256,8 @@ export const tooManyRequestsApiResponse = () =>
 
 export const validationErrorApiResponse = () =>
   ApiResponse({
+    // @ts-ignore
+    headers: headers,
     status: 422,
     description: 'Validation error',
     mediaType: 'application/json',
@@ -267,6 +293,8 @@ export const validationErrorApiResponse = () =>
 
 export const notFoundApiResponse = () =>
   ApiResponse({
+    // @ts-ignore
+    headers: headers,
     status: 404,
     description: 'Resource not found',
     mediaType: 'application/json',
@@ -289,6 +317,8 @@ export const notFoundApiResponse = () =>
 
 export const unauthorizedApiResponse = () =>
   ApiResponse({
+    // @ts-ignore
+    headers: headers,
     status: 401,
     description: 'Unauthorized',
     mediaType: 'application/json',

@@ -31,16 +31,14 @@ import { BookDto, SearchBookDto } from '#dtos/book'
 import Image from '#models/image'
 import { ImageBaseDto } from '#dtos/image'
 import { getIdsValidator } from '#validators/common_validator'
-import { ApiOperation, ApiResponse, ApiTags } from '@foadonis/openapi/decorators'
+import { ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
-  limitApiProperty,
   limitApiQuery,
   nanoIdApiPathParameter,
   nanoIdsApiQuery,
   notFoundApiResponse,
   pageApiQuery,
-  remainingApiProperty,
-  requestIdApiProperty,
+  successApiResponse,
   tooManyRequestsApiResponse,
   validationErrorApiResponse,
 } from '#config/openapi'
@@ -48,9 +46,6 @@ import { ImageBaseDtoPaginated } from '#dtos/pagination'
 import NotFoundException from '#exceptions/not_found_exception'
 
 @ApiTags('Book')
-@requestIdApiProperty()
-@limitApiProperty()
-@remainingApiProperty()
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
 export default class BooksController {
@@ -301,7 +296,7 @@ export default class BooksController {
   })
   @nanoIdApiPathParameter()
   @notFoundApiResponse()
-  @ApiResponse({ type: BookDto, status: 200 })
+  @successApiResponse({ type: BookDto, status: 200 })
   async get({ params }: HttpContext) {
     await getBookValidator.validate(params)
 
@@ -321,7 +316,7 @@ export default class BooksController {
   })
   @nanoIdsApiQuery()
   @notFoundApiResponse()
-  @ApiResponse({ type: [SearchBookDto], status: 200 })
+  @successApiResponse({ type: [SearchBookDto], status: 200 })
   async getMultiple({ request }: HttpContext) {
     const payload = await getIdsValidator.validate(request.qs())
 
@@ -348,7 +343,7 @@ export default class BooksController {
   @pageApiQuery()
   @limitApiQuery()
   @notFoundApiResponse()
-  @ApiResponse({ type: ImageBaseDtoPaginated, status: 200 })
+  @successApiResponse({ type: ImageBaseDtoPaginated, status: 200 })
   async images({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
 
