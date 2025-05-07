@@ -64,11 +64,20 @@ export class ContributorBaseDto extends ContributorMinimalDto {
   })
   declare identifiers: IdentifierBaseDto[]
 
+  @ApiPropertyOptional({
+    type: 'string',
+    description: 'The country of the contributor.',
+    example: 'US',
+    nullable: true,
+  })
+  declare country: string | null
+
   constructor(contributor?: Contributor) {
     super(contributor)
     if (!contributor) return
     this.image = contributor.imageUrl
     this.identifiers = IdentifierBaseDto.fromArray(contributor.identifiers)
+    this.country = contributor.country
   }
 }
 
@@ -95,13 +104,32 @@ export class ContributorFullDto extends ContributorBaseDto {
   })
   declare description: string | null
 
+  @ApiPropertyOptional({
+    type: 'string',
+    description: 'The website of the contributor.',
+    example: 'https://example.com',
+    nullable: true,
+  })
+  declare website: string | null
+
+  @ApiPropertyOptional({
+    type: 'string',
+    description: 'The birth date of the contributor.',
+    example: '1990-01-01',
+    nullable: true,
+  })
+  declare birthDate: Date | null
+
   constructor(contributor?: Contributor) {
     super(contributor)
     if (!contributor) return
+
+    this.description = contributor.description
+    this.website = contributor.website
+    this.birthDate = contributor.birthDate?.toJSDate() || null
+    this.identifiers = IdentifierFullDto.fromArray(contributor.identifiers)
     this.createdAt = contributor.createdAt.toISO()!
     this.updatedAt = contributor.updatedAt.toISO()!
-    this.description = contributor.description
-    this.identifiers = IdentifierFullDto.fromArray(contributor.identifiers)
   }
 }
 

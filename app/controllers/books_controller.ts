@@ -6,7 +6,6 @@ import Book from '#models/book'
 import { DateTime } from 'luxon'
 import { getIdPaginationValidator } from '#validators/provider_validator'
 import { ModelHelper } from '../helpers/model_helper.js'
-import { Audiobookshelf } from '../provider/audiobookshelf.js'
 import { LogState } from '../enum/log_enum.js'
 import { bookIndex } from '#config/meilisearch'
 import router from '@adonisjs/core/services/router'
@@ -35,6 +34,7 @@ import { createUpdateBookValidation } from '#validators/crud_validator'
 import { BooksHelper } from '../helpers/books_helper.js'
 import db from '@adonisjs/lucid/services/db'
 import { UserAbilities } from '../enum/user_enum.js'
+import Log from '#models/log'
 
 @ApiTags('Book')
 @validationErrorApiResponse()
@@ -46,15 +46,27 @@ export default class BooksController {
       'Creates a new book and (optionally) its relations (authors, narrators, genres, identifiers, series, tracks).',
     operationId: 'createBook',
   })
-  @notFoundApiResponse()
   @forbiddenApiResponse()
   @ApiBody({ type: () => createUpdateBookValidation })
   @successApiResponse({ type: BookDto, status: 201 })
   async create(context: HttpContext) {
-    const payload = await context.request.validateUsing(createUpdateBookValidation)
+    let payload = await context.request.validateUsing(createUpdateBookValidation)
+
     const abilities = new UserAbilities(undefined, context.auth.user)
 
-    if (abilities.hasAbility('item:draft:add')) throw Error()
+    let log: Log | null = null
+    if (payload.logId) {
+      if (abilities.hasAbility('item:add')) throw Error()
+      log = await Log.query().where('public_id', payload.logId).where('action', 1).firstOrFail()
+      payload = await createUpdateBookValidation.validate(log.data)
+    }
+
+    if (!payload.title) {
+      throw new Error('Title is required')
+    }
+    payload.title = payload.title || ''
+
+    //if (abilities.hasAbility('item:draft:add')) throw Error()
 
     const exactDuplicates = await Book.query()
       .where((builder) => {
@@ -122,7 +134,7 @@ export default class BooksController {
       })
     }
 
-    await book.saveWithLog(result.hits.length > 0 ? LogState.DUPLICATE_FOUND : LogState.PENDING)
+    await book.save()
 
     await BooksHelper.addGenreToBook(book, payload.genres)
     await ModelHelper.addIdentifier(book, payload.identifiers, trx)
@@ -131,9 +143,26 @@ export default class BooksController {
     await BooksHelper.addSeriesToBook(book, payload.series)
     await BooksHelper.addPublisherToBook(book, payload.publisher)
 
+    !log
+      ? await book.saveWithLog(
+          abilities.hasAbility('item:add')
+            ? LogState.APPROVED
+            : result.hits.length > 0
+              ? LogState.DUPLICATE_FOUND
+              : LogState.PENDING,
+          payload
+        )
+      : await book.save()
+
     if (!abilities.hasAbility('item:add')) {
+      console.log('User does not have permission to add books')
       await trx.rollback()
     } else {
+      console.log(abilities.getAbilities())
+      console.log('User has permission to add books')
+      if (log) {
+        log.state = LogState.APPROVED
+      }
       await trx.commit()
     }
 
@@ -156,12 +185,6 @@ export default class BooksController {
     }
 
     return { book: bookDto, message: 'Book created successfully.', available: false }
-  }
-
-  async abs({ request }: HttpContext) {
-    const absBook = await Audiobookshelf.fetchBook(request.body())
-
-    return new BookDto(absBook)
   }
 
   @ApiOperation({

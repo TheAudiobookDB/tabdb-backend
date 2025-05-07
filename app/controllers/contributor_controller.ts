@@ -20,8 +20,9 @@ import {
 import db from '@adonisjs/lucid/services/db'
 import { UserAbilities } from '../enum/user_enum.js'
 import { getIdsValidator } from '#validators/common_validator'
-import { ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
+import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
+  forbiddenApiResponse,
   limitApiQuery,
   nanoIdApiPathParameter,
   nanoIdsApiQuery,
@@ -33,6 +34,10 @@ import {
 } from '#config/openapi'
 import { BookDtoPaginated } from '#dtos/pagination'
 import NotFoundException from '#exceptions/not_found_exception'
+import {
+  createUpdateBookValidation,
+  createUpdateContributorValidation,
+} from '#validators/crud_validator'
 
 @ApiTags('Contributor')
 @validationErrorApiResponse()
@@ -79,21 +84,16 @@ export default class NarratorsController {
     )
   }
 
-  /**
-   * @create
-   * @operationId createContributor
-   * @summary Create a new contributor
-   * @description Create a new contributor
-   *
-   * @requestBody - <contributorCreateValidator>
-   *
-   * @responseHeader 201 - @use(rate)
-   * @responseHeader 201 - @use(requestId)
-   *
-   * @responseBody 201 - <Contributor>.with(relations).exclude(books)
-   */
+  @ApiOperation({
+    summary: 'Create a new Contributor',
+    description: 'Creates a new contributor. This will also upload the image if provided.',
+    operationId: 'createContributor',
+  })
+  @forbiddenApiResponse()
+  @ApiBody({ type: () => createUpdateContributorValidation })
+  @successApiResponse({ type: ContributorFullDto, status: 201 })
   async create({ request }: HttpContext) {
-    const payload = await contributorCreateValidator.validate(request.body())
+    const payload = await createUpdateContributorValidation.validate(request.body())
 
     const trx = await db.transaction()
 
@@ -117,7 +117,7 @@ export default class NarratorsController {
       contributor.publicId = nanoid()
       contributor.name = payload.name!
 
-      contributor.birthDate = payload.birthdate ? DateTime.fromJSDate(payload.birthdate) : null
+      contributor.birthDate = payload.birthDate ? DateTime.fromJSDate(payload.birthDate) : null
       contributor.country = payload.country || null
       contributor.description = payload.description || null
       contributor.website = payload.website || null
@@ -125,7 +125,7 @@ export default class NarratorsController {
       contributor.useTransaction(trx)
       await contributor.saveWithLog(
         possibleDuplicate ? LogState.PENDING_DUPLICATE : LogState.PENDING,
-        trx
+        payload
       )
 
       // To only upload the image if the contributor could be created
@@ -167,84 +167,6 @@ export default class NarratorsController {
     } catch (e) {
       await trx.rollback()
 
-      throw e
-    }
-  }
-
-  /**
-   * @update
-   * @operationId updateContributor
-   * @summary Update a contributor
-   * @description Update a contributor
-   *
-   * @requestBody - <contributorValidator>
-   *
-   * @responseHeader 201 - @use(rate)
-   * @responseHeader 201 - @use(requestId)
-   *
-   * @responseBody 201 - <Contributor>.with(relations).exclude(books)
-   */
-  async update({ request, auth }: HttpContext) {
-    const payload = await contributorUpdateValidator.validate(request.body())
-
-    const contributor = await Contributor.findByOrFail('publicId', payload.id)
-
-    const trx = await db.transaction()
-    const logTrx = await db.transaction()
-
-    const userPermissions = new UserAbilities(undefined, auth.user)
-    const instantUpdate = userPermissions.hasAbility('server:update')
-
-    try {
-      contributor.name = payload.name ?? contributor.name
-
-      contributor.birthDate = payload.birthdate
-        ? DateTime.fromJSDate(payload.birthdate)
-        : contributor.birthDate
-      contributor.country = payload.country ?? contributor.country
-      contributor.description = payload.description ?? contributor.description
-      contributor.website = payload.website ?? contributor.website
-      contributor.useTransaction(trx)
-
-      if (payload.image) {
-        const fileName = await FileHelper.saveFile(
-          payload.image,
-          'contributors',
-          contributor.publicId,
-          true,
-          contributor.image
-        )
-        if (fileName) {
-          contributor.image = fileName
-          contributor.useTransaction(trx)
-          await contributor.save()
-        }
-      }
-
-      if (payload.identifiers) {
-        await ModelHelper.addIdentifier(contributor, payload.identifiers, trx, true)
-      }
-
-      await contributor.saveWithLog(
-        instantUpdate ? LogState.APPROVED : LogState.PENDING,
-        logTrx,
-        false
-      )
-
-      if (instantUpdate) {
-        await trx.commit()
-      } else {
-        await trx.rollback()
-      }
-      await logTrx.commit()
-
-      return {
-        message: instantUpdate ? 'Contributor updated' : 'Contributor updated with pending',
-        data: new ContributorFullDto(contributor),
-      }
-    } catch (e) {
-      await trx.rollback()
-      await logTrx.rollback()
       throw e
     }
   }

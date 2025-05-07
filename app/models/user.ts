@@ -8,6 +8,8 @@ import Log from '#models/log'
 import type { HasMany } from '@adonisjs/lucid/types/relations'
 import { imageTypes, nanoid } from '#config/app'
 import * as model_1 from '@adonisjs/lucid/types/model'
+import { LogState } from '../enum/log_enum.js'
+import { HttpContext } from '@adonisjs/core/http'
 
 const AuthFinder = withAuthFinder(() => hash.use('scrypt'), {
   uids: ['email'],
@@ -86,5 +88,12 @@ export default class User extends compose(BaseModel, AuthFinder) {
     if (!model.publicId) {
       model.publicId = nanoid()
     }
+  }
+
+  public static async approveLog(log: Log) {
+    const ctx = HttpContext.get()
+    log.state = LogState.APPROVED
+    log.userId = ctx?.auth?.user ? ctx.auth.user!.id : 1
+    await log.save()
   }
 }

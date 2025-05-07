@@ -13,6 +13,7 @@ WORKDIR /app
 ADD package.json package-lock.json ./
 RUN npm install
 RUN npm i @swc/core
+RUN patch-package
 
 # Build stage
 FROM base AS build

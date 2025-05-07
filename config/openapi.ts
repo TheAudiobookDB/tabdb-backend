@@ -102,14 +102,6 @@ const headers = {
       example: 'e667bhmtdw07kop6irbg2m9y',
     },
   },
-  'Date': {
-    description: 'The date and time when the response was generated.',
-    schema: {
-      type: 'string',
-      format: 'date-time',
-      example: 'Tue, 06 May 2025 07:19:09 GMTZ',
-    },
-  },
 }
 
 const rateLimitHeaders = {
