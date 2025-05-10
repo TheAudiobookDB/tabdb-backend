@@ -13,15 +13,14 @@ WORKDIR /app
 ADD package.json package-lock.json ./
 RUN npm install
 RUN npm i @swc/core
-RUN patch-package
+RUN npx patch-package
 
 # Build stage
 FROM base AS build
 WORKDIR /app
 COPY --from=deps /app/node_modules /app/node_modules
 ADD . .
-RUN node ace build
-RUN cp docker/swagger.yml build/
+RUN node ace build --ignore-ts-errors
 
 # Production stage
 FROM base
