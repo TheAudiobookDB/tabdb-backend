@@ -143,12 +143,15 @@ export default class AuthController {
   })
   @unauthorizedApiResponse()
   @successApiResponse({
-    type: () => ({
-      message: {
-        type: 'string',
-        example: 'Logged out successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: 'Logged out successfully',
+        },
       },
-    }),
+    },
     status: 200,
   })
   async logout({ auth }: HttpContext) {
@@ -193,12 +196,15 @@ export default class AuthController {
   })
   @badRequestApiResponse()
   @successApiResponse({
-    type: () => ({
-      message: {
-        type: 'string',
-        example: 'Username is available',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: 'Username is available',
+        },
       },
-    }),
+    },
     status: 200,
   })
   async checkFreeUsername({ request, response }: HttpContext) {

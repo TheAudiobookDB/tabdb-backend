@@ -182,7 +182,7 @@ export class UserTokenDto extends BaseModelDto {
     if (!user) return
     this.type = user.type
     this.name = user.name
-    this.token = user.token
+    this.token = user.value.release()
     this.abilities = user.abilities
     this.lastUsed = user.lastUsed
     this.expiresAt = user.expiresAt

@@ -11,6 +11,13 @@ export default class ForceJsonResponseMiddleware {
     const headers = request.headers()
     if (request.url(false) !== '/api') {
       headers.accept = 'application/json'
+    } else {
+      if (
+        request.header('Referer', null) !== null &&
+        request.header('Referer', null) === request.completeUrl()
+      ) {
+        headers.accept = 'application/json'
+      }
     }
 
     return next()

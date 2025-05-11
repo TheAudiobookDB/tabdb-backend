@@ -15,7 +15,7 @@ export default defineConfig({
     () => import('@adonisjs/lucid/commands'),
     () => import('@adonisjs/mail/commands'),
     () => import('@adonisjs/cache/commands'),
-    () => import('@adocasts.com/dto/commands')
+    () => import('@adocasts.com/dto/commands'),
   ],
 
   /*
@@ -43,7 +43,7 @@ export default defineConfig({
     () => import('@adonisjs/limiter/limiter_provider'),
     () => import('@adonisjs/cache/cache_provider'),
     () => import('@adonisjs/redis/redis_provider'),
-    () => import('@foadonis/openapi/openapi_provider')
+    () => import('@foadonis/openapi/openapi_provider'),
   ],
 
   /*
@@ -87,6 +87,10 @@ export default defineConfig({
     },
     {
       pattern: 'database/sql/*.sql',
+      reloadServer: false,
+    },
+    {
+      pattern: 'patches/*',
       reloadServer: false,
     },
   ],
