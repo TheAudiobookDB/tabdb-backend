@@ -29,9 +29,6 @@ export default class Contributor extends compose(LogExtension, ImageExtension) {
   @column({ isPrimary: true, serializeAs: null })
   declare id: number
 
-  @column({ serializeAs: 'id' })
-  declare publicId: string
-
   @column()
   // @example('J.K. Rowling')
   declare name: string

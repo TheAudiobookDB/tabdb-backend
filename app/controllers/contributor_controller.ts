@@ -13,12 +13,7 @@ import { ModelHelper } from '../helpers/model_helper.js'
 import { contributorIndex } from '#config/meilisearch'
 import router from '@adonisjs/core/services/router'
 import { nanoid } from '#config/app'
-import {
-  contributorCreateValidator,
-  contributorUpdateValidator,
-} from '#validators/create_validator'
 import db from '@adonisjs/lucid/services/db'
-import { UserAbilities } from '../enum/user_enum.js'
 import { getIdsValidator } from '#validators/common_validator'
 import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
@@ -34,10 +29,7 @@ import {
 } from '#config/openapi'
 import { BookDtoPaginated } from '#dtos/pagination'
 import NotFoundException from '#exceptions/not_found_exception'
-import {
-  createUpdateBookValidation,
-  createUpdateContributorValidation,
-} from '#validators/crud_validator'
+import { createUpdateContributorValidation } from '#validators/crud_validator'
 
 @ApiTags('Contributor')
 @validationErrorApiResponse()

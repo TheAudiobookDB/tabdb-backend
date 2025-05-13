@@ -13,7 +13,6 @@ WORKDIR /app
 ADD package.json package-lock.json ./
 RUN npm install
 RUN npm i @swc/core
-RUN npx patch-package
 
 # Build stage
 FROM base AS build
@@ -29,5 +28,6 @@ WORKDIR /app
 COPY --from=production-deps /app/node_modules /app/node_modules
 COPY --from=build /app/build /app
 RUN mkdir -p /app/storage/uploads
+RUN npx patch-package
 EXPOSE 7701
 CMD ["node", "./bin/server.js"]

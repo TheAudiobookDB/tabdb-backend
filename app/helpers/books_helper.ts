@@ -47,7 +47,7 @@ export class BooksHelper {
       }
     }
 
-    const narratorModels = await Contributor.findManyBy(
+    const narratorModels = await Contributor.query().whereIn(
       'public_id',
       contributors.map((contributor) => contributor.id)
     )
@@ -74,7 +74,7 @@ export class BooksHelper {
 
     const positions: Record<string, ModelObject> = {}
 
-    const seriesModels = await Series.findManyBy(
+    const seriesModels = await Series.query().whereIn(
       'public_id',
       payloadObject.map((serie) => serie.id)
     )

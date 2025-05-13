@@ -10,7 +10,6 @@ import {
   seriesValidator,
 } from '#validators/provider_validator'
 import { DateTime } from 'luxon'
-import BooksController from '#controllers/books_controller'
 import { ModelHelper } from '../helpers/model_helper.js'
 import Track from '#models/track'
 import Series from '#models/series'
@@ -23,6 +22,9 @@ import { FileHelper } from '../helpers/file_helper.js'
 import { nanoid } from '#config/app'
 import { HttpContext } from '@adonisjs/core/http'
 import { ProviderNotFoundException } from '#exceptions/provider_error_exception'
+import { BooksHelper } from '../helpers/books_helper.js'
+import Genre from '#models/genre'
+import Publisher from '#models/publisher'
 
 export class Audible {
   static async fetchBook(identifier: string, language: string): Promise<Book> {
@@ -98,7 +100,20 @@ export class Audible {
       }
     }
 
-    await BooksController.addContributorToBook(book, contributors)
+    // @ts-ignore
+    const createdContributors = await Contributor.fetchOrCreateMany(['name'], contributors, {
+      allowExtraProperties: true,
+    })
+
+    await BooksHelper.addContributorToBook(
+      fullBook,
+      createdContributors.map((contributor, index) => {
+        return {
+          id: contributor.publicId,
+          type: contributors[index].type,
+        }
+      })
+    )
 
     if (payload.series) {
       const series: Infer<typeof seriesValidator>[] = []
@@ -117,14 +132,48 @@ export class Audible {
         })
       }
 
-      await BooksController.addSeriesToBook(fullBook, series)
+      // @ts-ignore
+      const createdSeries = await Series.fetchOrCreateMany(['name'], series, {
+        allowExtraProperties: true,
+      })
+
+      await BooksHelper.addSeriesToBook(
+        fullBook,
+        createdSeries.map((serie, index) => {
+          return {
+            id: serie.publicId,
+            position: series[index].position ?? undefined,
+          }
+        })
+      )
     }
 
-    await BooksController.addGenreToBook(fullBook, payload.genres)
+    if (payload.genres) {
+      const createdGenres = await Genre.fetchOrCreateMany(
+        ['name'],
+        payload.genres.map((genre) => ({
+          name: genre.name,
+          type: genre.type as 'genre' | 'tag',
+        })),
+        {
+          allowExtraProperties: true,
+        }
+      )
+
+      await BooksHelper.addGenreToBook(
+        fullBook,
+        createdGenres.map((genre) => ({
+          id: genre.publicId,
+          type: genre.type,
+        }))
+      )
+    }
+
     await ModelHelper.addIdentifier(fullBook, [
       {
         type: 'audible:asin',
         value: payload.asin,
+        extra: language,
       },
       // If isbn is not null, add it as an identifier
       // @ts-ignore
@@ -142,7 +191,11 @@ export class Audible {
       const publisher: Infer<typeof publisherValidator> = {
         name: payload.publisher,
       }
-      await BooksController.addPublisherToBook(book, publisher)
+      // @ts-ignore
+      const publisherFound = await Publisher.firstOrCreate({ name: publisher.name }, publisher, {
+        allowExtraProperties: true,
+      })
+      await BooksHelper.addPublisherToBook(book, { id: publisherFound.publicId })
     }
 
     await Book.enableBookAndRelations(fullBook.id)

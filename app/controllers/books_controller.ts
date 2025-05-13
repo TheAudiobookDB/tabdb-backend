@@ -70,6 +70,8 @@ export default class BooksController {
 
     const exactDuplicates = await Book.query()
       .where((builder) => {
+        // TODO: fix this
+        // @ts-ignore
         builder.where('title', payload.title)
         if (payload.subtitle) {
           builder.where('subtitle', payload.subtitle)

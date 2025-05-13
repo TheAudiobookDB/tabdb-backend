@@ -79,7 +79,7 @@ router
   .use(r2Limiter)
 router.get('/book/:id', [BooksController, 'get']).use(middleware.relaxAuth()).use(r1Limiter)
 router.post('/book', [BooksController, 'create']).use(middleware.auth()).use(r3Limiter)
-router.post('/book/abs', [BooksController, 'abs']).use(middleware.auth()).use(r3Limiter)
+// router.post('/book/abs', [BooksController, 'abs']).use(middleware.auth()).use(r3Limiter)
 
 /**
  * Contributor
@@ -98,10 +98,6 @@ router
   .use(r2Limiter)
 router
   .post('/contributor', [ContributorsController, 'create'])
-  .use(middleware.auth())
-  .use(r3Limiter)
-router
-  .patch('/contributor', [ContributorsController, 'update'])
   .use(middleware.auth())
   .use(r3Limiter)
 

@@ -16,7 +16,7 @@ export const addContributorValidator = vine.object({
 
 export const addSeriesValidator = vine.object({
   id: nanoIdValidation,
-  position: vine.number().optional(),
+  position: vine.string().optional(),
 })
 
 export const addIdValidator = vine.object({
