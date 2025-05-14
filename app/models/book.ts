@@ -93,7 +93,7 @@ export default class Book extends compose(LogExtension, ImageExtension) {
   declare type: 'book' | 'audiobook' | 'podcast' | 'e-book'
 
   @manyToMany(() => Contributor, {
-    pivotColumns: ['role'],
+    pivotColumns: ['type', 'role'],
   })
   declare contributors: ManyToMany<typeof Contributor>
 

@@ -55,6 +55,7 @@ export class Audible {
       if (!book.copyright) book.copyright = audibleCopyright
       else book.copyright += `, ${audibleCopyright}`
     }
+    book.copyright = book.copyright.substring(0, 255)
     book.duration =
       book.duration ?? (payload.lengthMinutes !== undefined ? payload.lengthMinutes * 60 : null)
     book.releasedAt =
@@ -100,19 +101,29 @@ export class Audible {
       }
     }
 
+    const uniqueContributors = contributors.filter(
+      (contributor, index, self) => index === self.findIndex((c) => c.name === contributor.name)
+    )
+
     // @ts-ignore
-    const createdContributors = await Contributor.fetchOrCreateMany(['name'], contributors, {
+    const createdContributors = await Contributor.fetchOrCreateMany(['name'], uniqueContributors, {
       allowExtraProperties: true,
     })
 
     await BooksHelper.addContributorToBook(
       fullBook,
-      createdContributors.map((contributor, index) => {
-        return {
-          id: contributor.publicId,
-          type: contributors[index].type,
-        }
-      })
+      contributors
+        .map((contributor) => {
+          const foundContributor = createdContributors.find((c) => c.name === contributor.name)
+          if (foundContributor) {
+            return {
+              id: foundContributor.publicId,
+              type: contributor.type,
+            }
+          }
+          return null
+        })
+        .filter((contributor) => contributor !== null)
     )
 
     if (payload.series) {
@@ -132,18 +143,24 @@ export class Audible {
         })
       }
 
+      const uniqueSeries = series.filter(
+        (serie, index, self) => index === self.findIndex((s) => s.name === serie.name)
+      )
+
       // @ts-ignore
-      const createdSeries = await Series.fetchOrCreateMany(['name'], series, {
+      const createdSeries = await Series.fetchOrCreateMany(['name'], uniqueSeries, {
         allowExtraProperties: true,
       })
 
       await BooksHelper.addSeriesToBook(
         fullBook,
-        createdSeries.map((serie, index) => {
-          return {
-            id: serie.publicId,
-            position: series[index].position ?? undefined,
-          }
+        createdSeries.flatMap((serie) => {
+          return uniqueSeries
+            .filter((s) => s.name === serie.name)
+            .map((s) => ({
+              id: serie.publicId,
+              position: s.position ?? undefined,
+            }))
         })
       )
     }

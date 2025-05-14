@@ -54,7 +54,7 @@ export default class Contributor extends compose(LogExtension, ImageExtension) {
   declare enabled: boolean
 
   @manyToMany(() => Book, {
-    pivotColumns: ['role', 'type'],
+    pivotColumns: ['type', 'role'],
   })
   declare books: ManyToMany<typeof Book>
 
