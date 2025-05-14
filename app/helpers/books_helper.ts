@@ -14,7 +14,7 @@ import {
 
 export class BooksHelper {
   static async addGenreToBook(book: Book, genres?: Infer<typeof addIdValidator>[]) {
-    if (!genres) return
+    if (!genres || genres.length === 0) return
     const genresModel = await Genre.findManyBy('public_id', genres)
 
     if (genres.length === 0) throw Error('No valid genres were supplied')
@@ -27,7 +27,7 @@ export class BooksHelper {
     book: Book,
     contributors?: Infer<typeof addContributorValidator>[]
   ) {
-    if (!contributors) return
+    if (!contributors || contributors.length === 0) return
 
     const roles: Record<string, ModelObject> = {}
 
@@ -70,7 +70,7 @@ export class BooksHelper {
   }
 
   static async addSeriesToBook(book: Book, payloadObject?: Infer<typeof addSeriesValidator>[]) {
-    if (!payloadObject) return
+    if (!payloadObject || payloadObject.length === 0) return
 
     const positions: Record<string, ModelObject> = {}
 
@@ -107,7 +107,7 @@ export class BooksHelper {
   }
 
   static async addTrackToBook(book: Book, ids?: Infer<typeof addIdValidator>[]) {
-    if (!ids) return
+    if (!ids || ids.length === 0) return
     const tracks = await Track.findManyBy('public_id', ids)
 
     if (tracks.length === 0) throw Error('No valid tracks were supplied')
