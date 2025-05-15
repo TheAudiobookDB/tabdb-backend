@@ -113,6 +113,7 @@ export default class NarratorsController {
       contributor.country = payload.country || null
       contributor.description = payload.description || null
       contributor.website = payload.website || null
+      contributor.enabled = !possibleDuplicate
 
       contributor.useTransaction(trx)
       await contributor.saveWithLog(
@@ -143,16 +144,19 @@ export default class NarratorsController {
 
       return {
         message: possibleDuplicate
-          ? 'Contributor created with pending duplicate'
+          ? 'Contributor created with pending duplicate. Please'
           : 'Contributor created',
         data: new ContributorFullDto(contributor),
         ...(possibleDuplicate
           ? {
               activationLink: router
                 .builder()
-                .params({ id: contributor.publicId })
+                .qs({ id: contributor.publicId })
                 .disableRouteLookup()
-                .make('/confirm/contributor/:id'),
+                .makeSigned(`/confirm/contributor`, {
+                  expiresIn: '7d',
+                  purpose: 'confirm-contributor',
+                }),
             }
           : {}),
       }

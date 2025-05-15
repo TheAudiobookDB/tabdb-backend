@@ -162,7 +162,13 @@ router
 /**
  * Confirm
  */
-router.get('/confirm/:id', [ConfirmsController, 'create']).use(middleware.auth()).use(r1Limiter)
+router
+  .post('/confirm/:model', [ConfirmsController, 'create'])
+  .use(middleware.auth())
+  .use(r1Limiter)
+  .where('model', {
+    match: /^(book|contributor|series|genre|publisher|group)$/,
+  })
 
 /**
  * Request
@@ -172,7 +178,7 @@ router.post('/request', [RequestsController, 'index']).use(middleware.relaxAuth(
 router
   .get('/:model/:id/edit-history', [LogsController, 'getEditHistory'])
   .where('model', {
-    match: /^(book|contributor|series|genre|publisher)$/,
+    match: /^(book|contributor|series|genre|publisher|group)$/,
   })
   .use(middleware.auth())
   .use(r1Limiter)

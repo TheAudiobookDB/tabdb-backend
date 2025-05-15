@@ -6,6 +6,13 @@ import {
   typeValidation,
 } from '#validators/provider_validator'
 
+export const confirmValidation = vine.compile(
+  vine.object({
+    id: nanoIdValidation,
+    signature: vine.string(),
+  })
+)
+
 // Add - Internal
 
 export const addContributorValidator = vine.object({
