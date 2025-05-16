@@ -120,6 +120,7 @@ router
   .get('/genre/:id/books', [GenresController, 'books'])
   .use(middleware.relaxAuth())
   .use(r2Limiter)
+router.post('/genre', [GenresController, 'create']).use(middleware.auth()).use(r3Limiter)
 
 /**
  * Tracks

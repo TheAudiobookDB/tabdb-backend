@@ -4,11 +4,13 @@ import { HttpContext } from '@adonisjs/core/http'
 import { getIdPaginationValidator, getIdValidator } from '#validators/provider_validator'
 import Publisher from '#models/publisher'
 import Book from '#models/book'
-import { PublisherBaseDto, PublisherFullDto } from '#dtos/publisher'
+import { PublisherBaseDto, PublisherFullDto, PublisherMinimalDto } from '#dtos/publisher'
 import { BookDto } from '#dtos/book'
 import { getIdsValidator } from '#validators/common_validator'
-import { ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
+import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
+  duplicateApiResponse,
+  forbiddenApiResponse,
   limitApiQuery,
   nanoIdApiPathParameter,
   nanoIdsApiQuery,
@@ -20,6 +22,12 @@ import {
 } from '#config/openapi'
 import { BookDtoPaginated } from '#dtos/pagination'
 import NotFoundException from '#exceptions/not_found_exception'
+import db from '@adonisjs/lucid/services/db'
+import { publisherIndex } from '#config/meilisearch'
+import { nanoid } from '#config/app'
+import { LogState } from '../enum/log_enum.js'
+import router from '@adonisjs/core/services/router'
+import { createPublisherValidation } from '#validators/crud_validator'
 
 @ApiTags('Publisher')
 @validationErrorApiResponse()
@@ -82,5 +90,109 @@ export default class PublishersController {
     if (!publishers || publishers.length === 0) throw new NotFoundException()
 
     return PublisherBaseDto.fromArray(publishers)
+  }
+
+  @ApiOperation({
+    summary: 'Create a new Publisher',
+    description: 'Creates a new publisher.',
+    operationId: 'createPublisher',
+  })
+  @forbiddenApiResponse()
+  @ApiBody({ type: () => createPublisherValidation })
+  @duplicateApiResponse('PublisherBaseDto')
+  @successApiResponse({
+    status: 201,
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          description: 'Success or information message',
+          example: 'Publisher created successfully',
+        },
+        data: { $ref: '#/components/schemas/PublisherFullDto' },
+        activationLink: { type: 'string' },
+        duplicates: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/PublisherMinimalDto' },
+        },
+      },
+      required: ['message', 'data'],
+    },
+  })
+  async create({ request, response }: HttpContext) {
+    const payload = await createPublisherValidation.validate(request.body())
+
+    const trx = await db.transaction()
+
+    try {
+      const existingPublisher = await publisherIndex.search(payload.name, {
+        limit: 3,
+        attributesToRetrieve: ['id'],
+        rankingScoreThreshold: 0.95,
+      })
+      const ids = existingPublisher.hits.map((publisher) => publisher.id)
+      const potentialPublishers = await Publisher.query()
+        .whereILike('name', payload.name!)
+        .orWhereIn('id', ids)
+
+      const duplicatePublisher = potentialPublishers.find((publisher) => {
+        return publisher.name.toLowerCase() === payload.name!.toLowerCase()
+      })
+
+      if (duplicatePublisher) {
+        return response.status(409).send({
+          message: 'Publisher already exists',
+          requestId: request.id(),
+          data: new PublisherBaseDto(duplicatePublisher),
+        })
+      }
+
+      let possibleDuplicate = false
+      if (existingPublisher.hits.length > 0) {
+        possibleDuplicate = true
+      }
+      if (potentialPublishers && potentialPublishers.length) {
+        possibleDuplicate = true
+      }
+
+      const publisher = new Publisher()
+      publisher.publicId = nanoid()
+      publisher.name = payload.name
+      publisher.description = payload.description || null
+      publisher.enabled = !possibleDuplicate
+
+      publisher.useTransaction(trx)
+      await publisher.saveWithLog(
+        possibleDuplicate ? LogState.PENDING_DUPLICATE : LogState.PENDING,
+        payload
+      )
+
+      await trx.commit()
+
+      return {
+        message: possibleDuplicate
+          ? 'Publisher created with pending duplicate. Please'
+          : 'Publisher created',
+        data: new PublisherFullDto(publisher),
+        ...(possibleDuplicate
+          ? {
+              activationLink: router
+                .builder()
+                .qs({ id: publisher.publicId })
+                .disableRouteLookup()
+                .makeSigned(`/confirm/publisher`, {
+                  expiresIn: '7d',
+                  purpose: 'confirm-publisher',
+                }),
+              duplicates: PublisherMinimalDto.fromArray(potentialPublishers),
+            }
+          : {}),
+      }
+    } catch (e) {
+      await trx.rollback()
+
+      throw e
+    }
   }
 }

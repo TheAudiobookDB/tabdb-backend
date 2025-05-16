@@ -70,3 +70,17 @@ export const createUpdateContributorValidation = vine.compile(
     logId: nanoIdValidation.optional().requiredIfMissing('name'),
   })
 )
+
+export const createGenreValidation = vine.compile(
+  vine.object({
+    name: vine.string().minLength(2).maxLength(255),
+    type: vine.enum(['genre', 'tag']),
+  })
+)
+
+export const createPublisherValidation = vine.compile(
+  vine.object({
+    name: vine.string().minLength(2).maxLength(255),
+    description: vine.string().maxLength(10000).optional(),
+  })
+)

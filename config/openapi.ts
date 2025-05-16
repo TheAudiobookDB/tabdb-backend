@@ -381,3 +381,30 @@ export const badRequestApiResponse = () =>
       },
     },
   })
+
+export const duplicateApiResponse = (dto: string) =>
+  ApiResponse({
+    // @ts-ignore
+    headers: headers,
+    status: 409,
+    description: 'Duplicate entry',
+    mediaType: 'application/json',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: 'A duplicate entry already exists',
+        },
+        requestId: {
+          type: 'string',
+          example: 'sbq3l6jl0a2fpqnkydlwl9mu',
+          description:
+            'The unique identifier for the request. If you have any issues, please provide this ID to us.',
+        },
+        data: {
+          $ref: `#/components/schemas/${dto}`,
+        },
+      },
+    },
+  })

@@ -15,25 +15,6 @@ export class GenreMinimalDto extends BaseModelDto {
   })
   declare name: string
 
-  constructor(genre?: Genre) {
-    super()
-    if (!genre) return
-    this.id = genre.publicId
-    this.name = genre.name
-  }
-}
-
-export class GenreBaseDto extends BaseModelDto {
-  @nanoIdApiProperty()
-  declare id: string
-
-  @ApiProperty({
-    type: 'string',
-    description: 'The name of the genre.',
-    example: 'Science Fiction',
-  })
-  declare name: string
-
   @ApiProperty({
     type: 'string',
     enum: ['genre', 'tag'],
@@ -48,6 +29,12 @@ export class GenreBaseDto extends BaseModelDto {
     this.id = genre.publicId
     this.name = genre.name
     this.type = genre.type
+  }
+}
+
+export class GenreBaseDto extends GenreMinimalDto {
+  constructor(genre?: Genre) {
+    super(genre)
   }
 }
 

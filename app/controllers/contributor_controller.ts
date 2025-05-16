@@ -5,7 +5,7 @@ import { getIdPaginationValidator, getIdValidator } from '#validators/provider_v
 import Contributor from '#models/contributor'
 import Book from '#models/book'
 import { BookDto } from '#dtos/book'
-import { ContributorBaseDto, ContributorFullDto } from '#dtos/contributor'
+import { ContributorBaseDto, ContributorFullDto, ContributorMinimalDto } from '#dtos/contributor'
 import { FileHelper } from '../helpers/file_helper.js'
 import { DateTime } from 'luxon'
 import { LogState } from '../enum/log_enum.js'
@@ -83,7 +83,26 @@ export default class NarratorsController {
   })
   @forbiddenApiResponse()
   @ApiBody({ type: () => createUpdateContributorValidation })
-  @successApiResponse({ type: ContributorFullDto, status: 201 })
+  @successApiResponse({
+    status: 201,
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          description: 'Success or information message',
+          example: 'Contributor created successfully',
+        },
+        data: { $ref: '#/components/schemas/ContributorFullDto' },
+        activationLink: { type: 'string' },
+        duplicates: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/ContributorMinimalDto' },
+        },
+      },
+      required: ['message', 'data'],
+    },
+  })
   async create({ request }: HttpContext) {
     const payload = await createUpdateContributorValidation.validate(request.body())
 
@@ -91,17 +110,20 @@ export default class NarratorsController {
 
     try {
       const existingContributor = await contributorIndex.search(payload.name, {
-        limit: 1,
+        limit: 3,
         attributesToRetrieve: ['id'],
         rankingScoreThreshold: 0.95,
       })
-      const exactContributor = await Contributor.query().whereILike('name', payload.name!).first()
+      const ids = existingContributor.hits.map((contributor) => contributor.id)
+      const potentialContributors = await Contributor.query()
+        .whereILike('name', payload.name!)
+        .orWhereIn('id', ids)
 
       let possibleDuplicate = false
       if (existingContributor.hits.length > 0) {
         possibleDuplicate = true
       }
-      if (exactContributor) {
+      if (potentialContributors && potentialContributors.length) {
         possibleDuplicate = true
       }
 
@@ -122,6 +144,7 @@ export default class NarratorsController {
       )
 
       // To only upload the image if the contributor could be created
+      console.log(payload.image)
       if (payload.image) {
         const fileName = await FileHelper.saveFile(
           payload.image,
@@ -129,6 +152,7 @@ export default class NarratorsController {
           contributor.publicId,
           true
         )
+        console.log(fileName)
         if (fileName) {
           contributor.image = fileName
           contributor.useTransaction(trx)
@@ -157,6 +181,7 @@ export default class NarratorsController {
                   expiresIn: '7d',
                   purpose: 'confirm-contributor',
                 }),
+              duplicates: ContributorMinimalDto.fromArray(potentialContributors),
             }
           : {}),
       }

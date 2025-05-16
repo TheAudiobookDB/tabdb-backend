@@ -20,7 +20,8 @@ export class ContributorMinimalDto extends BaseModelDto {
 
   @ApiPropertyOptional({
     type: 'string',
-    description: 'The role of the contributor.',
+    description:
+      'The role of the contributor. This is only available in a context connected to a book.',
     example: 'Max John',
     nullable: true,
   })
@@ -28,12 +29,21 @@ export class ContributorMinimalDto extends BaseModelDto {
 
   @ApiPropertyOptional({
     type: 'number',
-    description: 'The type of the contributor.',
+    description:
+      'The type of the contributor. The type is only available in a context connected to a book. A single contributor can therefore have multiple types and is not assigned to a single type.',
     enum: ContributorType,
     example: ContributorType.NARRATOR,
     nullable: false,
   })
   declare type: number
+
+  @ApiPropertyOptional({
+    type: 'string',
+    description: 'The country of the contributor.',
+    example: 'US',
+    nullable: true,
+  })
+  declare country: string | null
 
   constructor(contributor?: Contributor) {
     super()
@@ -50,6 +60,7 @@ export class ContributorMinimalDto extends BaseModelDto {
     if (contributor.$extras.pivot_type) {
       this.type = contributor.$extras.pivot_type
     }
+    this.country = contributor.country
   }
 }
 
@@ -64,20 +75,11 @@ export class ContributorBaseDto extends ContributorMinimalDto {
   })
   declare identifiers: IdentifierBaseDto[]
 
-  @ApiPropertyOptional({
-    type: 'string',
-    description: 'The country of the contributor.',
-    example: 'US',
-    nullable: true,
-  })
-  declare country: string | null
-
   constructor(contributor?: Contributor) {
     super(contributor)
     if (!contributor) return
     this.image = contributor.imageUrl
     this.identifiers = IdentifierBaseDto.fromArray(contributor.identifiers)
-    this.country = contributor.country
   }
 }
 
