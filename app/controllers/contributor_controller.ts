@@ -160,7 +160,7 @@ export default class NarratorsController {
         }
       }
 
-      if (contributor.identifiers) {
+      if (payload.identifiers) {
         await ModelHelper.addIdentifier(contributor, payload.identifiers, trx)
       }
 

@@ -25,7 +25,7 @@ export class FileHelper {
    */
   public static async saveFile(
     file: MultipartFile | string,
-    subDirectory: 'covers' | 'contributors' | 'users',
+    subDirectory: 'covers' | 'contributors' | 'users' | 'series',
     prefix: string,
     useRandomName: boolean = true,
     previousUrl?: string | null | undefined

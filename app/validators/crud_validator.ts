@@ -84,3 +84,12 @@ export const createPublisherValidation = vine.compile(
     description: vine.string().maxLength(10000).optional(),
   })
 )
+
+export const createSeriesValidation = vine.compile(
+  vine.object({
+    name: vine.string().minLength(2).maxLength(255),
+    image: imageValidation.optional(),
+    description: vine.string().maxLength(10000).optional(),
+    identifiers: vine.array(addIdValidator).maxLength(10).optional(),
+  })
+)

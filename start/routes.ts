@@ -110,6 +110,7 @@ router
   .get('/series/:id/books', [SeriesController, 'books'])
   .use(middleware.relaxAuth())
   .use(r2Limiter)
+router.post('/series', [SeriesController, 'create']).use(middleware.auth()).use(r3Limiter)
 
 /**
  * Genre
@@ -138,6 +139,7 @@ router
   .get('/publisher/:id/books', [PublishersController, 'books'])
   .use(middleware.relaxAuth())
   .use(r2Limiter)
+router.post('/publisher', [PublishersController, 'create']).use(middleware.auth()).use(r3Limiter)
 
 /**
  * Search
