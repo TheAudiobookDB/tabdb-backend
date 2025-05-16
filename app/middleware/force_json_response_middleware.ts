@@ -12,10 +12,7 @@ export default class ForceJsonResponseMiddleware {
     if (request.url(false) !== '/api') {
       headers.accept = 'application/json'
     } else {
-      if (
-        request.header('Referer', null) !== null &&
-        request.header('Referer', null) === request.completeUrl()
-      ) {
+      if (request.header('Referer', null) !== null) {
         headers.accept = 'application/json'
       }
     }
