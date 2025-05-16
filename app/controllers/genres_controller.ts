@@ -9,6 +9,7 @@ import { BookDto } from '#dtos/book'
 import { getIdsValidator } from '#validators/common_validator'
 import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
+  createdApiResponse,
   duplicateApiResponse,
   forbiddenApiResponse,
   limitApiQuery,
@@ -100,26 +101,7 @@ export default class GenresController {
   @forbiddenApiResponse()
   @ApiBody({ type: () => createGenreValidation })
   @duplicateApiResponse('GenreBaseDto')
-  @successApiResponse({
-    status: 201,
-    schema: {
-      type: 'object',
-      properties: {
-        message: {
-          type: 'string',
-          description: 'Success or information message',
-          example: 'Genre created successfully',
-        },
-        data: { $ref: '#/components/schemas/GenreFullDto' },
-        activationLink: { type: 'string' },
-        duplicates: {
-          type: 'array',
-          items: { $ref: '#/components/schemas/GenreMinimalDto' },
-        },
-      },
-      required: ['message', 'data'],
-    },
-  })
+  @createdApiResponse('GenreFullDto', 'GenreMinimalDto')
   async create({ request, response }: HttpContext) {
     const payload = await createGenreValidation.validate(request.body())
 

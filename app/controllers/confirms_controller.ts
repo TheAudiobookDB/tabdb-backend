@@ -10,6 +10,9 @@ import {
 } from '#config/openapi'
 import { confirmValidation, createUpdateContributorValidation } from '#validators/crud_validator'
 import Contributor from '#models/contributor'
+import Publisher from '#models/publisher'
+import Genre from '#models/genre'
+import Series from '#models/series'
 
 @ApiTags('Confirm')
 @validationErrorApiResponse()
@@ -50,6 +53,39 @@ export default class ConfirmsController {
       await contributor.save()
 
       return { message: 'Contributor created successfully', contributor }
+    }
+
+    if (model === 'series') {
+      const series = await Series.query().where('publicId', payload.id).firstOrFail()
+      if (series.enabled) {
+        return { message: 'Series already enabled' }
+      }
+      series.enabled = true
+      await series.save()
+
+      return { message: 'Series created successfully', series }
+    }
+
+    if (model === 'genre') {
+      const genre = await Genre.query().where('publicId', payload.id).firstOrFail()
+      if (genre.enabled) {
+        return { message: 'Genre already enabled' }
+      }
+      genre.enabled = true
+      await genre.save()
+
+      return { message: 'Genre created successfully', genre }
+    }
+
+    if (model === 'publisher') {
+      const publisher = await Publisher.query().where('publicId', payload.id).firstOrFail()
+      if (publisher.enabled) {
+        return { message: 'Publisher already enabled' }
+      }
+      publisher.enabled = true
+      await publisher.save()
+
+      return { message: 'Publisher created successfully', publisher }
     }
 
     console.log(model)

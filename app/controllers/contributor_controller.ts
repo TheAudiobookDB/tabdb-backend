@@ -17,6 +17,7 @@ import db from '@adonisjs/lucid/services/db'
 import { getIdsValidator } from '#validators/common_validator'
 import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
+  createdApiResponse,
   forbiddenApiResponse,
   limitApiQuery,
   nanoIdApiPathParameter,
@@ -77,32 +78,34 @@ export default class NarratorsController {
   }
 
   @ApiOperation({
+    summary: 'Get multiple Contributors by IDs',
+    description:
+      'Gets multiple contributors by IDs. This only returns minified versions. If you want the full version, use the `get` endpoint.',
+    operationId: 'getContributors',
+  })
+  @nanoIdsApiQuery()
+  @notFoundApiResponse()
+  @successApiResponse({ type: [ContributorBaseDto], status: 200 })
+  async getMultiple({ request }: HttpContext) {
+    const payload = await getIdsValidator.validate(request.qs())
+
+    const contributors: Contributor[] = await Contributor.query()
+      .whereIn('public_id', payload.ids)
+      .preload('identifiers')
+
+    if (!contributors || contributors.length === 0) throw new NotFoundException()
+
+    return ContributorBaseDto.fromArray(contributors)
+  }
+
+  @ApiOperation({
     summary: 'Create a new Contributor',
     description: 'Creates a new contributor. This will also upload the image if provided.',
     operationId: 'createContributor',
   })
   @forbiddenApiResponse()
   @ApiBody({ type: () => createUpdateContributorValidation })
-  @successApiResponse({
-    status: 201,
-    schema: {
-      type: 'object',
-      properties: {
-        message: {
-          type: 'string',
-          description: 'Success or information message',
-          example: 'Contributor created successfully',
-        },
-        data: { $ref: '#/components/schemas/ContributorFullDto' },
-        activationLink: { type: 'string' },
-        duplicates: {
-          type: 'array',
-          items: { $ref: '#/components/schemas/ContributorMinimalDto' },
-        },
-      },
-      required: ['message', 'data'],
-    },
-  })
+  @createdApiResponse('ContributorFullDto', 'ContributorMinimalDto')
   async create({ request }: HttpContext) {
     const payload = await createUpdateContributorValidation.validate(request.body())
 
@@ -190,26 +193,5 @@ export default class NarratorsController {
 
       throw e
     }
-  }
-
-  @ApiOperation({
-    summary: 'Get multiple Contributors by IDs',
-    description:
-      'Gets multiple contributors by IDs. This only returns minified versions. If you want the full version, use the `get` endpoint.',
-    operationId: 'getContributors',
-  })
-  @nanoIdsApiQuery()
-  @notFoundApiResponse()
-  @successApiResponse({ type: [ContributorBaseDto], status: 200 })
-  async getMultiple({ request }: HttpContext) {
-    const payload = await getIdsValidator.validate(request.qs())
-
-    const contributors: Contributor[] = await Contributor.query()
-      .whereIn('public_id', payload.ids)
-      .preload('identifiers')
-
-    if (!contributors || contributors.length === 0) throw new NotFoundException()
-
-    return ContributorBaseDto.fromArray(contributors)
   }
 }

@@ -9,6 +9,7 @@ import { BookDto } from '#dtos/book'
 import { getIdsValidator } from '#validators/common_validator'
 import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
+  createdApiResponse,
   duplicateApiResponse,
   forbiddenApiResponse,
   limitApiQuery,
@@ -100,26 +101,7 @@ export default class PublishersController {
   @forbiddenApiResponse()
   @ApiBody({ type: () => createPublisherValidation })
   @duplicateApiResponse('PublisherBaseDto')
-  @successApiResponse({
-    status: 201,
-    schema: {
-      type: 'object',
-      properties: {
-        message: {
-          type: 'string',
-          description: 'Success or information message',
-          example: 'Publisher created successfully',
-        },
-        data: { $ref: '#/components/schemas/PublisherFullDto' },
-        activationLink: { type: 'string' },
-        duplicates: {
-          type: 'array',
-          items: { $ref: '#/components/schemas/PublisherMinimalDto' },
-        },
-      },
-      required: ['message', 'data'],
-    },
-  })
+  @createdApiResponse('PublisherFullDto', 'PublisherMinimalDto')
   async create({ request, response }: HttpContext) {
     const payload = await createPublisherValidation.validate(request.body())
 

@@ -18,6 +18,7 @@ import { ImageBaseDto } from '#dtos/image'
 import { getIdsValidator } from '#validators/common_validator'
 import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
+  createdApiResponse,
   forbiddenApiResponse,
   limitApiQuery,
   nanoIdApiPathParameter,
@@ -49,6 +50,7 @@ export default class BooksController {
   @forbiddenApiResponse()
   @ApiBody({ type: () => createUpdateBookValidation })
   @successApiResponse({ type: BookDto, status: 201 })
+  @createdApiResponse('BookDto', 'SearchBookDto')
   async create(context: HttpContext) {
     let payload = await context.request.validateUsing(createUpdateBookValidation)
 

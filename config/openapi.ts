@@ -408,3 +408,34 @@ export const duplicateApiResponse = (dto: string) =>
       },
     },
   })
+
+export const createdApiResponse = (dataDto: string, duplicateDto: string) =>
+  successApiResponse({
+    status: 201,
+    description:
+      'Indicates the item was created successfully, or with a pending status if potential duplicates were found.',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          description:
+            'A summary of the outcome. Returns a success message on standard creation, or explains that the item was created in a pending state due to possible duplicates. If pending, an activation link is provided. The activation link remains valid for 7 days; after this period, the pending item will be deleted.',
+          example: 'Contributor created successfully',
+        },
+        data: { $ref: `#/components/schemas/${dataDto}` },
+        activationLink: {
+          type: 'string',
+          description:
+            'A URL to activate the newly created item, valid for 7 days. After this period, the item will be deleted if not activated. Items created in a pending state require activation searchable and usable. Items need to be approved afterwards by an moderator and can be deleted at any point. For books, moderator approval is mandatory before search is enabled.',
+        },
+        duplicates: {
+          description:
+            'An array listing potential duplicate items found during creation. Useful for displaying alternatives to the user and avoiding duplicate entries.',
+          type: 'array',
+          items: { $ref: `#/components/schemas/${duplicateDto}` },
+        },
+      },
+      required: ['message', 'data'],
+    },
+  })

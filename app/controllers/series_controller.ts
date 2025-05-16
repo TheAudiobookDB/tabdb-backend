@@ -9,6 +9,7 @@ import { BookDto } from '#dtos/book'
 import { getIdsValidator } from '#validators/common_validator'
 import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
+  createdApiResponse,
   forbiddenApiResponse,
   limitApiQuery,
   nanoIdApiPathParameter,
@@ -103,26 +104,7 @@ export default class SeriesController {
   })
   @forbiddenApiResponse()
   @ApiBody({ type: () => createSeriesValidation })
-  @successApiResponse({
-    status: 201,
-    schema: {
-      type: 'object',
-      properties: {
-        message: {
-          type: 'string',
-          description: 'Success or information message',
-          example: 'Series created successfully',
-        },
-        data: { $ref: '#/components/schemas/SeriesFullDto' },
-        activationLink: { type: 'string' },
-        duplicates: {
-          type: 'array',
-          items: { $ref: '#/components/schemas/SeriesMinimalDto' },
-        },
-      },
-      required: ['message', 'data'],
-    },
-  })
+  @createdApiResponse('SeriesFullDto', 'SeriesMinimalDto')
   async create({ request }: HttpContext) {
     const payload = await createSeriesValidation.validate(request.body())
 
