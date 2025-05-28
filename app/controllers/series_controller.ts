@@ -58,7 +58,7 @@ export default class SeriesController {
   @limitApiQuery()
   @nanoIdApiPathParameter()
   @notFoundApiResponse()
-  @successApiResponse({ type: [BookDtoPaginated], status: 200 })
+  @successApiResponse({ type: BookDtoPaginated, status: 200 })
   async books({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
     return BookDto.fromPaginator(

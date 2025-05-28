@@ -55,7 +55,7 @@ export default class GenresController {
   @limitApiQuery()
   @nanoIdApiPathParameter()
   @notFoundApiResponse()
-  @successApiResponse({ type: [BookDtoPaginated], status: 200 })
+  @successApiResponse({ type: BookDtoPaginated, status: 200 })
   async books({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
     return BookDto.fromPaginator(
@@ -75,10 +75,10 @@ export default class GenresController {
   }
 
   @ApiOperation({
-    summary: 'Get multiple Books by IDs',
+    summary: 'Get multiple Genres by IDs',
     description:
       'Gets multiple genres by IDs. This only returns minified versions. If you want the full version, use the `get` endpoint.',
-    operationId: 'getBooks',
+    operationId: 'getGenres',
   })
   @nanoIdsApiQuery()
   @notFoundApiResponse()

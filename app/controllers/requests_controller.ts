@@ -3,7 +3,6 @@ import { indexRequestValidator } from '#validators/request_validator'
 import { Audible } from '../provider/audible.js'
 import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
-  nanoIdApiPathParameter,
   successApiResponse,
   tooManyRequestsApiResponse,
   validationErrorApiResponse,
@@ -38,9 +37,8 @@ export default class RequestsController {
       '*   **Supported Types:** `book`, `author`, `tracks`, `series`\n' +
       '*   **Identifier:** `ASIN` (10 characters long)\n' +
       '*   **Required Data:** Region (`us`, `ca`, `uk`, `au`, `fr`, `de`, `jp`, `it`, `in`, `es`, `br`)\n',
-    operationId: 'getContributor',
+    operationId: 'request',
   })
-  @nanoIdApiPathParameter()
   @successApiResponse({
     schema: {
       type: 'object',

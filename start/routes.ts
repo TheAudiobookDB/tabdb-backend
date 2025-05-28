@@ -20,6 +20,7 @@ import {
 import { middleware } from '#start/kernel'
 import app from '@adonisjs/core/services/app'
 import openapi from '@foadonis/openapi/services/main'
+import { ApiExcludeOperation } from '@foadonis/openapi/decorators'
 
 openapi.registerRoutes()
 
@@ -178,6 +179,7 @@ router
  */
 router.post('/request', [RequestsController, 'index']).use(middleware.relaxAuth()).use(r1Limiter)
 
+/*
 router
   .get('/:model/:id/edit-history', [LogsController, 'getEditHistory'])
   .where('model', {
@@ -204,3 +206,4 @@ router.get('/tmp/:file', async (context) => {
   const filePath = app.makePath('storage/uploads', file)
   return context.response.download(filePath)
 })
+*/

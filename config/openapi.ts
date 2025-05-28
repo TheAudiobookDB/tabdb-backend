@@ -6,6 +6,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiResponseOptions,
+  ApiBearerAuth,
 } from '@foadonis/openapi/decorators'
 
 export default defineConfig({
@@ -35,6 +36,22 @@ export default defineConfig({
         description: 'Local Dev',
       },
     ],
+    components: {
+      securitySchemes: {
+        BearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          description: 'Authentication with a Bearer token. Example: Authorization: Bearer <token>',
+        },
+        CookieAuth: {
+          type: 'apiKey',
+          in: 'cookie',
+          name: 'Authorization',
+          description:
+            "Authentication via a session cookie named 'Authorization'. The cookie should be sent automatically by the browser or client.",
+        },
+      },
+    },
     security: [
       {
         BearerAuth: [],
@@ -124,7 +141,7 @@ const rateLimitHeaders = {
 export const successApiResponse = (options: ApiResponseOptions) =>
   ApiResponse({
     // @ts-ignore
-    headers: { headers, ...rateLimitHeaders },
+    //headers: { headers, ...rateLimitHeaders },
     status: 200,
     description: 'Success',
     ...options,
@@ -230,7 +247,7 @@ export const nanoIdApiPathParameter = () =>
 export const tooManyRequestsApiResponse = () =>
   ApiResponse({
     // @ts-ignore
-    headers: { headers, ...rateLimitHeaders },
+    //headers: { headers, ...rateLimitHeaders },
     status: 429,
     description: 'Too many requests',
     mediaType: 'application/json',
@@ -252,7 +269,7 @@ export const tooManyRequestsApiResponse = () =>
 export const validationErrorApiResponse = () =>
   ApiResponse({
     // @ts-ignore
-    headers: { headers, ...rateLimitHeaders },
+    //headers: { headers, ...rateLimitHeaders },
     status: 422,
     description: 'Validation error',
     mediaType: 'application/json',
@@ -289,7 +306,7 @@ export const validationErrorApiResponse = () =>
 export const notFoundApiResponse = () =>
   ApiResponse({
     // @ts-ignore
-    headers: { headers, ...rateLimitHeaders },
+    //headers: { headers, ...rateLimitHeaders },
     status: 404,
     description: 'Resource not found',
     mediaType: 'application/json',
@@ -313,7 +330,7 @@ export const notFoundApiResponse = () =>
 export const unauthorizedApiResponse = () =>
   ApiResponse({
     // @ts-ignore
-    headers: headers,
+    //headers: headers,
     status: 401,
     description: 'Unauthorized',
     mediaType: 'application/json',
@@ -337,7 +354,7 @@ export const unauthorizedApiResponse = () =>
 export const forbiddenApiResponse = (message: string = 'A duplicate entry already exists') =>
   ApiResponse({
     // @ts-ignore
-    headers: headers,
+    //headers: headers,
     status: 403,
     description: `Forbidden - ${message}`,
     mediaType: 'application/json',
@@ -361,7 +378,7 @@ export const forbiddenApiResponse = (message: string = 'A duplicate entry alread
 export const badRequestApiResponse = () =>
   ApiResponse({
     // @ts-ignore
-    headers: headers,
+    //headers: headers,
     status: 400,
     description: 'Bad request',
     mediaType: 'application/json',
@@ -385,7 +402,7 @@ export const badRequestApiResponse = () =>
 export const duplicateApiResponse = (dto: string) =>
   ApiResponse({
     // @ts-ignore
-    headers: headers,
+    //headers: headers,
     status: 409,
     description: 'Duplicate entry',
     mediaType: 'application/json',

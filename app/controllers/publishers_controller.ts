@@ -55,7 +55,7 @@ export default class PublishersController {
   @limitApiQuery()
   @nanoIdApiPathParameter()
   @notFoundApiResponse()
-  @successApiResponse({ type: [BookDtoPaginated], status: 200 })
+  @successApiResponse({ type: BookDtoPaginated, status: 200 })
   async books({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
     return BookDto.fromPaginator(
@@ -100,7 +100,7 @@ export default class PublishersController {
   })
   @forbiddenApiResponse()
   @ApiBody({ type: () => createPublisherValidation })
-  @duplicateApiResponse('PublisherBaseDto')
+  @duplicateApiResponse('PublisherMinimalDto')
   @createdApiResponse('PublisherFullDto', 'PublisherMinimalDto')
   async create({ request, response }: HttpContext) {
     const payload = await createPublisherValidation.validate(request.body())

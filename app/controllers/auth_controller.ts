@@ -13,21 +13,13 @@ import {
   unauthorizedApiResponse,
   validationErrorApiResponse,
 } from '#config/openapi'
-import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiCookieAuth,
-  ApiOperation,
-  ApiTags,
-} from '@foadonis/openapi/decorators'
+import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import { UserLoginDto, UserTokenDto } from '#dtos/user'
 import { roleAbilities } from '../enum/user_enum.js'
 
 @ApiTags('Auth')
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
-@ApiBearerAuth()
-@ApiCookieAuth()
 export default class AuthController {
   @ApiOperation({
     summary: 'Send magic link',

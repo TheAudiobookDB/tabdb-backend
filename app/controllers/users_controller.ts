@@ -9,14 +9,10 @@ import { updateUserValidator } from '#validators/user_validator'
 import { FileHelper } from '../helpers/file_helper.js'
 import { UserBaseDto, UserFullDto, UserPublicDto } from '#dtos/user'
 import { LogBaseDto } from '#dtos/log'
+import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@foadonis/openapi/decorators'
 import {
-  ApiBearerAuth,
-  ApiBody,
-  ApiOperation,
-  ApiTags,
-  ApiCookieAuth,
-} from '@foadonis/openapi/decorators'
-import {
+  nanoIdApiPathParameter,
+  nanoIdsApiQuery,
   notFoundApiResponse,
   successApiResponse,
   tooManyRequestsApiResponse,
@@ -27,8 +23,6 @@ import {
 @ApiTags('User')
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
-@ApiBearerAuth()
-@ApiCookieAuth()
 export default class UsersController {
   @ApiOperation({
     summary: 'Get the authenticated user',
@@ -36,8 +30,6 @@ export default class UsersController {
   })
   @notFoundApiResponse()
   @unauthorizedApiResponse()
-  @ApiBearerAuth()
-  @ApiCookieAuth()
   @successApiResponse({ type: UserBaseDto, status: 200 })
   async getMe({ auth }: HttpContext) {
     return new UserBaseDto(await auth.authenticate())
@@ -49,24 +41,22 @@ export default class UsersController {
   })
   @notFoundApiResponse()
   @unauthorizedApiResponse()
+  @nanoIdApiPathParameter()
   @successApiResponse({ type: UserPublicDto, status: 200 })
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
     return new UserPublicDto(await User.query().where('publicId', payload.id).firstOrFail())
   }
 
-  /**
-   * @editHistory
-   * @operationId getEditHistoryByUser
-   * @summary Get edit history by user ID
-   *
-   * @paramUse(pagination)
-   *
-   * @responseHeader 200 - @use(rate)
-   * @responseHeader 200 - @use(requestId)
-   *
-   * @responseBody 200 - <Log[]>.paginated()
-   */
+  @ApiOperation({
+    summary: 'Get the a User edit history by ID',
+    operationId: 'getUserHistory',
+    deprecated: true,
+  })
+  @notFoundApiResponse()
+  @unauthorizedApiResponse()
+  @nanoIdApiPathParameter()
+  @successApiResponse({ type: UserPublicDto, status: 200 })
   async editHistory({ params, auth }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
 
