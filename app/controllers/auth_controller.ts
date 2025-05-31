@@ -90,11 +90,13 @@ export default class AuthController {
 
       let user = await User.findBy('email', email)
 
-      let existingUser = await User.findBy('username', username)
-      if (existingUser && email !== existingUser.email) {
-        return response.badRequest({
-          message: 'Username is already taken',
-        })
+      if (username) {
+        let existingUser = await User.findBy('username', username)
+        if (existingUser && email !== existingUser.email) {
+          return response.badRequest({
+            message: 'Username is already taken',
+          })
+        }
       }
 
       if (!user) {

@@ -376,11 +376,6 @@ export default class SearchesController {
       rankingScoreThreshold: payload.threshold || 0.35,
       ...(sortArray.length > 0 ? { sort: sortArray } : {}),
     })
-    if (!books || !books.hits || books.hits.length <= 0) {
-      return {
-        message: 'Books not found',
-      }
-    }
 
     const bookIds = books.hits.map((book) => book.id)
 
@@ -437,10 +432,6 @@ export default class SearchesController {
       showRankingScore: true,
       rankingScoreThreshold: payload.threshold || 0.35,
     })
-
-    if (!contributors || !contributors.hits || contributors.hits.length <= 0) {
-      return { message: 'Narrators not found' }
-    }
 
     const contributorsIds = contributors.hits.map((contributor) => contributor.id)
 
@@ -556,10 +547,6 @@ export default class SearchesController {
       rankingScoreThreshold: payload.threshold || 0.35,
     })
 
-    if (!series || !series.hits || series.hits.length <= 0) {
-      return { message: 'Narrators not found' }
-    }
-
     const narratorIds = series.hits.map((serie) => serie.id)
 
     const seriesResults = await Series.query()
@@ -612,10 +599,6 @@ export default class SearchesController {
 
     const publisherIds = publishers.hits.map((publisher) => publisher.id)
 
-    if (!publishers || !publishers.hits || publishers.hits.length <= 0) {
-      return { message: 'Publisher not found' }
-    }
-
     const publisherResults = await Publisher.query()
       .whereIn('id', publisherIds)
       .orderByRaw(
@@ -623,8 +606,10 @@ export default class SearchesController {
       )
       .paginate(1, limit)
 
+    const pagination = PublisherMinimalDto.fromPaginator(publisherResults)
+
     return {
-      hits: PublisherMinimalDto.fromPaginator(publisherResults),
+      data: pagination.data,
       meta: SearchEngineHelper.buildPagination(page, publishers.totalHits, limit),
     }
   }

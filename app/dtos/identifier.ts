@@ -39,7 +39,7 @@ export class IdentifierBaseDto extends IdentifierMinimalDto {
     type: 'string',
     description:
       'The extra information associated with the identifier. For audible ASIN this is the region.',
-    example: null,
+    example: 'us',
   })
   declare extra: string | null
 

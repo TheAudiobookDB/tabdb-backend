@@ -12,13 +12,11 @@ export class UserMinimalDto extends BaseModelDto {
   declare id: string
 
   @ApiProperty({
-    type: 'string',
     description: 'The username of the user.',
     example: 'system',
     schema: {
       minLength: 3,
       maxLength: 20,
-      format: 'string',
       pattern: '^[a-z0-9_.-]*$',
     },
   })
@@ -90,27 +88,15 @@ export class UserFullDto extends UserBaseDto {
 }
 
 export class UserPublicDto extends BaseModelDto {
-  @ApiProperty({
-    type: 'string',
-    description: 'The username of the user.',
-    example: 'system',
-    schema: {
-      minLength: 3,
-      maxLength: 20,
-      format: 'string',
-      pattern: '^[a-z0-9_.-]*$',
-    },
-  })
+  @nanoIdApiProperty()
   declare id: string
 
   @ApiProperty({
-    type: 'string',
     description: 'The username of the user.',
     example: 'system',
     schema: {
       minLength: 3,
       maxLength: 20,
-      format: 'string',
       pattern: '^[a-z0-9_.-]*$',
     },
   })

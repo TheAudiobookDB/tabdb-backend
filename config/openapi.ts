@@ -188,7 +188,7 @@ export const thresholdApiQuery = () =>
       default: 0.35,
       maximum: 1,
     },
-    example: 0,
+    example: 0.35,
   })
 
 //
@@ -199,7 +199,7 @@ export const keywordApiQuery = () =>
     description:
       'The keywords to search for in the the requested items. Will return items that can be far away from the wanted results. Do not use keywords if you are using some kind of automatching. It will match to broadly. You can try to contain it with other parameters. Note: title/name will overwrite the keywords, but still searches more broadly. So do not use title/name and keywords together unless you know what you want',
     type: 'string',
-    example: ['Harry Potter', 'Series Name 1', 'Keyword 1', 'Simon Jäger'],
+    example: 'Harry Potter',
     required: false,
   })
 
@@ -208,7 +208,7 @@ export const nameApiQuery = () =>
     name: 'name',
     description: 'The name of the item to search for.',
     type: 'string',
-    example: ['Simon Jäger', 'David Nathan', 'Sebastian Fitzek'],
+    example: 'Sebastian Fitzek',
     required: false,
   })
 
@@ -224,7 +224,7 @@ export const nanoIdsApiQuery = () =>
         pattern: '^[a-z0-9]{16}$',
       },
     },
-    example: ['6pywk967huhwml9x', '7abcf123def456gh'],
+    example: '6pywk967huhwml9x',
     required: true,
     explode: false,
   })
