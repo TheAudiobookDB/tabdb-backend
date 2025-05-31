@@ -8,7 +8,7 @@ export class SearchEngineHelper {
   }
 
   static buildPagination(currentPage: number, totalResults: number, limit: number): any {
-    const lastPage = Math.ceil(totalResults / limit)
+    const lastPage = Math.max(Math.ceil(totalResults / limit), 1)
     return {
       total: totalResults,
       lastPage: lastPage,

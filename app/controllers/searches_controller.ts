@@ -379,6 +379,13 @@ export default class SearchesController {
 
     const bookIds = books.hits.map((book) => book.id)
 
+    if (bookIds.length === 0) {
+      return {
+        data: [],
+        meta: SearchEngineHelper.buildPagination(page, 0, limit),
+      }
+    }
+
     const bookResults = await Book.query()
       .withScopes((s) => s.minimalAll())
       .where((builder) => {
@@ -434,6 +441,13 @@ export default class SearchesController {
     })
 
     const contributorsIds = contributors.hits.map((contributor) => contributor.id)
+
+    if (contributorsIds.length === 0) {
+      return {
+        data: [],
+        meta: SearchEngineHelper.buildPagination(page, 0, limit),
+      }
+    }
 
     const narratorResults = await Contributor.query()
       .preload('identifiers')
@@ -549,6 +563,13 @@ export default class SearchesController {
 
     const narratorIds = series.hits.map((serie) => serie.id)
 
+    if (narratorIds.length === 0) {
+      return {
+        data: [],
+        meta: SearchEngineHelper.buildPagination(page, 0, limit),
+      }
+    }
+
     const seriesResults = await Series.query()
       .preload('identifiers')
       .whereIn('id', narratorIds)
@@ -598,6 +619,13 @@ export default class SearchesController {
     })
 
     const publisherIds = publishers.hits.map((publisher) => publisher.id)
+
+    if (publisherIds.length === 0) {
+      return {
+        data: [],
+        meta: SearchEngineHelper.buildPagination(page, 0, limit),
+      }
+    }
 
     const publisherResults = await Publisher.query()
       .whereIn('id', publisherIds)
