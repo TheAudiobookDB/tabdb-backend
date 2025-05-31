@@ -167,6 +167,8 @@ export default class BooksController {
       if (log) {
         log.state = LogState.APPROVED
       }
+      book.enabled = true
+      await book.save()
       await trx.commit()
     }
 
