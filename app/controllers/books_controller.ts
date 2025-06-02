@@ -190,7 +190,11 @@ export default class BooksController {
       }
     }
 
-    return { book: bookDto, message: 'Book created successfully.', available: false }
+    return {
+      book: bookDto,
+      message: 'Book created successfully.',
+      available: abilities.hasAbility('item:add'),
+    }
   }
 
   @ApiOperation({
