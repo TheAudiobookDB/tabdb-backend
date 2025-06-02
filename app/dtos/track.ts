@@ -4,6 +4,7 @@ import { ContributorMinimalDto } from '#dtos/contributor'
 import { ImageBaseDto } from '#dtos/image'
 import { createdAtApiProperty, nanoIdApiProperty, updatedAtApiProperty } from '#config/openapi'
 import { ApiProperty, ApiPropertyOptional } from '@foadonis/openapi/decorators'
+import { TrackType } from '../enum/track_enum.js'
 
 export class TrackMinimalDto extends BaseModelDto {
   @nanoIdApiProperty()
@@ -62,17 +63,34 @@ export class TrackBaseDto extends TrackMinimalDto {
   })
   declare images: ImageBaseDto[]
 
+  @ApiProperty({
+    type: 'number',
+    format: 'integer',
+    description:
+      'The type of the track. This can be one of the following: 1 - Chapter, 2 - Intro, 3 - Outro, 4 - Publisher Intro, 5 - Publisher Outro.',
+    example: 1,
+    default: 1,
+    minimum: 1,
+    maximum: 5,
+  })
+  declare type: TrackType
+
+  @ApiPropertyOptional({})
+  declare subTracks: TrackBaseDto[]
+
   constructor(track?: Track) {
     super(track)
     if (!track) return
     this.start = track.start
     this.end = track.end
     this.duration = track.duration
+    track.type = track.type || TrackType.CHAPTER
     if (track.contributors) {
       this.contributors = track.contributors.map(
         (contributor) => new ContributorMinimalDto(contributor)
       )
     }
+    if (track.tracks) this.subTracks = track.tracks.map((subTrack) => new TrackBaseDto(subTrack))
     if (track.images) this.images = ImageBaseDto.fromArray(track.images)
   }
 }

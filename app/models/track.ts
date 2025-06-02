@@ -8,6 +8,7 @@ import { trackValidator } from '#validators/provider_validator'
 import { LogExtension } from '../extensions/log_extension.js'
 import Contributor from '#models/contributor'
 import Image from '#models/image'
+import { TrackType } from '../enum/track_enum.js'
 
 export default class Track extends LogExtension {
   @column({ isPrimary: true, serializeAs: null })
@@ -24,6 +25,9 @@ export default class Track extends LogExtension {
 
   @column()
   declare end: number
+
+  @column()
+  declare type: TrackType
 
   @computed()
   get duration() {
@@ -45,6 +49,15 @@ export default class Track extends LogExtension {
     foreignKey: 'trackId',
   })
   declare images: HasMany<typeof Image>
+
+  @hasMany(() => Track)
+  declare tracks: HasMany<typeof Track>
+
+  @belongsTo(() => Track, {
+    foreignKey: 'parent',
+    localKey: 'id',
+  })
+  declare parentTrack: BelongsTo<typeof Track>
 
   @column.dateTime({ autoCreate: true, serializeAs: null })
   declare createdAt: DateTime
