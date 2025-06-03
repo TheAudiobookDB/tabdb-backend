@@ -49,6 +49,7 @@ export const audiMetaBookValidator = vine.compile(
     language: vine.string().use(isLanguageRule({})).optional(),
     publisher: vine.string().maxLength(1023).optional(),
     releaseDate: vine.string().optional(),
+    skuGroup: vine.string().nullable(),
     series: vine
       .array(
         vine.object({
@@ -156,11 +157,13 @@ export const identifierValidation = vine
         'value' in value &&
         'type' in value &&
         vine.helpers.isString(value.type) &&
-        value.type.includes('asin') &&
+        (value.type.includes('asin') ||
+          value.type.includes('audible') ||
+          value.type.includes('amazon')) &&
         value.value &&
         !('id' in value),
       vine.object({
-        type: vine.enum(['audible:asin', 'amazon:asin']),
+        type: vine.enum(['audible:asin', 'amazon:asin', 'audible:sku']),
         value: asinValidation,
         extra: vine.string().optional(),
       })

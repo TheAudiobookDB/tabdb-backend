@@ -25,6 +25,7 @@ import { ProviderNotFoundException } from '#exceptions/provider_error_exception'
 import { BooksHelper } from '../helpers/books_helper.js'
 import Genre from '#models/genre'
 import Publisher from '#models/publisher'
+import { TrackType } from '../enum/track_enum.js'
 
 export class Audible {
   static async fetchBook(identifier: string, language: string): Promise<Book> {
@@ -202,6 +203,15 @@ export class Audible {
             },
           ]
         : []),
+      // @ts-ignore
+      ...(payload.skuGroup
+        ? [
+            {
+              type: 'audible:sku',
+              value: payload.skuGroup,
+            },
+          ]
+        : []),
     ])
 
     if (payload.publisher) {
@@ -304,14 +314,53 @@ export class Audible {
 
     const book: Book = books[0]
 
-    const tracksData = payload.chapters.map((chapter) => {
+    const tracksData: any[] = []
+
+    if (payload.brandIntroDurationMs) {
+      tracksData.push({
+        name: 'Audible Intro',
+        start: 0,
+        end: payload.brandIntroDurationMs,
+        bookId: book.id,
+        type: TrackType.PUBLISHER_INTRO,
+      })
+    }
+
+    const processedChapters = payload.chapters.map((chapter, index) => {
+      let start = chapter.startOffsetMs
+      let end = chapter.startOffsetMs + chapter.lengthMs
+
+      if (index === 0 && payload.brandIntroDurationMs) {
+        start = Math.max(payload.brandIntroDurationMs, start)
+      }
+
+      if (index === payload.chapters.length - 1 && payload.brandOutroDurationMs) {
+        end = end - payload.brandOutroDurationMs
+      }
+
       return {
         name: chapter.title,
-        start: chapter.startOffsetMs,
-        end: chapter.startOffsetMs + chapter.lengthMs,
+        start: start,
+        end: end,
         bookId: book.id,
+        type: TrackType.CHAPTER,
       }
     })
+
+    tracksData.push(...processedChapters)
+
+    if (payload.brandOutroDurationMs && payload.chapters.length > 0) {
+      const lastChapter = payload.chapters[payload.chapters.length - 1]
+      const lastChapterOriginalEnd = lastChapter.startOffsetMs + lastChapter.lengthMs
+
+      tracksData.push({
+        name: 'Audible Outro',
+        start: lastChapterOriginalEnd - payload.brandOutroDurationMs,
+        end: lastChapterOriginalEnd,
+        bookId: book.id,
+        type: TrackType.PUBLISHER_OUTRO,
+      })
+    }
 
     if (tracksData.length > 0) {
       await Track.updateOrCreateMany(['bookId', 'name'], tracksData)

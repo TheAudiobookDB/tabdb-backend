@@ -15,7 +15,10 @@ export default class Image extends compose(LogExtension, ImageExtension) {
   declare image: string
 
   @column()
-  declare bookId: number
+  declare bookId: number | null
+
+  @column()
+  declare trackId: number | null
 
   @belongsTo(() => Book)
   declare book: BelongsTo<typeof Book>

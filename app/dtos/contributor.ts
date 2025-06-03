@@ -1,6 +1,5 @@
 import { BaseModelDto } from '@adocasts.com/dto/base'
 import Contributor from '#models/contributor'
-import { BookDto } from '#dtos/book'
 import { IdentifierFullDto, IdentifierBaseDto } from '#dtos/identifier'
 import { ContributorType } from '../enum/contributor_enum.js'
 import { createdAtApiProperty, nanoIdApiProperty } from '#config/openapi'
@@ -132,18 +131,5 @@ export class ContributorFullDto extends ContributorBaseDto {
     this.identifiers = IdentifierFullDto.fromArray(contributor.identifiers)
     this.createdAt = contributor.createdAt.toISO()!
     this.updatedAt = contributor.updatedAt.toISO()!
-  }
-}
-
-export class ContributorWithBooksDto extends ContributorBaseDto {
-  declare books: BookDto[]
-
-  constructor(
-    contributor?: Contributor,
-    bookDto: { fromArray: (books: any[]) => any[] } = BookDto
-  ) {
-    super(contributor)
-    if (!contributor) return
-    this.books = bookDto.fromArray(contributor.books)
   }
 }

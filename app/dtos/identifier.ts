@@ -1,6 +1,5 @@
 import { BaseModelDto } from '@adocasts.com/dto/base'
 import Identifier from '#models/identifier'
-import { BookDto } from '#dtos/book'
 import { ApiProperty, ApiPropertyOptional } from '@foadonis/openapi/decorators'
 import { createdAtApiProperty, updatedAtApiProperty } from '#config/openapi'
 
@@ -62,15 +61,5 @@ export class IdentifierFullDto extends IdentifierBaseDto {
     if (!identifier) return
     this.createdAt = identifier.createdAt.toISO()!
     this.updatedAt = identifier.updatedAt.toISO()!
-  }
-}
-
-export class IdentifierWithBooksDto extends IdentifierBaseDto {
-  declare books: BookDto[]
-
-  constructor(identifier?: Identifier, bookDto: { fromArray: (books: any[]) => any[] } = BookDto) {
-    super(identifier)
-    if (!identifier) return
-    this.books = bookDto.fromArray(identifier.books)
   }
 }
