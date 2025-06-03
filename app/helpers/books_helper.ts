@@ -23,110 +23,62 @@ export class BooksHelper {
     await book.related('genres').saveMany(genresModel)
   }
 
+  // TODO: Drop contributors not in the list
   static async addContributorToBook(
     book: Book,
     contributors?: Infer<typeof addContributorValidator>[]
   ) {
     if (!contributors || contributors.length === 0) return
 
-    const roles: Record<number, ModelObject> = {}
-    const duplicateContributors: Record<number, ModelObject>[] = []
-
     if (!book.contributors) {
       await book.load('contributors', (q) => q.pivotColumns(['role', 'type']))
     }
+
+    const existingCombinations = new Set<string>()
+
     if (book.contributors && book.contributors.length > 0) {
       for (const contributor of book.contributors) {
-        const role = contributor.$extras.pivot_role
         const type = contributor.$extras.pivot_type
-
-        const duplicate = roles[contributor.id]
-
-        if (duplicate && duplicate.type === type) {
-          console.log('duplicate1', duplicate)
-          continue
-        }
-
-        if (duplicate) {
-          const tmpRecord: Record<number, ModelObject> = {}
-          tmpRecord[contributor.id] = { role, type }
-          if (
-            !duplicateContributors.some(
-              (entry) => entry[contributor.id] && entry[contributor.id].type === type
-            )
-          ) {
-            if (role) {
-              tmpRecord[contributor.id] = { role, type }
-            } else {
-              tmpRecord[contributor.id] = { type }
-            }
-            duplicateContributors.push(tmpRecord)
-          }
-        } else {
-          if (role) {
-            roles[contributor.id] = { role, type }
-          } else {
-            roles[contributor.id] = { type }
-          }
-        }
+        const role = contributor.$extras.pivot_role || ''
+        existingCombinations.add(`${contributor.id}-${type}-${role}`)
       }
     }
 
-    const narratorModels = await Contributor.query().whereIn(
+    const contributorModels = await Contributor.query().whereIn(
       'public_id',
       contributors.map((contributor) => contributor.id)
     )
 
-    if (narratorModels.length === 0) throw Error('No valid contributors were supplied')
+    if (contributorModels.length === 0) {
+      throw new Error('No valid contributors were supplied')
+    }
 
     for (const contributor of contributors) {
-      const narratorModel = narratorModels.find((model) => model.publicId === contributor.id)
-      if (!narratorModel) continue
+      const contributorModel = contributorModels.find((model) => model.publicId === contributor.id)
 
-      const role = contributor.role
+      if (!contributorModel) continue
+
+      const role = contributor.role || ''
       const type = contributor.type
+      const combinationKey = `${contributorModel.id}-${type}-${role}`
 
-      const duplicate = roles[narratorModel.id]
-      if (duplicate && duplicate.role === role && duplicate.type === type) {
-        console.log('duplicate', duplicate)
+      if (existingCombinations.has(combinationKey)) {
+        console.log(
+          `Skipping duplicate combination: contributor ${contributorModel.id}, type ${type}, role ${role}`
+        )
         continue
       }
 
-      if (duplicate) {
-        const tmpRecord: Record<number, ModelObject> = {}
-        tmpRecord[narratorModel.id] = { role, type }
-        if (
-          !duplicateContributors.some(
-            (entry) => entry[narratorModel.id] && entry[narratorModel.id].type === type
-          )
-        ) {
-          if (role) {
-            tmpRecord[narratorModel.id] = { role, type }
-          } else {
-            tmpRecord[narratorModel.id] = { type }
-          }
-          duplicateContributors.push(tmpRecord)
-        }
-      } else {
-        if (role) {
-          roles[narratorModel.id] = { role, type }
-        } else {
-          roles[narratorModel.id] = { type }
-        }
+      const pivotData: any = { type }
+      if (role) {
+        pivotData.role = role
       }
-    }
 
-    // TODO: Investigate why .sync() is not working
-    // @ts-ignore
-    await book.related('contributors').detach(roles)
+      await book.related('contributors').attach({
+        [contributorModel.id]: pivotData,
+      })
 
-    await book.related('contributors').attach(roles)
-
-    if (duplicateContributors) {
-      for (const duplicate of duplicateContributors) {
-        //await book.related('contributors').detach(duplicate)
-        await book.related('contributors').attach(duplicate)
-      }
+      existingCombinations.add(combinationKey)
     }
   }
 
