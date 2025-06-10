@@ -12,7 +12,6 @@ import {
   addSeriesValidator,
   addTrackValidator,
 } from '#validators/crud_validator'
-import { TransactionClient } from '@adonisjs/lucid/build/src/transaction_client/index.js'
 import db from '@adonisjs/lucid/services/db'
 import { TrackType } from '../enum/track_enum.js'
 
@@ -28,7 +27,7 @@ export class BooksHelper {
   }
 
   static async addContributorToBook(
-    book: Book,
+    book: Book | Track,
     contributors?: Infer<typeof addContributorValidator>[]
   ) {
     if (!contributors || contributors.length === 0) return
@@ -229,8 +228,10 @@ export class BooksHelper {
 
     trackModels.push(
       ...(await Track.createMany(toCreateTracks, {
-        client: trx as TransactionClient,
+        client: trx,
       }))
     )
+
+    await book.related('tracks').saveMany(trackModels)
   }
 }

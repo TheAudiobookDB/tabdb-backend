@@ -143,7 +143,7 @@ export default class BooksController {
     await BooksHelper.addGenreToBook(book, payload.genres)
     await ModelHelper.addIdentifier(book, payload.identifiers, trx)
     await BooksHelper.addContributorToBook(book, payload.contributors)
-    await BooksHelper.addTrackToBook(book, payload.tracks)
+    await BooksHelper.addTracksToBook(book, payload.tracks)
     await BooksHelper.addSeriesToBook(book, payload.series)
     await BooksHelper.addPublisherToBook(book, payload.publisher)
 
