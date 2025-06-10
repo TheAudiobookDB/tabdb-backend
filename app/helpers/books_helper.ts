@@ -235,5 +235,7 @@ export class BooksHelper {
         client: trx,
       }))
     )
+
+    await trx.commit()
   }
 }
