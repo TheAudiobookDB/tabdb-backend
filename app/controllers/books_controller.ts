@@ -132,6 +132,8 @@ export default class BooksController {
     book.type = payload.type ?? 'audiobook'
     book.groupId = payload.groupId ?? null
 
+    await trx.commit()
+
     await book.save()
 
     if (payload.image) {
