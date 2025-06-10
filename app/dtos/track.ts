@@ -67,7 +67,7 @@ export class TrackBaseDto extends TrackMinimalDto {
     type: 'number',
     format: 'integer',
     description:
-      'The type of the track. This can be one of the following: 1 - Chapter, 2 - Intro, 3 - Outro, 4 - Publisher Intro, 5 - Publisher Outro.',
+      'The type of the track. This can be one of the following:\n1 - Chapter\n2 - Intro\n3 - Outro\n4 - Publisher Intro\n5 - Publisher Outro',
     example: 1,
     default: 1,
     minimum: 1,

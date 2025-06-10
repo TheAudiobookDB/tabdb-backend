@@ -29,7 +29,7 @@ export class ContributorMinimalDto extends BaseModelDto {
   @ApiPropertyOptional({
     type: 'number',
     description:
-      'The type of the contributor. The type is only available in a context connected to a book. A single contributor can therefore have multiple types and is not assigned to a single type.',
+      'The type of the contributor. The type is only available in a context connected to a book. A single contributor can therefore have multiple types and is not assigned to a single type.\n\nTypes:\nAUTHOR = 1\nNARRATOR = 2\nILLUSTRATOR = 3\nPRODUCTION = 4\nEDITOR = 5\nSCRIPTWRITER = 6\nTRANSLATOR = 7\nOTHER = 99',
     enum: ContributorType,
     example: ContributorType.NARRATOR,
     nullable: false,

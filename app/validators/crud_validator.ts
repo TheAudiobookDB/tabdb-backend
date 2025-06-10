@@ -5,6 +5,7 @@ import {
   imageValidation,
   typeValidation,
 } from '#validators/provider_validator'
+import { TrackType } from '../enum/track_enum.js'
 
 export const confirmValidation = vine.compile(
   vine.object({
@@ -36,6 +37,14 @@ export const placeholderIdentifierValidator = vine.object({
   extra: vine.string().optional(),
 })
 
+export const addTrackValidator = vine.object({
+  id: nanoIdValidation.optional().requiredIfMissing(''),
+  name: vine.string().optional(),
+  start: vine.number().positive().withoutDecimals().optional(),
+  end: vine.number().positive().withoutDecimals().optional(),
+  type: vine.enum(Object.values(TrackType)).optional(),
+})
+
 // Create
 
 export const createUpdateBookValidation = vine.compile(
@@ -59,7 +68,7 @@ export const createUpdateBookValidation = vine.compile(
     contributors: vine.array(addContributorValidator).maxLength(50).optional(),
     identifiers: vine.array(placeholderIdentifierValidator).maxLength(10).optional(),
     series: vine.array(addSeriesValidator).maxLength(10).optional(),
-    tracks: vine.array(addIdValidator).maxLength(2000).optional(),
+    tracks: vine.array(addTrackValidator).maxLength(2000).optional(),
     logId: nanoIdValidation.optional().requiredIfMissing('title'),
   })
 )
