@@ -18,9 +18,7 @@ import {
   r3Limiter,
 } from '#start/limiter'
 import { middleware } from '#start/kernel'
-import app from '@adonisjs/core/services/app'
 import openapi from '@foadonis/openapi/services/main'
-import { ApiExcludeOperation } from '@foadonis/openapi/decorators'
 
 openapi.registerRoutes()
 

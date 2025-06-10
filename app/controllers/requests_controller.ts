@@ -13,7 +13,6 @@ import { nanoid } from '#config/app'
 import app from '@adonisjs/core/services/app'
 import ImageTemp from '#models/image_temp'
 
-@ApiTags('Request')
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
 export default class RequestsController {
@@ -41,6 +40,7 @@ export default class RequestsController {
   })
   @ApiBody({ type: () => indexRequestValidator })
   @jsonHeaderApi()
+  @ApiTags('Request')
   async index({ request, response }: HttpContext) {
     const payload = await request.validateUsing(indexRequestValidator)
 
@@ -115,6 +115,7 @@ export default class RequestsController {
     required: true,
     schema: { type: 'string', default: 'multipart/form-data' },
   })
+  @ApiTags('Image')
   @ApiBody({ type: () => addImageValidation })
   async uploadImage(ctx: HttpContext) {
     const payload = await ctx.request.validateUsing(addImageValidation)

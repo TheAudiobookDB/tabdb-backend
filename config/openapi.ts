@@ -65,8 +65,8 @@ export default defineConfig({
 
 export const jsonHeaderApi = () =>
   ApiHeader({
-    name: 'Accept',
-    description: 'The response format you want to receive. Always use "application/json".',
+    name: 'Content-Type',
+    description: 'The content type of the request. Must be set to application/json.',
     required: true,
     schema: {
       type: 'string',
@@ -121,7 +121,7 @@ export const languageApiProperty = () =>
     nullable: false,
   })
 
-const headers = {
+/*const headers = {
   'x-request-id': {
     description:
       'A unique identifier for the request. If you have any issues, please provide this ID to us.',
@@ -148,7 +148,7 @@ const rateLimitHeaders = {
       example: 100,
     },
   },
-}
+}*/
 
 export const successApiResponse = (options: ApiResponseOptions) =>
   ApiResponse({

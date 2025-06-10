@@ -2,7 +2,7 @@
 
 import Book from '#models/book'
 import { HttpContext } from '@adonisjs/core/http'
-import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
+import { ApiBody, ApiOperation, ApiParam, ApiTags } from '@foadonis/openapi/decorators'
 import {
   forbiddenApiResponse,
   jsonHeaderApi,
@@ -28,6 +28,15 @@ export default class ConfirmsController {
   })
   @forbiddenApiResponse()
   @ApiBody({ type: () => createUpdateContributorValidation })
+  @ApiParam({
+    name: 'model',
+    description: 'The type of model to confirm (book, contributor, series, genre, publisher)',
+    required: true,
+    schema: {
+      type: 'string',
+      enum: ['book', 'contributor', 'series', 'genre', 'publisher', 'group'],
+    },
+  })
   async create({ request }: HttpContext) {
     const payload = await confirmValidation.validate(request.qs())
     const { model } = request.params()
