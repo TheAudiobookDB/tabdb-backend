@@ -16,9 +16,9 @@ export const confirmValidation = vine.compile(
 
 export const imageCRUDValidation = vine
   .string()
-  .regex(new RegExp('^[a-z0-9]{16}-[a-z0-9]{6}$'))
-  .minLength(21)
-  .maxLength(21)
+  .regex(new RegExp('^[a-z0-9]{16}$'))
+  .minLength(16)
+  .maxLength(16)
 
 // Add - Internal
 

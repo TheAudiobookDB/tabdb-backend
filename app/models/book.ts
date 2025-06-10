@@ -27,6 +27,7 @@ import { compose } from '@adonisjs/core/helpers'
 import { LogState } from '../enum/log_enum.js'
 import { ModelQueryBuilderContract } from '@adonisjs/lucid/types/model'
 import Image from '#models/image'
+import logger from '@adonisjs/core/services/logger'
 
 type Builder = ModelQueryBuilderContract<typeof Book>
 
@@ -139,6 +140,9 @@ export default class Book extends compose(LogExtension, ImageExtension) {
   declare updatedAt: DateTime
 
   private static buildSearchDocument(book: Book) {
+    if (!book || !book.id || !book.title) {
+      logger.warn('Book is missing, cannot build search document')
+    }
     return {
       id: book.id,
       title: book.title,
@@ -175,19 +179,26 @@ export default class Book extends compose(LogExtension, ImageExtension) {
     }
   }
 
-  private static async fetchBookWithRelations(bookId: number): Promise<Book> {
-    return (await Book.query()
-      .where('id', bookId)
-      .preload('contributors', (q) => q.pivotColumns(['role', 'type']))
-      .preload('genres')
-      .preload('series')
-      .preload('publisher')
-      .first()) as Book
+  private static async fetchBookWithRelations(book: Book): Promise<Book> {
+    const bookRelations: Book | null =
+      (await Book.query()
+        .where('id', book.id)
+        .preload('contributors', (q) => q.pivotColumns(['role', 'type']))
+        .preload('genres')
+        .preload('series')
+        .preload('publisher')
+        .first()) || book
+
+    if (!bookRelations) {
+      throw new Error(`Book with id ${book.id} not found`)
+    }
+
+    return bookRelations
   }
 
   private static async processSearchIndex(book: Book, action: 'add' | 'update'): Promise<void> {
     if (book.enabled) {
-      const fetchedBook = await this.fetchBookWithRelations(book.id)
+      const fetchedBook = await this.fetchBookWithRelations(book)
       const doc = this.buildSearchDocument(fetchedBook)
 
       if (action === 'add') {
@@ -227,7 +238,7 @@ export default class Book extends compose(LogExtension, ImageExtension) {
     book.enabled = true
     await book.saveWithLog(LogState.APPROVED)
 
-    const fetchedBook = await this.fetchBookWithRelations(book.id)
+    const fetchedBook = await this.fetchBookWithRelations(book)
 
     for (const contributor of fetchedBook.contributors) {
       if (!contributor.enabled) {

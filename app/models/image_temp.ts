@@ -12,6 +12,9 @@ export default class ImageTemp extends LogExtension {
   @column()
   declare ip: string
 
+  @column()
+  declare extension: string
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

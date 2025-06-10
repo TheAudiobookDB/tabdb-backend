@@ -14,6 +14,8 @@ export default class extends BaseSchema {
       table.integer('user_id').unsigned().references('id').inTable('users').onDelete('CASCADE')
       table.string('ip', 46)
 
+      table.string('extension', 10).notNullable()
+
       table.timestamp('created_at')
       table.timestamp('updated_at')
     })

@@ -10,8 +10,6 @@ import { LogState } from '../enum/log_enum.js'
 import { bookIndex } from '#config/meilisearch'
 import router from '@adonisjs/core/services/router'
 import env from '#start/env'
-import app from '@adonisjs/core/services/app'
-import { cuid } from '@adonisjs/core/helpers'
 import { BookDto, SearchBookDto } from '#dtos/book'
 import Image from '#models/image'
 import { ImageBaseDto } from '#dtos/image'
@@ -37,6 +35,7 @@ import { BooksHelper } from '../helpers/books_helper.js'
 import db from '@adonisjs/lucid/services/db'
 import { UserAbilities } from '../enum/user_enum.js'
 import Log from '#models/log'
+import { FileHelper } from '../helpers/file_helper.js'
 
 @ApiTags('Book')
 @validationErrorApiResponse()
@@ -133,14 +132,13 @@ export default class BooksController {
     book.type = payload.type ?? 'audiobook'
     book.groupId = payload.groupId ?? null
 
-    let image = context.request.file('image')
-    if (image) {
-      await image.move(app.makePath('storage/uploads'), {
-        name: `${cuid()}.${image.extname}`,
-      })
-    }
-
     await book.save()
+
+    if (payload.image) {
+      book.image =
+        (await FileHelper.uploadFromTemp(payload.image, 'covers', book.publicId, true)) ||
+        book.image
+    }
 
     await BooksHelper.addGenreToBook(book, payload.genres)
     await ModelHelper.addIdentifier(book, payload.identifiers, trx)

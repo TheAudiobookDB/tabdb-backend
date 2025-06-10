@@ -8,6 +8,7 @@ import { PassThrough, Readable } from 'node:stream'
 import app from '@adonisjs/core/services/app'
 import { cloudflareClient, imageTypes, nanoid } from '#config/app'
 import logger from '@adonisjs/core/services/logger'
+import ImageTemp from '#models/image_temp'
 
 const MAX_FILE_SIZE = 3 * 1024 * 1024 // 3MB
 const ALLOWED_MIME = ['jpg', 'jpeg', 'png', 'webp']
@@ -132,6 +133,36 @@ export class FileHelper {
         }
       }
     }
+  }
+
+  public static async uploadFromTemp(
+    imageId: string,
+    subDirectory: 'covers' | 'contributors' | 'users' | 'series',
+    modelId: string,
+    suffix: boolean = true
+  ): Promise<string | null> {
+    const imageTemp = await ImageTemp.query().where('publicId', imageId).first()
+
+    if (!imageTemp) return null
+
+    const fileBuffer = await FileHelper.downloadFile(
+      `${env.get('CDN_PROCESS_HOST')}/temp/${imageId}.${imageTemp.extension}?class=p`,
+      {
+        'CF-Access-Client-Id': env.get('CDN_IMAGE_CLIENT_ID'),
+        'CF-Access-Client-Secret': env.get('CDN_IMAGE_SECRET'),
+      }
+    )
+    const suffixStr = suffix ? `_${nanoid(6)}` : ''
+    await FileHelper.upload(fileBuffer, `${subDirectory}/${modelId}${suffixStr}.webp`)
+
+    const uploadPath = app.makePath('storage/uploads/temp', `${imageId}.${imageTemp.extension}`)
+    if (fs.existsSync(uploadPath)) {
+      fs.unlinkSync(uploadPath)
+    }
+
+    await imageTemp.delete()
+
+    return `${subDirectory}/${modelId}${suffixStr}.webp`
   }
 
   /**

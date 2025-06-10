@@ -8,8 +8,7 @@ import {
   tooManyRequestsApiResponse,
   validationErrorApiResponse,
 } from '#config/openapi'
-import { addImageValidation, addImageValidator } from '#validators/crud_validator'
-import { FileHelper } from '../helpers/file_helper.js'
+import { addImageValidation } from '#validators/crud_validator'
 import { nanoid } from '#config/app'
 import app from '@adonisjs/core/services/app'
 import ImageTemp from '#models/image_temp'
@@ -141,6 +140,21 @@ export default class RequestsController {
       })
     }
 
+    if (!payload.image || !payload.image.extname) {
+      return ctx.response.status(422).send({
+        message: 'Image is required',
+        errors: [
+          {
+            fieldName: 'image',
+            clientName: payload.image?.clientName || 'image',
+            message: 'Image is required',
+            provided: payload.image ? `${payload.image.type}/${payload.image.subtype}` : 'none',
+            type: 'required',
+          },
+        ],
+      })
+    }
+
     const imageId = nanoid()
 
     const uploadPath = app.makePath('storage/uploads/temp')
@@ -154,6 +168,7 @@ export default class RequestsController {
       ctx.request.header('CF-Connecting-IP') || ctx.request.header('x-real-ip') || ctx.request.ip()
     image.publicId = imageId
     image.userId = ctx.auth.user!.id
+    image.extension = payload.image.extname!
 
     await image.save()
 
