@@ -8,6 +8,7 @@ import Book from '#models/book'
 import { getIdsValidator } from '#validators/common_validator'
 import { ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
+  jsonHeaderApi,
   limitApiQuery,
   nanoIdApiPathParameter,
   nanoIdsApiQuery,
@@ -23,6 +24,7 @@ import NotFoundException from '#exceptions/not_found_exception'
 @ApiTags('Track')
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
+@jsonHeaderApi()
 export default class TracksController {
   /**
    * @get

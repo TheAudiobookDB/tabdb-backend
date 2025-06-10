@@ -12,6 +12,7 @@ import {
   createdApiResponse,
   duplicateApiResponse,
   forbiddenApiResponse,
+  jsonHeaderApi,
   limitApiQuery,
   nanoIdApiPathParameter,
   nanoIdsApiQuery,
@@ -33,6 +34,7 @@ import { createPublisherValidation } from '#validators/crud_validator'
 @ApiTags('Publisher')
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
+@jsonHeaderApi()
 export default class PublishersController {
   @ApiOperation({
     summary: 'Get a Publisher by ID',

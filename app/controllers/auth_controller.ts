@@ -7,6 +7,7 @@ import env from '#start/env'
 import { randomUUID } from 'node:crypto'
 import {
   badRequestApiResponse,
+  jsonHeaderApi,
   notFoundApiResponse,
   successApiResponse,
   tooManyRequestsApiResponse,
@@ -20,6 +21,7 @@ import { roleAbilities } from '../enum/user_enum.js'
 @ApiTags('Auth')
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
+@jsonHeaderApi()
 export default class AuthController {
   @ApiOperation({
     summary: 'Send magic link',

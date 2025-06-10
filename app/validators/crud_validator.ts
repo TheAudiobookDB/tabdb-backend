@@ -1,10 +1,6 @@
 import vine from '@vinejs/vine'
 import { languageValidation, nanoIdValidation } from '#config/app'
-import {
-  contributorTypeValidation,
-  imageValidation,
-  typeValidation,
-} from '#validators/provider_validator'
+import { contributorTypeValidation, typeValidation } from '#validators/provider_validator'
 import { TrackType } from '../enum/track_enum.js'
 
 export const confirmValidation = vine.compile(
@@ -13,6 +9,12 @@ export const confirmValidation = vine.compile(
     signature: vine.string(),
   })
 )
+
+export const imageCRUDValidation = vine
+  .string()
+  .regex(new RegExp('^[a-z0-9]{16}-[a-z0-9]{6}$'))
+  .minLength(21)
+  .maxLength(21)
 
 // Add - Internal
 
@@ -38,11 +40,13 @@ export const placeholderIdentifierValidator = vine.object({
 })
 
 export const addTrackValidator = vine.object({
-  id: nanoIdValidation.optional().requiredIfMissing(''),
-  name: vine.string().optional(),
-  start: vine.number().positive().withoutDecimals().optional(),
-  end: vine.number().positive().withoutDecimals().optional(),
-  type: vine.enum(Object.values(TrackType)).optional(),
+  id: nanoIdValidation.optional().requiredIfMissing('name'),
+  name: vine.string().optional().requiredIfMissing('id'),
+  start: vine.number().positive().withoutDecimals().optional().requiredIfMissing('end'),
+  end: vine.number().positive().withoutDecimals().optional().requiredIfMissing('start'),
+  type: vine.enum(Object.values(TrackType)).optional().requiredIfMissing('id'),
+  contributors: vine.array(addContributorValidator).maxLength(10).optional(),
+  image: imageCRUDValidation.optional(),
 })
 
 // Create
@@ -62,7 +66,7 @@ export const createUpdateBookValidation = vine.compile(
     isExplicit: vine.boolean().optional(),
     isAbridged: vine.boolean().optional(),
     groupId: vine.number().positive().withoutDecimals().optional(),
-    image: imageValidation.optional(),
+    image: imageCRUDValidation.optional(),
     type: typeValidation.optional(),
     genres: vine.array(addIdValidator).maxLength(30).optional(),
     contributors: vine.array(addContributorValidator).maxLength(50).optional(),
@@ -76,7 +80,7 @@ export const createUpdateBookValidation = vine.compile(
 export const createUpdateContributorValidation = vine.compile(
   vine.object({
     name: vine.string().minLength(3).maxLength(255),
-    image: imageValidation.optional(),
+    image: imageCRUDValidation.optional(),
     identifiers: vine.array(placeholderIdentifierValidator).maxLength(10).optional(),
     country: vine.string().maxLength(2).optional(),
     description: vine.string().maxLength(10000).optional(),
@@ -103,7 +107,7 @@ export const createPublisherValidation = vine.compile(
 export const createSeriesValidation = vine.compile(
   vine.object({
     name: vine.string().minLength(2).maxLength(255),
-    image: imageValidation.optional(),
+    image: imageCRUDValidation.optional(),
     description: vine.string().maxLength(10000).optional(),
     identifiers: vine.array(placeholderIdentifierValidator).maxLength(10).optional(),
   })

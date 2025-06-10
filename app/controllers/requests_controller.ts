@@ -3,6 +3,7 @@ import { indexRequestValidator } from '#validators/request_validator'
 import { Audible } from '../provider/audible.js'
 import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
+  jsonHeaderApi,
   successApiResponse,
   tooManyRequestsApiResponse,
   validationErrorApiResponse,
@@ -11,6 +12,7 @@ import {
 @ApiTags('Request')
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
+@jsonHeaderApi()
 export default class RequestsController {
   /**
    * @index

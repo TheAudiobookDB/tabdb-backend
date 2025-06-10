@@ -9,10 +9,10 @@ import { updateUserValidator } from '#validators/user_validator'
 import { FileHelper } from '../helpers/file_helper.js'
 import { UserBaseDto, UserFullDto, UserPublicDto } from '#dtos/user'
 import { LogBaseDto } from '#dtos/log'
-import { ApiBody, ApiOperation, ApiParam, ApiQuery, ApiTags } from '@foadonis/openapi/decorators'
+import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
+  jsonHeaderApi,
   nanoIdApiPathParameter,
-  nanoIdsApiQuery,
   notFoundApiResponse,
   successApiResponse,
   tooManyRequestsApiResponse,
@@ -23,6 +23,7 @@ import {
 @ApiTags('User')
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
+@jsonHeaderApi()
 export default class UsersController {
   @ApiOperation({
     summary: 'Get the authenticated user',

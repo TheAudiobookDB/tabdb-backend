@@ -14,6 +14,7 @@ import {
 } from '#validators/crud_validator'
 import db from '@adonisjs/lucid/services/db'
 import { TrackType } from '../enum/track_enum.js'
+import { nanoid } from '#config/app'
 
 export class BooksHelper {
   static async addGenreToBook(book: Book, genres?: Infer<typeof addIdValidator>[]) {
@@ -198,19 +199,22 @@ export class BooksHelper {
       start: number
       end: number
       type: TrackType
-      bookId: number
+      book_id: number
+      public_id: string
     }> = []
 
     for (const track of tracks) {
       if (track.id) {
         existingTracks.push(track)
       } else {
+        console.log(book.id)
         toCreateTracks.push({
           name: track.name!,
           start: track.start!,
           end: track.end!,
           type: track.type! as TrackType,
-          bookId: book.id,
+          public_id: nanoid(),
+          book_id: book.id,
         })
       }
     }
@@ -231,7 +235,5 @@ export class BooksHelper {
         client: trx,
       }))
     )
-
-    await book.related('tracks').saveMany(trackModels)
   }
 }

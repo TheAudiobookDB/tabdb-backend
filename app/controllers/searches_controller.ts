@@ -26,6 +26,7 @@ import { GenreBaseDto } from '#dtos/genre'
 import Genre from '#models/genre'
 import { ApiOperation, ApiTags, ApiQuery } from '@foadonis/openapi/decorators'
 import {
+  jsonHeaderApi,
   keywordApiQuery,
   limitApiQuery,
   nameApiQuery,
@@ -46,6 +47,7 @@ import {
 @ApiTags('Search')
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
+@jsonHeaderApi()
 export default class SearchesController {
   @ApiQuery({
     name: 'title',

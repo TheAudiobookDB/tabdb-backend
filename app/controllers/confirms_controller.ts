@@ -5,6 +5,7 @@ import { HttpContext } from '@adonisjs/core/http'
 import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
   forbiddenApiResponse,
+  jsonHeaderApi,
   tooManyRequestsApiResponse,
   validationErrorApiResponse,
 } from '#config/openapi'
@@ -17,6 +18,7 @@ import Series from '#models/series'
 @ApiTags('Confirm')
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
+@jsonHeaderApi()
 export default class ConfirmsController {
   @ApiOperation({
     summary: 'Confirm item',

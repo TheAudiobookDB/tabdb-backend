@@ -12,10 +12,20 @@ index 4f177b0..54ee7c1 100644
   * Configures a response.
   * Can be applied to Controllers and Operations.
 diff --git a/node_modules/openapi-metadata/dist/index.mjs b/node_modules/openapi-metadata/dist/index.mjs
-index b46abeb..d3235be 100644
+index b46abeb..bb9b100 100644
 --- a/node_modules/openapi-metadata/dist/index.mjs
 +++ b/node_modules/openapi-metadata/dist/index.mjs
-@@ -114,7 +114,12 @@ async function loadType(context, options) {
+@@ -82,7 +82,8 @@ const ClassTypeLoader = async (context, value) => {
+   };
+   const properties = PropertyMetadataStorage.getMetadata(value.prototype);
+   if (!properties) {
+-    context.logger.warn(`You tried to use '${model}' as a type but it does not contain any ApiProperty.`);
++    context.logger.warn(`You tried to use '${model}' as a type but it does not contain any ApiProperty. (${value})`);
++    return;
+   }
+   context.schemas[model] = schema;
+   for (const [key, property] of Object.entries(properties)) {
+@@ -114,7 +115,12 @@ async function loadType(context, options) {
      return;
    }
    const thunk = isThunk(options.type);

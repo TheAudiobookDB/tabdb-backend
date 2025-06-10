@@ -6,7 +6,7 @@ import {
   ApiResponse,
   ApiParam,
   ApiResponseOptions,
-  ApiBearerAuth,
+  ApiHeader,
 } from '@foadonis/openapi/decorators'
 
 export default defineConfig({
@@ -62,6 +62,18 @@ export default defineConfig({
     ],
   },
 })
+
+export const jsonHeaderApi = () =>
+  ApiHeader({
+    name: 'Accept',
+    description: 'The response format you want to receive. Always use "application/json".',
+    required: true,
+    schema: {
+      type: 'string',
+      default: 'application/json',
+      example: 'application/json',
+    },
+  })
 
 export const commonNames = {
   updatedAt: 'The date when the resource was last updated',
