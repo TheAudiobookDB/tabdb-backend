@@ -19,6 +19,10 @@ import {
 } from '#start/limiter'
 import { middleware } from '#start/kernel'
 import openapi from '@foadonis/openapi/services/main'
+import app from '@adonisjs/core/services/app'
+import { HttpContext } from '@adonisjs/core/http'
+import path from 'node:path'
+import { stat } from 'node:fs/promises'
 
 openapi.registerRoutes()
 
@@ -33,7 +37,6 @@ const GenresController = () => import('#controllers/genres_controller')
 const TracksController = () => import('#controllers/tracks_controller')
 const PublishersController = () => import('#controllers/publishers_controller')
 const UsersController = () => import('#controllers/users_controller')
-const LogsController = () => import('#controllers/logs_controller')
 
 /**
  * Swagger
@@ -185,24 +188,43 @@ router
     match: /^(book|contributor|series|genre|publisher|group)$/,
   })
   .use(middleware.auth())
-  .use(r1Limiter)
+  .use(r1Limiter)*/
 
-router.get('/tmp/:file', async (context) => {
-  const file = context.request.param('file')
+router.get('/tmp/:file', async ({ params, response }: HttpContext) => {
+  const uploadsPath = app.makePath('storage/uploads')
 
-  if (!file) {
-    return context.response.status(400).send({
-      message: 'No file provided',
-    })
+  const filePath = path.join(uploadsPath, params.file)
+
+  if (!filePath.startsWith(uploadsPath)) {
+    return response.badRequest({ message: 'Invalid file path' })
   }
 
-  if (file.includes('..')) {
-    return context.response.status(400).send({
-      message: 'Invalid file path',
-    })
+  try {
+    await stat(filePath)
+  } catch (error) {
+    return response.notFound({ message: 'File not found' })
   }
 
-  const filePath = app.makePath('storage/uploads', file)
-  return context.response.download(filePath)
+  return response.download(filePath)
 })
-*/
+
+// TODO: Remove this endpoint in the future, use /tmp/:file instead
+router.get('/tmp/temp/:file', async ({ params, response }: HttpContext) => {
+  const uploadsPath = app.makePath('storage/uploads/temp')
+
+  const filePath = path.join(uploadsPath, params.file)
+
+  console.log('File path:', filePath)
+
+  if (!filePath.startsWith(uploadsPath)) {
+    return response.badRequest({ message: 'Invalid file path' })
+  }
+
+  try {
+    await stat(filePath)
+  } catch (error) {
+    return response.notFound({ message: 'File not found' })
+  }
+
+  return response.download(filePath)
+})
