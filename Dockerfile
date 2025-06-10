@@ -28,6 +28,7 @@ WORKDIR /app
 COPY --from=production-deps /app/node_modules /app/node_modules
 COPY --from=build /app/build /app
 RUN mkdir -p /app/storage/uploads
+RUN mkdir -p /app/storage/uploads/temp
 RUN npx patch-package
 EXPOSE 7701
 CMD ["node", "./bin/server.js"]

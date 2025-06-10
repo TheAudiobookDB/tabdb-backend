@@ -25,7 +25,7 @@ export class FileHelper {
    */
   public static async saveFile(
     file: MultipartFile | string,
-    subDirectory: 'covers' | 'contributors' | 'users' | 'series',
+    subDirectory: 'covers' | 'contributors' | 'users' | 'series' | 'temp',
     prefix: string,
     useRandomName: boolean = true,
     previousUrl?: string | null | undefined
@@ -114,7 +114,7 @@ export class FileHelper {
         await FileHelper.upload(fileBuffer, `${subDirectory}/${fileName}.webp`)
       }
 
-      return `${env.get('CDN_SERVE_HOST')}/${subDirectory}/${fileName}.webp`
+      return `${subDirectory}/${fileName}.webp`
     } catch (error) {
       throw error
     } finally {

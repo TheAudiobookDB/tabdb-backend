@@ -1,6 +1,10 @@
 import vine from '@vinejs/vine'
 import { languageValidation, nanoIdValidation } from '#config/app'
-import { contributorTypeValidation, typeValidation } from '#validators/provider_validator'
+import {
+  contributorTypeValidation,
+  imageValidation,
+  typeValidation,
+} from '#validators/provider_validator'
 import { TrackType } from '../enum/track_enum.js'
 
 export const confirmValidation = vine.compile(
@@ -48,6 +52,12 @@ export const addTrackValidator = vine.object({
   contributors: vine.array(addContributorValidator).maxLength(10).optional(),
   image: imageCRUDValidation.optional(),
 })
+
+export const addImageValidator = vine.object({
+  image: imageValidation,
+})
+
+export const addImageValidation = vine.compile(addImageValidator)
 
 // Create
 

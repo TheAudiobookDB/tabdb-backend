@@ -178,6 +178,7 @@ router
  * Request
  */
 router.post('/request', [RequestsController, 'index']).use(middleware.relaxAuth()).use(r1Limiter)
+router.post('/image', [RequestsController, 'uploadImage']).use(middleware.auth()).use(r2Limiter)
 
 /*
 router
