@@ -2,6 +2,7 @@ import { BaseModelDto } from '@adocasts.com/dto/base'
 import Identifier from '#models/identifier'
 import { ApiProperty, ApiPropertyOptional } from '@foadonis/openapi/decorators'
 import { createdAtApiProperty, updatedAtApiProperty } from '#config/openapi'
+import { IdentifierType } from '../enum/identifier_enum.js'
 
 export class IdentifierMinimalDto extends BaseModelDto {
   @ApiProperty({
@@ -16,13 +17,13 @@ export class IdentifierMinimalDto extends BaseModelDto {
     example: '1234567890',
   })
   declare value: string
-  @ApiPropertyOptional({
+  @ApiProperty({
     type: 'string',
     description: 'The type of identifier.',
-    enum: ['audible:asin', 'amazon:asin', 'isbn10', 'isbn13', 'ean'],
-    example: 'isbn10',
+    enum: Object.values(IdentifierType),
+    example: 'isbn',
   })
-  declare type: 'audible:asin' | 'amazon:asin' | 'isbn10' | 'isbn13' | 'ean'
+  declare type: IdentifierType
 
   constructor(identifier?: Identifier) {
     super()

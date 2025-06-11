@@ -30,12 +30,13 @@ import {
 } from '#config/openapi'
 import { ImageBaseDtoPaginated } from '#dtos/pagination'
 import NotFoundException from '#exceptions/not_found_exception'
-import { createUpdateBookValidation } from '#validators/crud_validator'
+import { createUpdateBookValidation, identifierOpenAPIValidator } from '#validators/crud_validator'
 import { BooksHelper } from '../helpers/books_helper.js'
 import db from '@adonisjs/lucid/services/db'
 import { UserAbilities } from '../enum/user_enum.js'
 import Log from '#models/log'
 import { FileHelper } from '../helpers/file_helper.js'
+import { IdentifierValidator } from '#validators/custom_validator'
 
 @ApiTags('Book')
 @validationErrorApiResponse()
@@ -49,11 +50,12 @@ export default class BooksController {
     operationId: 'createBook',
   })
   @forbiddenApiResponse()
-  @ApiBody({ type: () => createUpdateBookValidation })
+  @ApiBody({ type: () => identifierOpenAPIValidator })
   @successApiResponse({ type: BookDto, status: 201 })
   @createdApiResponse('BookDto', 'SearchBookDto')
   async create(context: HttpContext) {
     let payload = await context.request.validateUsing(createUpdateBookValidation)
+    payload.identifiers = IdentifierValidator.validateMany(payload.identifiers)
 
     const abilities = new UserAbilities(undefined, context.auth.user)
 
@@ -132,9 +134,9 @@ export default class BooksController {
     book.type = payload.type ?? 'audiobook'
     book.groupId = payload.groupId ?? null
 
-    await trx.commit()
-
     await book.save()
+
+    await trx.commit()
 
     if (payload.image) {
       book.image =
@@ -143,7 +145,7 @@ export default class BooksController {
     }
 
     await BooksHelper.addGenreToBook(book, payload.genres)
-    await ModelHelper.addIdentifier(book, payload.identifiers, trx)
+    await ModelHelper.addIdentifier(book, payload.identifiers)
     await BooksHelper.addContributorToBook(book, payload.contributors)
     await BooksHelper.addTracksToBook(book, payload.tracks)
     await BooksHelper.addSeriesToBook(book, payload.series)

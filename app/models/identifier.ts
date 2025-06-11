@@ -4,6 +4,7 @@ import Book from '#models/book'
 import type { ManyToMany } from '@adonisjs/lucid/types/relations'
 import { nanoid } from '#config/app'
 import { LogExtension } from '../extensions/log_extension.js'
+import { IdentifierType } from '../enum/identifier_enum.js'
 
 export default class Identifier extends LogExtension {
   @column({ isPrimary: true, serializeAs: null })
@@ -16,7 +17,7 @@ export default class Identifier extends LogExtension {
   declare value: string
 
   @column()
-  declare type: 'audible:asin' | 'amazon:asin' | 'isbn10' | 'isbn13' | 'ean'
+  declare type: IdentifierType
 
   @column()
   declare extra: string | null

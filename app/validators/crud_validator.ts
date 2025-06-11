@@ -6,6 +6,7 @@ import {
   typeValidation,
 } from '#validators/provider_validator'
 import { TrackType } from '../enum/track_enum.js'
+import { IdentifierType } from '../enum/identifier_enum.js'
 
 export const confirmValidation = vine.compile(
   vine.object({
@@ -19,6 +20,17 @@ export const imageCRUDValidation = vine
   .regex(new RegExp('^[a-z0-9]{16}$'))
   .minLength(16)
   .maxLength(16)
+
+export const allowedIdentifiers = Object.values(IdentifierType)
+
+export const placeholderIdentifierValidator = vine.object({
+  id: nanoIdValidation.optional().requiredIfAnyMissing(['type', 'value']),
+  type: vine.enum(allowedIdentifiers).optional().requiredIfMissing('value'),
+  value: vine.string().minLength(2).maxLength(255).optional().requiredIfMissing('type'),
+  extra: vine.string().optional().requiredIfMissing('type'),
+})
+
+export const identifierOpenAPIValidator = vine.compile(placeholderIdentifierValidator)
 
 // Add - Internal
 
@@ -35,12 +47,6 @@ export const addSeriesValidator = vine.object({
 
 export const addIdValidator = vine.object({
   id: nanoIdValidation,
-})
-
-export const placeholderIdentifierValidator = vine.object({
-  type: vine.enum(['isbn', 'asin', 'ean']),
-  value: vine.string().minLength(2).maxLength(255),
-  extra: vine.string().optional(),
 })
 
 export const addTrackValidator = vine.object({
