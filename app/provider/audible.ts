@@ -26,6 +26,7 @@ import { BooksHelper } from '../helpers/books_helper.js'
 import Genre from '#models/genre'
 import Publisher from '#models/publisher'
 import { TrackType } from '../enum/track_enum.js'
+import { IdentifierType } from '../enum/identifier_enum.js'
 
 export class Audible {
   static async fetchBook(identifier: string, language: string): Promise<Book> {
@@ -35,7 +36,11 @@ export class Audible {
     const payload = await audiMetaBookValidator.validate(response)
 
     let book: Book
-    const foundBooks = await ModelHelper.findByIdentifier(Book, payload.asin, 'audible:asin')
+    const foundBooks = await ModelHelper.findByIdentifier(
+      Book,
+      payload.asin,
+      IdentifierType.AudibleAsin
+    )
     if (foundBooks && foundBooks.length > 0) {
       book = foundBooks[0] as Book
       console.log('Found a book with the same ASIN, updating it')
@@ -83,7 +88,7 @@ export class Audible {
           identifiers: author.asin
             ? [
                 {
-                  type: 'audible:asin',
+                  type: IdentifierType.AudibleAsin,
                   value: author.asin,
                   extra: language,
                 },
@@ -113,6 +118,7 @@ export class Audible {
 
     await BooksHelper.addContributorToBook(
       fullBook,
+      // @ts-ignore
       contributors
         .map((contributor) => {
           const foundContributor = createdContributors.find((c) => c.name === contributor.name)
@@ -136,7 +142,7 @@ export class Audible {
           language: book.language ?? undefined,
           identifiers: [
             {
-              type: 'audible:asin',
+              type: IdentifierType.AudibleAsin,
               value: serie.asin,
               extra: language,
             },
@@ -189,7 +195,7 @@ export class Audible {
 
     await ModelHelper.addIdentifier(fullBook, [
       {
-        type: 'audible:asin',
+        type: IdentifierType.AudibleAsin,
         value: payload.asin,
         extra: language,
       },
@@ -198,7 +204,7 @@ export class Audible {
       ...(payload.isbn
         ? [
             {
-              type: 'isbn13',
+              type: IdentifierType.Isbn,
               value: payload.isbn,
             },
           ]
@@ -207,7 +213,7 @@ export class Audible {
       ...(payload.skuGroup
         ? [
             {
-              type: 'audible:sku',
+              type: IdentifierType.AudibleSku,
               value: payload.skuGroup,
             },
           ]
@@ -245,7 +251,7 @@ export class Audible {
       const foundAuthors = await ModelHelper.findByIdentifier(
         Contributor,
         payload.asin!,
-        'audible:asin'
+        IdentifierType.AudibleAsin
       )
       if (foundAuthors && foundAuthors.length > 0) {
         author = foundAuthors[0] as Contributor
@@ -277,7 +283,7 @@ export class Audible {
 
       await ModelHelper.addIdentifier(author, [
         {
-          type: 'audible:asin',
+          type: IdentifierType.AudibleAsin,
           value: payload.asin!,
         },
       ])
@@ -305,7 +311,7 @@ export class Audible {
     const books: Book[] | null = (await ModelHelper.findByIdentifier(
       Book,
       identifier,
-      'audible:asin'
+      IdentifierType.AudibleAsin
     )) as Book[] | null
 
     if (!books || books.length === 0) {
@@ -379,7 +385,7 @@ export class Audible {
     const foundSeries = (await ModelHelper.findByIdentifier(
       Series,
       payload.asin,
-      'audible:asin'
+      IdentifierType.AudibleAsin
     )) as Series[] | null
     if (foundSeries && foundSeries.length > 0) {
       series = foundSeries[0] as Series
@@ -394,7 +400,7 @@ export class Audible {
 
     await ModelHelper.addIdentifier(series, [
       {
-        type: 'audible:asin',
+        type: IdentifierType.AudibleAsin,
         value: payload.asin,
       },
     ])

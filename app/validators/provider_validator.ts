@@ -2,6 +2,7 @@ import vine from '@vinejs/vine'
 import { languageValidation, limitValidation, nanoIdValidation, pageValidation } from '#config/app'
 import { isLanguageRule } from '#start/rules/language'
 import { ContributorType } from '../enum/contributor_enum.js'
+import { placeholderIdentifierValidator } from '#validators/crud_validator'
 
 export const asinValidation = vine
   .string()
@@ -143,68 +144,6 @@ export const audiMetaSeriesValidator = vine.compile(
   })
 )
 
-export const identifierValidation = vine
-  .union([
-    vine.union.if(
-      (value) => vine.helpers.isObject(value) && 'id' in value,
-      vine.object({
-        id: nanoIdValidation,
-      })
-    ),
-    vine.union.if(
-      (value) =>
-        vine.helpers.isObject(value) &&
-        'value' in value &&
-        'type' in value &&
-        vine.helpers.isString(value.type) &&
-        (value.type.includes('asin') ||
-          value.type.includes('audible') ||
-          value.type.includes('amazon')) &&
-        value.value &&
-        !('id' in value),
-      vine.object({
-        type: vine.enum(['audible:asin', 'amazon:asin', 'audible:sku']),
-        value: asinValidation,
-        extra: vine.string().optional(),
-      })
-    ),
-    vine.union.if(
-      (value) =>
-        vine.helpers.isObject(value) &&
-        'value' in value &&
-        'type' in value &&
-        vine.helpers.isString(value.type) &&
-        value.type.includes('isbn10') &&
-        value.value &&
-        !('id' in value),
-      vine.object({
-        type: vine.enum(['isbn10']),
-        value: vine.string().regex(RegExp('^\\d{9}[\\dX]$')),
-        extra: vine.string().optional(),
-      })
-    ),
-    vine.union.if(
-      (value) =>
-        vine.helpers.isObject(value) &&
-        'value' in value &&
-        'type' in value &&
-        vine.helpers.isString(value.type) &&
-        (value.type.includes('isbn13') || value.type.includes('ean')) &&
-        value.value &&
-        !('id' in value),
-      vine.object({
-        type: vine.enum(['isbn13', 'ean']),
-        value: vine.string().regex(RegExp('^\\d{13}$')),
-        extra: vine.string().optional(),
-      })
-    ),
-  ])
-  .otherwise((_, field) => {
-    field.report('Invalid type or format', 'invalid_identifier', field)
-  })
-
-export const identifierValidator = vine.compile(identifierValidation)
-
 export const contributorValidation = vine.object({
   id: nanoIdValidation.optional().requiredIfMissing('name'),
   name: vine.string().minLength(3).maxLength(255).optional().requiredIfMissing('id'),
@@ -215,7 +154,7 @@ export const contributorValidation = vine.object({
   country: vine.string().maxLength(2).minLength(2).optional(),
   website: vine.string().url().optional(),
   type: contributorTypeValidation,
-  identifiers: vine.array(identifierValidation).maxLength(10).optional(),
+  identifiers: vine.array(placeholderIdentifierValidator).maxLength(10).optional(),
 })
 export const contributorValidator = vine.compile(contributorValidation)
 
@@ -233,7 +172,7 @@ export const seriesValidation = vine.object({
   image: imageValidation.optional(),
   position: vine.string().optional(),
   language: languageValidation.optional(),
-  identifiers: vine.array(identifierValidation).maxLength(5).optional(),
+  identifiers: vine.array(placeholderIdentifierValidator).maxLength(5).optional(),
 })
 export const seriesValidator = vine.compile(seriesValidation)
 

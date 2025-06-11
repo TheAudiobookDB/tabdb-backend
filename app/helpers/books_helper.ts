@@ -37,6 +37,7 @@ export class BooksHelper {
     const duplicateContributors: Record<number, ModelObject>[] = []
 
     if (!book.contributors) {
+      // @ts-ignore
       await book.load('contributors', (q) => q.pivotColumns(['role', 'type']))
     }
     if (book.contributors && book.contributors.length > 0) {
@@ -124,11 +125,13 @@ export class BooksHelper {
     // @ts-ignore
     await book.related('contributors').detach(roles)
 
+    // @ts-ignore
     await book.related('contributors').attach(roles)
 
     if (duplicateContributors) {
       for (const duplicate of duplicateContributors) {
         //await book.related('contributors').detach(duplicate)
+        // @ts-ignore
         await book.related('contributors').attach(duplicate)
       }
     }

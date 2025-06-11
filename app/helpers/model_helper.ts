@@ -1,11 +1,11 @@
 import Contributor from '#models/contributor'
 import Series from '#models/series'
-import { identifierValidation } from '#validators/provider_validator'
 import Identifier from '#models/identifier'
 import Book from '#models/book'
 import { Infer } from '@vinejs/vine/types'
 import { TransactionClientContract } from '@adonisjs/lucid/types/database'
 import { identifierOpenAPIValidator } from '#validators/crud_validator'
+import { IdentifierType } from '../enum/identifier_enum.js'
 
 export class ModelHelper {
   static async addIdentifier(
@@ -63,7 +63,7 @@ export class ModelHelper {
   static async findByIdentifier(
     model: typeof Book | typeof Contributor | typeof Series,
     identifier?: string,
-    type?: string,
+    type?: IdentifierType,
     identifierObj?:
       | {
           id: string
@@ -109,7 +109,7 @@ export class ModelHelper {
 
   static async findByIdentifiers(
     model: typeof Book | typeof Contributor | typeof Series,
-    identifiers: Infer<typeof identifierValidation>[]
+    identifiers: Infer<typeof identifierOpenAPIValidator>[]
   ): Promise<(Book | Contributor | Series)[] | null> {
     if (identifiers.length > 0) {
       return model
