@@ -57,7 +57,7 @@ export class Audible {
     book.copyright = book.copyright ?? payload.copyright ?? null
 
     const audibleCopyright = 'Certain parts of this item are copyrighted by Audible, Inc.'
-    if (!book.copyright || !book.copyright?.includes('audibleCopyright')) {
+    if (!book.copyright || !book.copyright?.includes(audibleCopyright)) {
       if (!book.copyright) book.copyright = audibleCopyright
       else book.copyright += `, ${audibleCopyright}`
     }
