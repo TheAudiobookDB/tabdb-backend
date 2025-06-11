@@ -13,7 +13,7 @@ import env from '#start/env'
 import { BookDto, SearchBookDto } from '#dtos/book'
 import Image from '#models/image'
 import { ImageBaseDto } from '#dtos/image'
-import { getIdsValidator } from '#validators/common_validator'
+import { getIdsValidator, identifierOpenAPIValidator } from '#validators/common_validator'
 import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
   createdApiResponse,
@@ -30,7 +30,7 @@ import {
 } from '#config/openapi'
 import { ImageBaseDtoPaginated } from '#dtos/pagination'
 import NotFoundException from '#exceptions/not_found_exception'
-import { createUpdateBookValidation, identifierOpenAPIValidator } from '#validators/crud_validator'
+import { createUpdateBookValidation } from '#validators/crud_validator'
 import { BooksHelper } from '../helpers/books_helper.js'
 import db from '@adonisjs/lucid/services/db'
 import { UserAbilities } from '../enum/user_enum.js'

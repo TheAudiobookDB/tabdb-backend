@@ -9,11 +9,12 @@ import {
   tooManyRequestsApiResponse,
   validationErrorApiResponse,
 } from '#config/openapi'
-import { confirmValidation, createUpdateContributorValidation } from '#validators/crud_validator'
+import { createUpdateContributorValidation } from '#validators/crud_validator'
 import Contributor from '#models/contributor'
 import Publisher from '#models/publisher'
 import Genre from '#models/genre'
 import Series from '#models/series'
+import { confirmValidation } from '#validators/common_validator'
 
 @ApiTags('Confirm')
 @validationErrorApiResponse()

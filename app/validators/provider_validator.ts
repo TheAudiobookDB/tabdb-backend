@@ -2,7 +2,7 @@ import vine from '@vinejs/vine'
 import { languageValidation, limitValidation, nanoIdValidation, pageValidation } from '#config/app'
 import { isLanguageRule } from '#start/rules/language'
 import { ContributorType } from '../enum/contributor_enum.js'
-import { placeholderIdentifierValidator } from '#validators/crud_validator'
+import { placeholderIdentifierValidator } from '#validators/common_validator'
 
 export const asinValidation = vine
   .string()

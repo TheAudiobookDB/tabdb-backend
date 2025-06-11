@@ -1,6 +1,6 @@
 import { IdentifierType } from '../enum/identifier_enum.js'
-import { allowedIdentifiers, identifierOpenAPIValidator } from '#validators/crud_validator'
 import { Infer } from '@vinejs/vine/types'
+import { allowedIdentifiers, identifierOpenAPIValidator } from '#validators/common_validator'
 
 export class IdentifierValidator {
   private static isValidIsbn(isbn: string): string | null {

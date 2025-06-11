@@ -1,5 +1,5 @@
 import vine from '@vinejs/vine'
-import { imageCRUDValidation } from '#validators/crud_validator'
+import { imageCRUDValidation } from '#validators/common_validator'
 
 export const updateUserValidator = vine.compile(
   vine.object({
