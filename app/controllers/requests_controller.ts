@@ -120,7 +120,8 @@ export default class RequestsController {
   async uploadImage(ctx: HttpContext) {
     const payload = await ctx.request.validateUsing(addImageValidation)
 
-    const imageLimit = 5
+    // TODO: deployment lower
+    const imageLimit = 30
     const userId = ctx.auth.user!.id
     const ip =
       ctx.request.header('CF-Connecting-IP') || ctx.request.header('x-real-ip') || ctx.request.ip()

@@ -143,26 +143,20 @@ export default class NarratorsController {
       contributor.enabled = !possibleDuplicate
 
       contributor.useTransaction(trx)
+      await trx.commit()
       await contributor.saveWithLog(
         possibleDuplicate ? LogState.PENDING_DUPLICATE : LogState.PENDING,
         payload
       )
 
-      // To only upload the image if the contributor could be created
-      console.log(payload.image)
       if (payload.image) {
-        const fileName = await FileHelper.saveFile(
-          payload.image,
-          'contributors',
-          contributor.publicId,
-          true
-        )
-        console.log(fileName)
-        if (fileName) {
-          contributor.image = fileName
-          contributor.useTransaction(trx)
-          await contributor.save()
-        }
+        contributor.image =
+          (await FileHelper.uploadFromTemp(
+            payload.image,
+            'contributors',
+            contributor.publicId,
+            true
+          )) || contributor.image
       }
 
       if (payload.identifiers) {

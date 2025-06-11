@@ -108,6 +108,17 @@ export default class UsersController {
       user.username = payload.username
     }
     if (payload.avatar) {
+      user.avatar =
+        (await FileHelper.uploadFromTemp(
+          payload.avatar,
+          'users',
+          user.publicId,
+          true,
+          user.avatar
+        )) || user.avatar
+    }
+
+    if (payload.avatar) {
       const filePath = await FileHelper.saveFile(
         payload.avatar,
         'users',

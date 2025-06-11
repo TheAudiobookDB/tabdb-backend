@@ -139,7 +139,8 @@ export class FileHelper {
     imageId: string,
     subDirectory: 'covers' | 'contributors' | 'users' | 'series',
     modelId: string,
-    suffix: boolean = true
+    suffix: boolean = true,
+    previousUrl?: string | null
   ): Promise<string | null> {
     const imageTemp = await ImageTemp.query().where('publicId', imageId).first()
 
@@ -159,6 +160,13 @@ export class FileHelper {
     if (fs.existsSync(uploadPath)) {
       fs.unlinkSync(uploadPath)
     }
+
+    if (previousUrl)
+      await FileHelper.deleteOldFile(
+        previousUrl.startsWith(env.get('CDN_SERVE_HOST'))
+          ? `${previousUrl}}`
+          : `${env.get('CDN_SERVE_HOST')}/${previousUrl}`
+      )
 
     await imageTemp.delete()
 

@@ -142,15 +142,12 @@ export default class SeriesController {
         possibleDuplicate ? LogState.PENDING_DUPLICATE : LogState.PENDING,
         payload
       )
+      await trx.commit()
 
-      // To only upload the image if the series could be created
       if (payload.image) {
-        const fileName = await FileHelper.saveFile(payload.image, 'series', series.publicId, true)
-        if (fileName) {
-          series.image = fileName
-          series.useTransaction(trx)
-          await series.save()
-        }
+        series.image =
+          (await FileHelper.uploadFromTemp(payload.image, 'series', series.publicId, true)) ||
+          series.image
       }
 
       if (payload.identifiers) {
