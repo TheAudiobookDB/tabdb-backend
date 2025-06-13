@@ -4,8 +4,8 @@ import Identifier from '#models/identifier'
 import Book from '#models/book'
 import { Infer } from '@vinejs/vine/types'
 import { TransactionClientContract } from '@adonisjs/lucid/types/database'
-import { identifierOpenAPIValidator } from '#validators/crud_validator'
 import { IdentifierType } from '../enum/identifier_enum.js'
+import { identifierOpenAPIValidator } from '#validators/common_validator'
 
 export class ModelHelper {
   static async addIdentifier(

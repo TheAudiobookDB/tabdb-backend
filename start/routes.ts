@@ -37,6 +37,7 @@ const GenresController = () => import('#controllers/genres_controller')
 const TracksController = () => import('#controllers/tracks_controller')
 const PublishersController = () => import('#controllers/publishers_controller')
 const UsersController = () => import('#controllers/users_controller')
+const ImagesController = () => import('#controllers/images_controller')
 
 /**
  * Swagger
@@ -179,7 +180,7 @@ router
  * Request
  */
 router.post('/request', [RequestsController, 'index']).use(middleware.relaxAuth()).use(r1Limiter)
-router.post('/image', [RequestsController, 'uploadImage']).use(middleware.auth()).use(r2Limiter)
+router.post('/image', [ImagesController, 'uploadImage']).use(middleware.auth()).use(r2Limiter)
 
 /*
 router
