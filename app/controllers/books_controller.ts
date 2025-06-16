@@ -50,9 +50,36 @@ export default class BooksController {
     operationId: 'createBook',
   })
   @forbiddenApiResponse()
-  @ApiBody({ type: () => identifierOpenAPIValidator })
+  @ApiBody({ type: () => createUpdateBookValidation })
   @successApiResponse({ type: BookDto, status: 201 })
-  @createdApiResponse('BookDto', 'SearchBookDto')
+  @successApiResponse({
+    status: 201,
+    description:
+      'Indicates the item was created successfully, or with a pending status if potential duplicates were found.',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          description:
+            'A summary of the outcome. Returns a success message on standard creation, or explains that the item was created in a pending state due to possible duplicates. If pending, an activation link is provided. The activation link remains valid for 7 days; after this period, the pending item will be deleted.',
+          example: 'Contributor created successfully',
+        },
+        data: { $ref: `#/components/schemas/BookDto` },
+        activationLink: {
+          type: 'string',
+          description:
+            'A URL to activate the newly created item, valid for 7 days. After this period, the item will be deleted if not activated. Items created in a pending state require activation searchable and usable. Items need to be approved afterwards by an moderator and can be deleted at any point. For books, moderator approval is mandatory before search is enabled.',
+        },
+        available: {
+          type: 'boolean',
+          description:
+            'Indicates whether the user has permission to add books. If false, the book is created in a pending state and requires moderator approval.',
+        },
+      },
+      required: ['message', 'data'],
+    },
+  })
   async create(context: HttpContext) {
     let payload = await context.request.validateUsing(createUpdateBookValidation)
     payload.identifiers = IdentifierValidator.validateMany(payload.identifiers)
@@ -188,14 +215,14 @@ export default class BooksController {
 
       return {
         message: 'Book created, but a duplicate was found.',
-        book: bookDto,
-        confirmation: url,
+        data: bookDto,
+        activationLink: url,
         available: false,
       }
     }
 
     return {
-      book: bookDto,
+      data: bookDto,
       message: 'Book created successfully.',
       available: abilities.hasAbility('item:add'),
     }

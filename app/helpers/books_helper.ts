@@ -15,13 +15,21 @@ import {
 import db from '@adonisjs/lucid/services/db'
 import { TrackType } from '../enum/track_enum.js'
 import { nanoid } from '#config/app'
+import logger from '@adonisjs/core/services/logger'
 
 export class BooksHelper {
   static async addGenreToBook(book: Book, genres?: Infer<typeof addIdValidator>[]) {
     if (!genres || genres.length === 0) return
-    const genresModel = await Genre.findManyBy('public_id', genres)
 
-    if (genres.length === 0) throw Error('No valid genres were supplied')
+    const genresModel = await Genre.query().whereIn(
+      'public_id',
+      genres.map((genre) => genre.id)
+    )
+
+    if (genresModel.length === 0) {
+      // Log a warning if no genres were found
+      logger.warn('No valid genres were supplied for book', book.id)
+    }
 
     book.$pushRelated('genres', genresModel)
     await book.related('genres').saveMany(genresModel)
