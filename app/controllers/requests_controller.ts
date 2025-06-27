@@ -3,7 +3,6 @@ import { indexRequestValidator } from '#validators/request_validator'
 import { Audible } from '../provider/audible.js'
 import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
-  jsonHeaderApi,
   successApiResponse,
   tooManyRequestsApiResponse,
   validationErrorApiResponse,
@@ -36,7 +35,6 @@ export default class RequestsController {
     status: 200,
   })
   @ApiBody({ type: () => indexRequestValidator })
-  @jsonHeaderApi()
   async index({ request, response }: HttpContext) {
     const payload = await request.validateUsing(indexRequestValidator)
 

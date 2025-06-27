@@ -11,7 +11,6 @@ import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
   createdApiResponse,
   forbiddenApiResponse,
-  jsonHeaderApi,
   limitApiQuery,
   nanoIdApiPathParameter,
   nanoIdsApiQuery,
@@ -35,7 +34,6 @@ import { createSeriesValidation } from '#validators/crud_validator'
 @ApiTags('Series')
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
-@jsonHeaderApi()
 export default class SeriesController {
   @ApiOperation({
     summary: 'Get a Series by ID',

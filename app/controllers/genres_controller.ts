@@ -12,7 +12,6 @@ import {
   createdApiResponse,
   duplicateApiResponse,
   forbiddenApiResponse,
-  jsonHeaderApi,
   limitApiQuery,
   nanoIdApiPathParameter,
   nanoIdsApiQuery,
@@ -34,7 +33,6 @@ import router from '@adonisjs/core/services/router'
 @ApiTags('Genre')
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
-@jsonHeaderApi()
 export default class GenresController {
   @ApiOperation({
     summary: 'Get an genre by ID',

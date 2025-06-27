@@ -13,12 +13,10 @@ import env from '#start/env'
 import { BookDto, SearchBookDto } from '#dtos/book'
 import Image from '#models/image'
 import { ImageBaseDto } from '#dtos/image'
-import { getIdsValidator, identifierOpenAPIValidator } from '#validators/common_validator'
+import { getIdsValidator } from '#validators/common_validator'
 import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
-  createdApiResponse,
   forbiddenApiResponse,
-  jsonHeaderApi,
   limitApiQuery,
   nanoIdApiPathParameter,
   nanoIdsApiQuery,
@@ -41,7 +39,6 @@ import { IdentifierValidator } from '#validators/custom_validator'
 @ApiTags('Book')
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
-@jsonHeaderApi()
 export default class BooksController {
   @ApiOperation({
     summary: 'Create a new Book',

@@ -19,7 +19,6 @@ import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
   createdApiResponse,
   forbiddenApiResponse,
-  jsonHeaderApi,
   limitApiQuery,
   nanoIdApiPathParameter,
   nanoIdsApiQuery,
@@ -36,7 +35,6 @@ import { createUpdateContributorValidation } from '#validators/crud_validator'
 @ApiTags('Contributor')
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
-@jsonHeaderApi()
 export default class NarratorsController {
   @ApiOperation({
     summary: 'Get a Contributor by ID',

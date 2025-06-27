@@ -11,7 +11,6 @@ import { UserBaseDto, UserFullDto, UserPublicDto } from '#dtos/user'
 import { LogBaseDto } from '#dtos/log'
 import { ApiBody, ApiOperation, ApiTags } from '@foadonis/openapi/decorators'
 import {
-  jsonHeaderApi,
   nanoIdApiPathParameter,
   notFoundApiResponse,
   successApiResponse,
@@ -23,7 +22,6 @@ import {
 @ApiTags('User')
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
-@jsonHeaderApi()
 export default class UsersController {
   @ApiOperation({
     summary: 'Get the authenticated user',

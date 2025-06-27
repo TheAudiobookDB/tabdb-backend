@@ -6,7 +6,6 @@ import {
   ApiResponse,
   ApiParam,
   ApiResponseOptions,
-  ApiHeader,
 } from '@foadonis/openapi/decorators'
 
 export default defineConfig({
@@ -62,18 +61,6 @@ export default defineConfig({
     ],
   },
 })
-
-export const jsonHeaderApi = () =>
-  ApiHeader({
-    name: 'Content-Type',
-    description: 'The content type of the request. Must be set to application/json.',
-    required: true,
-    schema: {
-      type: 'string',
-      default: 'application/json',
-      example: 'application/json',
-    },
-  })
 
 export const commonNames = {
   updatedAt: 'The date when the resource was last updated',
