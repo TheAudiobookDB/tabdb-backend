@@ -82,6 +82,8 @@ router
   .use(r2Limiter)
 router.get('/book/:id', [BooksController, 'get']).use(middleware.relaxAuth()).use(r1Limiter)
 router.post('/book', [BooksController, 'create']).use(middleware.auth()).use(r3Limiter)
+// TODO
+//router.post('/book/merge', [BooksController, 'merge']).use(middleware.auth()).use(r3Limiter)
 // router.post('/book/abs', [BooksController, 'abs']).use(middleware.auth()).use(r3Limiter)
 
 /**

@@ -11,6 +11,7 @@ import {
   addIdValidator,
   addSeriesValidator,
   addTrackValidator,
+  mergeItemsValidation,
 } from '#validators/crud_validator'
 import db from '@adonisjs/lucid/services/db'
 import { TrackType } from '../enum/track_enum.js'
@@ -248,5 +249,255 @@ export class BooksHelper {
     )
 
     await trx.commit()
+  }
+
+  static async mergeBooks(
+    book1: Book,
+    book2: Book,
+    payload: Infer<typeof mergeItemsValidation>
+  ): Promise<Book> {
+    if (!book1 || !book2) throw Error('Both books must be provided')
+
+    const keepBook1: string[] = payload.item1.keep
+    const keepBook2: string[] = payload.item2.keep
+
+    const commonFields = keepBook1.filter((field) => keepBook2.includes(field))
+    if (commonFields.length > 0) {
+      throw Error(
+        `The following fields are present in both keepBook1 and keepBook2: ${commonFields.join(
+          ', '
+        )}`
+      )
+    }
+
+    const trx = await db.transaction()
+
+    try {
+      const fieldsToKeepFromBook2 = keepBook2.filter((field) => !keepBook1.includes(field))
+
+      for (const field of fieldsToKeepFromBook2) {
+        switch (field) {
+          case 'title':
+            if (book2.title) book1.title = book2.title
+            break
+          case 'subtitle':
+            if (book2.subtitle !== undefined) book1.subtitle = book2.subtitle
+            break
+          case 'summary':
+            if (book2.summary !== undefined) book1.summary = book2.summary
+            break
+          case 'description':
+            if (book2.description !== undefined) book1.description = book2.description
+            break
+          case 'image':
+            if (book2.image !== undefined) book1.image = book2.image
+            break
+          case 'language':
+            if (book2.language !== undefined) book1.language = book2.language
+            break
+          case 'copyright':
+            if (book2.copyright !== undefined) book1.copyright = book2.copyright
+            break
+          case 'pages':
+            if (book2.pages !== undefined) book1.pages = book2.pages
+            break
+          case 'duration':
+            if (book2.duration !== undefined) book1.duration = book2.duration
+            break
+          case 'releasedAt':
+            if (book2.releasedAt !== undefined) book1.releasedAt = book2.releasedAt
+            break
+          case 'isExplicit':
+            book1.isExplicit = book2.isExplicit
+            break
+          case 'isAbridged':
+            if (book2.isAbridged !== undefined) book1.isAbridged = book2.isAbridged
+            break
+          case 'type':
+            book1.type = book2.type
+            break
+          case 'publisher':
+            if (book2.publisher_id !== undefined) book1.publisher_id = book2.publisher_id
+            break
+        }
+      }
+
+      const allFields = [
+        'title',
+        'subtitle',
+        'summary',
+        'description',
+        'image',
+        'language',
+        'copyright',
+        'pages',
+        'duration',
+        'releasedAt',
+        'isExplicit',
+        'isAbridged',
+        'type',
+        'publisher',
+      ]
+
+      for (const field of allFields) {
+        if (!keepBook1.includes(field) && !keepBook2.includes(field)) {
+          switch (field) {
+            case 'isExplicit':
+              book1.isExplicit = false
+              break
+            case 'type':
+              book1.type = 'audiobook'
+              break
+            case 'subtitle':
+              book1.subtitle = null
+              break
+            case 'summary':
+              book1.summary = null
+              break
+            case 'description':
+              book1.description = null
+              break
+            case 'image':
+              book1.image = null
+              break
+            case 'language':
+              book1.language = null
+              break
+            case 'copyright':
+              book1.copyright = null
+              break
+            case 'pages':
+              book1.pages = null
+              break
+            case 'duration':
+              book1.duration = null
+              break
+            case 'releasedAt':
+              book1.releasedAt = null
+              break
+            case 'isAbridged':
+              book1.isAbridged = null
+              break
+          }
+        }
+      }
+
+      await trx.from('tracks').where('book_id', book2.id).update({ book_id: book1.id })
+
+      await trx.from('images').where('book_id', book2.id).update({ book_id: book1.id })
+
+      const book2Contributors = await trx
+        .from('book_contributor')
+        .where('book_id', book2.id)
+        .select('contributor_id', 'role', 'type')
+
+      for (const contributor of book2Contributors) {
+        const existing = await trx
+          .from('book_contributor')
+          .where('book_id', book1.id)
+          .where('contributor_id', contributor.contributor_id)
+          .where('type', contributor.type)
+          .first()
+
+        if (!existing) {
+          await trx.table('book_contributor').insert({
+            book_id: book1.id,
+            contributor_id: contributor.contributor_id,
+            role: contributor.role,
+            type: contributor.type,
+            created_at: new Date(),
+            updated_at: new Date(),
+          })
+        }
+      }
+
+      await trx.from('book_contributor').where('book_id', book2.id).delete()
+
+      const book2Genres = await trx.from('book_genre').where('book_id', book2.id).select('genre_id')
+
+      for (const genre of book2Genres) {
+        const existing = await trx
+          .from('book_genre')
+          .where('book_id', book1.id)
+          .where('genre_id', genre.genre_id)
+          .first()
+
+        if (!existing) {
+          await trx.table('book_genre').insert({
+            book_id: book1.id,
+            genre_id: genre.genre_id,
+            created_at: new Date(),
+            updated_at: new Date(),
+          })
+        }
+      }
+
+      await trx.from('book_genre').where('book_id', book2.id).delete()
+
+      const book2Identifiers = await trx
+        .from('book_identifier')
+        .where('book_id', book2.id)
+        .select('identifier_id')
+
+      for (const identifier of book2Identifiers) {
+        const existing = await trx
+          .from('book_identifier')
+          .where('book_id', book1.id)
+          .where('identifier_id', identifier.identifier_id)
+          .first()
+
+        if (!existing) {
+          await trx.table('book_identifier').insert({
+            book_id: book1.id,
+            identifier_id: identifier.identifier_id,
+            created_at: new Date(),
+            updated_at: new Date(),
+          })
+        }
+      }
+
+      await trx.from('book_identifier').where('book_id', book2.id).delete()
+
+      const book2Series = await trx
+        .from('book_series')
+        .where('book_id', book2.id)
+        .select('series_id', 'position')
+
+      for (const series of book2Series) {
+        const existing = await trx
+          .from('book_series')
+          .where('book_id', book1.id)
+          .where('series_id', series.series_id)
+          .first()
+
+        if (!existing) {
+          await trx.table('book_series').insert({
+            book_id: book1.id,
+            series_id: series.series_id,
+            position: series.position,
+            created_at: new Date(),
+            updated_at: new Date(),
+          })
+        }
+      }
+
+      await trx.from('book_series').where('book_id', book2.id).delete()
+
+      await book1.useTransaction(trx).save()
+
+      await book2.useTransaction(trx).delete()
+
+      await trx.commit()
+
+      const mergedBook = await Book.query()
+        .where('id', book1.id)
+        .withScopes((s) => s.fullAll())
+        .firstOrFail()
+
+      return mergedBook
+    } catch (error) {
+      await trx.rollback()
+      throw error
+    }
   }
 }

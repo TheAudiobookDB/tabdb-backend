@@ -105,3 +105,18 @@ export const createSeriesValidation = vine.compile(
     identifiers: vine.array(placeholderIdentifierValidator).maxLength(10).optional(),
   })
 )
+
+// Merge
+
+export const mergeItemsValidation = vine.compile(
+  vine.object({
+    item1: vine.object({
+      id: nanoIdValidation,
+      keep: vine.array(vine.string()),
+    }),
+    item2: vine.object({
+      id: nanoIdValidation,
+      keep: vine.array(vine.string()),
+    }),
+  })
+)

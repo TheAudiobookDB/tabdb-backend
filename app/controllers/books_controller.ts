@@ -28,7 +28,7 @@ import {
 } from '#config/openapi'
 import { ImageBaseDtoPaginated } from '#dtos/pagination'
 import NotFoundException from '#exceptions/not_found_exception'
-import { createUpdateBookValidation } from '#validators/crud_validator'
+import { createUpdateBookValidation, mergeItemsValidation } from '#validators/crud_validator'
 import { BooksHelper } from '../helpers/books_helper.js'
 import db from '@adonisjs/lucid/services/db'
 import { UserAbilities } from '../enum/user_enum.js'
@@ -235,6 +235,44 @@ export default class BooksController {
       message: 'Book created successfully.',
       available: abilities.hasAbility('item:add'),
     }
+  }
+
+  @ApiOperation({
+    summary: 'Merge two Books by ID',
+    description:
+      'Merges two books into one, combining their data and relations. The first book will be the primary book which the second book will be merged into. The id will then be the id of the first book.',
+    operationId: 'mergeBooks',
+  })
+  @notFoundApiResponse()
+  @forbiddenApiResponse()
+  @ApiBody({ type: () => mergeItemsValidation })
+  @successApiResponse({ type: BookDto, status: 201 })
+  async merge({ request, auth }: HttpContext) {
+    const payload = await request.validateUsing(mergeItemsValidation)
+
+    const abilities = new UserAbilities(undefined, auth.user)
+
+    if (!abilities.hasAbility('item:merge')) {
+      //throw new ForbiddenException('You do not have permission to merge books.')
+    }
+
+    const book1: Book = await Book.query()
+      .where('public_id', payload.item1.id)
+      .withScopes((s) => s.fullAll())
+      .firstOrFail()
+
+    const book2: Book = await Book.query()
+      .where('public_id', payload.item2.id)
+      .withScopes((s) => s.fullAll())
+      .firstOrFail()
+
+    if (book1.id === book2.id) {
+      throw new NotFoundException('Cannot merge a book with itself.')
+    }
+
+    const mergedBook = await BooksHelper.mergeBooks(book1, book2, payload)
+
+    return new BookDto(mergedBook)
   }
 
   @ApiOperation({
