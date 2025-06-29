@@ -25,7 +25,7 @@ await bookIndex.updateSettings({
     'releasedAt',
   ],
   sortableAttributes: ['title', 'type', 'duration', 'pages', 'releasedAt', 'language.language'],
-  //rankingRules: ['sort', 'words', 'typo', 'proximity', 'attribute', 'exactness'],
+  rankingRules: ['words', 'typo', 'proximity', 'attribute', 'sort', 'exactness'],
 })
 
 await genreIndex.updateSettings({
