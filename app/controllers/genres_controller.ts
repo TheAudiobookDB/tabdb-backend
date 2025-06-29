@@ -29,6 +29,9 @@ import { genreIndex } from '#config/meilisearch'
 import { nanoid } from '#config/app'
 import { LogState } from '../enum/log_enum.js'
 import router from '@adonisjs/core/services/router'
+import ForbiddenException from '#exceptions/forbidden_exception'
+import { UserAbilities } from '../enum/user_enum.js'
+import { DateTime } from 'luxon'
 
 @ApiTags('Genre')
 @validationErrorApiResponse()
@@ -178,5 +181,37 @@ export default class GenresController {
 
       throw e
     }
+  }
+
+  @ApiOperation({
+    summary: 'Delete a Genre by ID',
+    description:
+      'Soft deletes a genre by setting its deletedAt timestamp. This will also remove it from search indices.',
+    operationId: 'deleteGenre',
+  })
+  @nanoIdApiPathParameter()
+  @forbiddenApiResponse()
+  @notFoundApiResponse()
+  @successApiResponse({ status: 204 })
+  async delete({ params, auth }: HttpContext) {
+    const payload = await getIdValidator.validate(params)
+
+    const abilities = new UserAbilities(undefined, auth.user)
+
+    if (!abilities.hasAbility('item:delete')) {
+      throw new ForbiddenException('You do not have permission to delete genres.')
+    }
+
+    const genre: Genre = await Genre.query()
+      .where('public_id', payload.id)
+      .whereNull('deleted_at')
+      .firstOrFail()
+
+    genre.deletedAt = DateTime.now()
+    await genre.save()
+
+    void genreIndex.deleteDocument(genre.publicId)
+
+    return { message: 'Genre deleted successfully' }
   }
 }

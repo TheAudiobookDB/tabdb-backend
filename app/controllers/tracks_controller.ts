@@ -16,9 +16,13 @@ import {
   successApiResponse,
   tooManyRequestsApiResponse,
   validationErrorApiResponse,
+  forbiddenApiResponse,
 } from '#config/openapi'
 import { TrackFullDtoPaginated } from '#dtos/pagination'
 import NotFoundException from '#exceptions/not_found_exception'
+import ForbiddenException from '#exceptions/forbidden_exception'
+import { UserAbilities } from '../enum/user_enum.js'
+import { CascadingSoftDeleteHelper } from '../helpers/cascading_soft_delete_helper.js'
 
 @ApiTags('Track')
 @validationErrorApiResponse()
@@ -103,5 +107,33 @@ export default class TracksController {
     if (!tracks || tracks.length === 0) throw new NotFoundException()
 
     return TrackMinimalDto.fromArray(tracks)
+  }
+
+  @ApiOperation({
+    summary: 'Delete a Track by ID',
+    description: 'Soft deletes a track by setting its deletedAt timestamp.',
+    operationId: 'deleteTrack',
+  })
+  @nanoIdApiPathParameter()
+  @forbiddenApiResponse()
+  @notFoundApiResponse()
+  @successApiResponse({ status: 204 })
+  async delete({ params, auth }: HttpContext) {
+    const payload = await getIdValidator.validate(params)
+
+    const abilities = new UserAbilities(undefined, auth.user)
+
+    if (!abilities.hasAbility('item:delete')) {
+      throw new ForbiddenException('You do not have permission to delete tracks.')
+    }
+
+    const track: Track = await Track.query()
+      .where('public_id', payload.id)
+      .whereNull('deleted_at')
+      .firstOrFail()
+
+    await CascadingSoftDeleteHelper.deleteTrack(track)
+
+    return { message: 'Track and related entities deleted successfully' }
   }
 }

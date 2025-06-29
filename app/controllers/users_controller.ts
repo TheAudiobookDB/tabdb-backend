@@ -17,7 +17,11 @@ import {
   tooManyRequestsApiResponse,
   unauthorizedApiResponse,
   validationErrorApiResponse,
+  forbiddenApiResponse,
 } from '#config/openapi'
+import ForbiddenException from '#exceptions/forbidden_exception'
+import { UserAbilities } from '../enum/user_enum.js'
+import { CascadingSoftDeleteHelper } from '../helpers/cascading_soft_delete_helper.js'
 
 @ApiTags('User')
 @validationErrorApiResponse()
@@ -136,5 +140,36 @@ export default class UsersController {
     await user.save()
 
     return new UserFullDto(user)
+  }
+
+  @ApiOperation({
+    summary: 'Delete a User by ID',
+    description:
+      'Soft deletes a user by setting its deletedAt timestamp. Only admins can delete users.',
+    operationId: 'deleteUser',
+  })
+  @nanoIdApiPathParameter()
+  @forbiddenApiResponse()
+  @notFoundApiResponse()
+  @successApiResponse({ status: 204 })
+  async delete({ params, auth }: HttpContext) {
+    const payload = await getIdValidator.validate(params)
+
+    const abilities = new UserAbilities(undefined, auth.user)
+
+    if (!abilities.hasAbility('user:delete')) {
+      throw new ForbiddenException('You do not have permission to delete users.')
+    }
+
+    const user: User = await User.query()
+      .where('public_id', payload.id)
+      .whereNull('deleted_at')
+      .firstOrFail()
+
+    // Use cascading soft delete to also delete user logs if needed
+    const deleteContributions = auth.user?.currentAccessToken?.abilities?.includes('admin') || false
+    await CascadingSoftDeleteHelper.deleteUser(user, deleteContributions)
+
+    return { message: 'User deleted successfully' }
   }
 }

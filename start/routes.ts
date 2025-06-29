@@ -38,6 +38,7 @@ const TracksController = () => import('#controllers/tracks_controller')
 const PublishersController = () => import('#controllers/publishers_controller')
 const UsersController = () => import('#controllers/users_controller')
 const ImagesController = () => import('#controllers/images_controller')
+const AdminController = () => import('#controllers/admin_controller')
 
 /**
  * Swagger
@@ -67,6 +68,7 @@ router
   .use(r1Limiter)
 
 router.patch('/user', [UsersController, 'update']).use(middleware.auth()).use(r1Limiter)
+router.delete('/user/:id', [UsersController, 'delete']).use(middleware.auth()).use(r1Limiter)
 
 /**
  * Book
@@ -85,6 +87,7 @@ router.post('/book', [BooksController, 'create']).use(middleware.auth()).use(r3L
 // TODO
 //router.post('/book/merge', [BooksController, 'merge']).use(middleware.auth()).use(r3Limiter)
 // router.post('/book/abs', [BooksController, 'abs']).use(middleware.auth()).use(r3Limiter)
+router.delete('/book/:id', [BooksController, 'delete']).use(middleware.auth()).use(r3Limiter)
 
 /**
  * Contributor
@@ -105,6 +108,10 @@ router
   .post('/contributor', [ContributorsController, 'create'])
   .use(middleware.auth())
   .use(r3Limiter)
+router
+  .delete('/contributor/:id', [ContributorsController, 'delete'])
+  .use(middleware.auth())
+  .use(r3Limiter)
 
 /**
  * Series
@@ -116,6 +123,7 @@ router
   .use(middleware.relaxAuth())
   .use(r2Limiter)
 router.post('/series', [SeriesController, 'create']).use(middleware.auth()).use(r3Limiter)
+router.delete('/series/:id', [SeriesController, 'delete']).use(middleware.auth()).use(r3Limiter)
 
 /**
  * Genre
@@ -127,11 +135,13 @@ router
   .use(middleware.relaxAuth())
   .use(r2Limiter)
 router.post('/genre', [GenresController, 'create']).use(middleware.auth()).use(r3Limiter)
+router.delete('/genre/:id', [GenresController, 'delete']).use(middleware.auth()).use(r3Limiter)
 
 /**
  * Tracks
  */
 router.get('/track/:id', [TracksController, 'get']).use(middleware.relaxAuth()).use(r1Limiter)
+router.delete('/track/:id', [TracksController, 'delete']).use(middleware.auth()).use(r3Limiter)
 
 /**
  * Publisher
@@ -145,6 +155,10 @@ router
   .use(middleware.relaxAuth())
   .use(r2Limiter)
 router.post('/publisher', [PublishersController, 'create']).use(middleware.auth()).use(r3Limiter)
+router
+  .delete('/publisher/:id', [PublishersController, 'delete'])
+  .use(middleware.auth())
+  .use(r3Limiter)
 
 /**
  * Search
@@ -183,15 +197,23 @@ router
  */
 router.post('/request', [RequestsController, 'index']).use(middleware.relaxAuth()).use(r1Limiter)
 router.post('/image', [ImagesController, 'uploadImage']).use(middleware.auth()).use(r2Limiter)
+router.delete('/image/:id', [ImagesController, 'delete']).use(middleware.auth()).use(r2Limiter)
 
-/*
+/**
+ * Admin
+ */
 router
-  .get('/:model/:id/edit-history', [LogsController, 'getEditHistory'])
-  .where('model', {
-    match: /^(book|contributor|series|genre|publisher|group)$/,
-  })
+  .post('/admin/cleanup/orphaned-images', [AdminController, 'cleanupOrphanedImages'])
   .use(middleware.auth())
-  .use(r1Limiter)*/
+  .use(r2Limiter)
+router
+  .post('/admin/cleanup/unused-entities', [AdminController, 'cleanupUnusedEntities'])
+  .use(middleware.auth())
+  .use(r2Limiter)
+router
+  .post('/admin/restore/book/:id', [AdminController, 'restoreBook'])
+  .use(middleware.auth())
+  .use(r2Limiter)
 
 router.get('/tmp/:file', async ({ params, response }: HttpContext) => {
   const uploadsPath = app.makePath('storage/uploads')

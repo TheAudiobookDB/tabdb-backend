@@ -53,6 +53,9 @@ export default class Contributor extends compose(LogExtension, ImageExtension) {
   @column({ serializeAs: null })
   declare enabled: boolean
 
+  @column.dateTime({ serializeAs: null })
+  declare deletedAt: DateTime | null
+
   @manyToMany(() => Book, {
     pivotColumns: ['type', 'role'],
   })

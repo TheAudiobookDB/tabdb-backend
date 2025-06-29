@@ -45,6 +45,9 @@ export default class Track extends LogExtension {
   })
   declare contributors: ManyToMany<typeof Contributor>
 
+  @column.dateTime({ serializeAs: null })
+  declare deletedAt: DateTime | null
+
   @hasMany(() => Image, {
     foreignKey: 'trackId',
   })

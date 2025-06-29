@@ -61,6 +61,9 @@ export default class User extends compose(BaseModel, AuthFinder) {
   @hasMany(() => Log)
   declare logs: HasMany<typeof Log>
 
+  @column.dateTime({ serializeAs: null })
+  declare deletedAt: DateTime | null
+
   @column.dateTime({ autoCreate: true })
   declare createdAt: DateTime
 

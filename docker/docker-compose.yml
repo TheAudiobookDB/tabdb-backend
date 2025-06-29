@@ -5,7 +5,7 @@ services:
       dockerfile: ../Dockerfile
 
     ports:
-      - "3333:3333"
+      - '3333:3333'
 
     # Maybe needed later
     # volumes:
@@ -50,7 +50,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U adonis"]
+      test: ['CMD-SHELL', 'pg_isready -U adonis']
       interval: 60s
       timeout: 5s
       retries: 5
@@ -63,7 +63,7 @@ services:
     volumes:
       - cache:/data
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -h localhost -a dor2hv*dj1dga ping"]
+      test: ['CMD-SHELL', 'redis-cli -h localhost -a dor2hv*dj1dga ping']
       interval: 60s
       timeout: 5s
       retries: 5

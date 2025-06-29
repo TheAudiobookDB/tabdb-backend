@@ -35,6 +35,8 @@ import { UserAbilities } from '../enum/user_enum.js'
 import Log from '#models/log'
 import { FileHelper } from '../helpers/file_helper.js'
 import { IdentifierValidator } from '#validators/custom_validator'
+import ForbiddenException from '#exceptions/forbidden_exception'
+import { CascadingSoftDeleteHelper } from '../helpers/cascading_soft_delete_helper.js'
 
 @ApiTags('Book')
 @validationErrorApiResponse()
@@ -341,5 +343,36 @@ export default class BooksController {
     if (!images || images.length === 0) throw new NotFoundException()
 
     return ImageBaseDto.fromPaginator(images)
+  }
+
+  @ApiOperation({
+    summary: 'Delete a Book by ID',
+    description:
+      'Soft deletes a book by setting its deletedAt timestamp. This will also remove it from search indices.',
+    operationId: 'deleteBook',
+  })
+  @nanoIdApiPathParameter()
+  @forbiddenApiResponse()
+  @notFoundApiResponse()
+  @successApiResponse({ status: 204 })
+  async delete({ params, auth }: HttpContext) {
+    await getBookValidator.validate(params)
+
+    const abilities = new UserAbilities(undefined, auth.user)
+
+    if (!abilities.hasAbility('item:delete')) {
+      throw new ForbiddenException('You do not have permission to delete books.')
+    }
+
+    const book: Book = await Book.query()
+      .where('public_id', params.id)
+      .whereNull('deleted_at')
+      .firstOrFail()
+
+    await CascadingSoftDeleteHelper.deleteBook(book)
+
+    void bookIndex.deleteDocument(book.id)
+
+    return { message: 'Book and related entities deleted successfully' }
   }
 }

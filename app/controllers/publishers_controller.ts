@@ -29,6 +29,9 @@ import { nanoid } from '#config/app'
 import { LogState } from '../enum/log_enum.js'
 import router from '@adonisjs/core/services/router'
 import { createPublisherValidation } from '#validators/crud_validator'
+import ForbiddenException from '#exceptions/forbidden_exception'
+import { UserAbilities } from '../enum/user_enum.js'
+import { DateTime } from 'luxon'
 
 @ApiTags('Publisher')
 @validationErrorApiResponse()
@@ -176,5 +179,37 @@ export default class PublishersController {
 
       throw e
     }
+  }
+
+  @ApiOperation({
+    summary: 'Delete a Publisher by ID',
+    description:
+      'Soft deletes a publisher by setting its deletedAt timestamp. This will also remove it from search indices.',
+    operationId: 'deletePublisher',
+  })
+  @nanoIdApiPathParameter()
+  @forbiddenApiResponse()
+  @notFoundApiResponse()
+  @successApiResponse({ status: 204 })
+  async delete({ params, auth }: HttpContext) {
+    const payload = await getIdValidator.validate(params)
+
+    const abilities = new UserAbilities(undefined, auth.user)
+
+    if (!abilities.hasAbility('item:delete')) {
+      throw new ForbiddenException('You do not have permission to delete publishers.')
+    }
+
+    const publisher: Publisher = await Publisher.query()
+      .where('public_id', payload.id)
+      .whereNull('deleted_at')
+      .firstOrFail()
+
+    publisher.deletedAt = DateTime.now()
+    await publisher.save()
+
+    void publisherIndex.deleteDocument(publisher.id)
+
+    return { message: 'Publisher deleted successfully' }
   }
 }

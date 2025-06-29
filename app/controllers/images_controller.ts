@@ -5,12 +5,20 @@ import {
   successApiResponse,
   tooManyRequestsApiResponse,
   validationErrorApiResponse,
+  nanoIdApiPathParameter,
+  forbiddenApiResponse,
+  notFoundApiResponse,
 } from '#config/openapi'
 import { HttpContext } from '@adonisjs/core/http'
 import { addImageValidation } from '#validators/crud_validator'
 import ImageTemp from '#models/image_temp'
 import { nanoid } from '#config/app'
 import app from '@adonisjs/core/services/app'
+import { getIdValidator } from '#validators/provider_validator'
+import ForbiddenException from '#exceptions/forbidden_exception'
+import { UserAbilities } from '../enum/user_enum.js'
+import { DateTime } from 'luxon'
+import Image from '#models/image'
 
 @validationErrorApiResponse()
 @tooManyRequestsApiResponse()
@@ -106,5 +114,34 @@ export default class ImagesController {
       id: imageId,
       message: 'Image uploaded successfully',
     }
+  }
+
+  @ApiOperation({
+    summary: 'Delete an Image by ID',
+    description: 'Soft deletes an image by setting its deletedAt timestamp.',
+    operationId: 'deleteImage',
+  })
+  @nanoIdApiPathParameter()
+  @forbiddenApiResponse()
+  @notFoundApiResponse()
+  @successApiResponse({ status: 204 })
+  async delete({ params, auth }: HttpContext) {
+    const payload = await getIdValidator.validate(params)
+
+    const abilities = new UserAbilities(undefined, auth.user)
+
+    if (!abilities.hasAbility('item:delete')) {
+      throw new ForbiddenException('You do not have permission to delete images.')
+    }
+
+    const image: Image = await Image.query()
+      .where('public_id', payload.id)
+      .whereNull('deleted_at')
+      .firstOrFail()
+
+    image.deletedAt = DateTime.now()
+    await image.save()
+
+    return { message: 'Image deleted successfully' }
   }
 }

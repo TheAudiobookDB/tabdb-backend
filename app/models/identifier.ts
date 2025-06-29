@@ -22,6 +22,9 @@ export default class Identifier extends LogExtension {
   @column()
   declare extra: string | null
 
+  @column.dateTime({ serializeAs: null })
+  declare deletedAt: DateTime | null
+
   @manyToMany(() => Book)
   declare books: ManyToMany<typeof Book>
 

@@ -31,6 +31,8 @@ import {
 import { BookDtoPaginated } from '#dtos/pagination'
 import NotFoundException from '#exceptions/not_found_exception'
 import { createUpdateContributorValidation } from '#validators/crud_validator'
+import ForbiddenException from '#exceptions/forbidden_exception'
+import { UserAbilities } from '../enum/user_enum.js'
 
 @ApiTags('Contributor')
 @validationErrorApiResponse()
@@ -187,5 +189,37 @@ export default class NarratorsController {
 
       throw e
     }
+  }
+
+  @ApiOperation({
+    summary: 'Delete a Contributor by ID',
+    description:
+      'Soft deletes a contributor by setting its deletedAt timestamp. This will also remove it from search indices.',
+    operationId: 'deleteContributor',
+  })
+  @nanoIdApiPathParameter()
+  @forbiddenApiResponse()
+  @notFoundApiResponse()
+  @successApiResponse({ status: 204 })
+  async delete({ params, auth }: HttpContext) {
+    const payload = await getIdValidator.validate(params)
+
+    const abilities = new UserAbilities(undefined, auth.user)
+
+    if (!abilities.hasAbility('item:delete')) {
+      throw new ForbiddenException('You do not have permission to delete contributors.')
+    }
+
+    const contributor: Contributor = await Contributor.query()
+      .where('public_id', payload.id)
+      .whereNull('deleted_at')
+      .firstOrFail()
+
+    contributor.deletedAt = DateTime.now()
+    await contributor.save()
+
+    void contributorIndex.deleteDocument(contributor.id)
+
+    return { message: 'Contributor deleted successfully' }
   }
 }

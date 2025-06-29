@@ -24,6 +24,9 @@ export default class Genre extends LogExtension {
   @column({ serializeAs: null })
   declare enabled: boolean
 
+  @column.dateTime({ serializeAs: null })
+  declare deletedAt: DateTime | null
+
   @manyToMany(() => Book)
   declare books: ManyToMany<typeof Book>
 

@@ -42,6 +42,9 @@ export default class Series extends compose(LogExtension, ImageExtension) {
   @column({ serializeAs: null })
   declare enabled: boolean
 
+  @column.dateTime({ serializeAs: null })
+  declare deletedAt: DateTime | null
+
   @column()
   declare language: string | null
 

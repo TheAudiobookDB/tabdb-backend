@@ -20,6 +20,9 @@ export default class Image extends compose(LogExtension, ImageExtension) {
   @column()
   declare trackId: number | null
 
+  @column.dateTime({ serializeAs: null })
+  declare deletedAt: DateTime | null
+
   @belongsTo(() => Book)
   declare book: BelongsTo<typeof Book>
 

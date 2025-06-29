@@ -15,6 +15,9 @@ export default class BookGroup extends LogExtension {
   @column()
   declare name: string
 
+  @column.dateTime({ serializeAs: null })
+  declare deletedAt: DateTime | null
+
   @hasMany(() => Book)
   declare books: HasMany<typeof Book>
 

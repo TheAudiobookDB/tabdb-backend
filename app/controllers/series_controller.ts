@@ -30,6 +30,9 @@ import { FileHelper } from '../helpers/file_helper.js'
 import { ModelHelper } from '../helpers/model_helper.js'
 import router from '@adonisjs/core/services/router'
 import { createSeriesValidation } from '#validators/crud_validator'
+import ForbiddenException from '#exceptions/forbidden_exception'
+import { UserAbilities } from '../enum/user_enum.js'
+import { DateTime } from 'luxon'
 
 @ApiTags('Series')
 @validationErrorApiResponse()
@@ -178,5 +181,37 @@ export default class SeriesController {
 
       throw e
     }
+  }
+
+  @ApiOperation({
+    summary: 'Delete a Series by ID',
+    description:
+      'Soft deletes a series by setting its deletedAt timestamp. This will also remove it from search indices.',
+    operationId: 'deleteSeries',
+  })
+  @nanoIdApiPathParameter()
+  @forbiddenApiResponse()
+  @notFoundApiResponse()
+  @successApiResponse({ status: 204 })
+  async delete({ params, auth }: HttpContext) {
+    const payload = await getIdValidator.validate(params)
+
+    const abilities = new UserAbilities(undefined, auth.user)
+
+    if (!abilities.hasAbility('item:delete')) {
+      throw new ForbiddenException('You do not have permission to delete series.')
+    }
+
+    const series: Series = await Series.query()
+      .where('public_id', payload.id)
+      .whereNull('deleted_at')
+      .firstOrFail()
+
+    series.deletedAt = DateTime.now()
+    await series.save()
+
+    void seriesIndex.deleteDocument(series.id)
+
+    return { message: 'Series deleted successfully' }
   }
 }
