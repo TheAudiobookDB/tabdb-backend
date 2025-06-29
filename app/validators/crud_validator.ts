@@ -59,6 +59,7 @@ export const createUpdateBookValidation = vine.compile(
     isAbridged: vine.boolean().optional(),
     groupId: vine.number().positive().withoutDecimals().optional(),
     image: imageCRUDValidation.optional(),
+    images: vine.array(imageCRUDValidation).optional(),
     type: typeValidation.optional(),
     genres: vine.array(addIdValidator).maxLength(30).optional(),
     contributors: vine.array(addContributorValidator).maxLength(50).optional(),

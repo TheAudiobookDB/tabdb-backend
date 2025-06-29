@@ -168,6 +168,18 @@ export default class BooksController {
         book.image
     }
 
+    if (payload.images) {
+      for (const image of payload.images) {
+        const uploadedImage = await FileHelper.uploadFromTemp(image, 'covers', book.publicId, true)
+        if (uploadedImage) {
+          const imageModel: Image = new Image()
+          imageModel.bookId = book.id
+          imageModel.image = uploadedImage
+          await book.related('images').save(imageModel)
+        }
+      }
+    }
+
     await BooksHelper.addGenreToBook(book, payload.genres)
     await ModelHelper.addIdentifier(book, payload.identifiers)
     await BooksHelper.addContributorToBook(book, payload.contributors)
