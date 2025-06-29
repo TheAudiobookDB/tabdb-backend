@@ -22,10 +22,12 @@ export class BooksHelper {
   static async addGenreToBook(book: Book, genres?: Infer<typeof addIdValidator>[]) {
     if (!genres || genres.length === 0) return
 
-    const genresModel = await Genre.query().whereIn(
-      'public_id',
-      genres.map((genre) => genre.id)
-    )
+    const genresModel = await Genre.query()
+      .whereIn(
+        'public_id',
+        genres.map((genre) => genre.id)
+      )
+      .whereNull('deleted_at')
 
     if (genresModel.length === 0) {
       // Log a warning if no genres were found
@@ -86,10 +88,12 @@ export class BooksHelper {
       }
     }
 
-    const narratorModels = await Contributor.query().whereIn(
-      'public_id',
-      contributors.map((contributor) => contributor.id)
-    )
+    const narratorModels = await Contributor.query()
+      .whereIn(
+        'public_id',
+        contributors.map((contributor) => contributor.id)
+      )
+      .whereNull('deleted_at')
 
     if (narratorModels.length === 0) throw Error('No valid contributors were supplied')
 
@@ -151,10 +155,12 @@ export class BooksHelper {
 
     const positions: Record<string, ModelObject> = {}
 
-    const seriesModels = await Series.query().whereIn(
-      'public_id',
-      payloadObject.map((serie) => serie.id)
-    )
+    const seriesModels = await Series.query()
+      .whereIn(
+        'public_id',
+        payloadObject.map((serie) => serie.id)
+      )
+      .whereNull('deleted_at')
 
     if (seriesModels.length === 0) throw Error('No valid series were supplied')
 
@@ -196,7 +202,10 @@ export class BooksHelper {
   static async addPublisherToBook(book: Book, publisher?: Infer<typeof addIdValidator>) {
     if (!publisher) return
 
-    const publisherModel = await Publisher.findByOrFail('public_id', publisher.id)
+    const publisherModel = await Publisher.query()
+      .where('public_id', publisher.id)
+      .whereNull('deleted_at')
+      .firstOrFail()
 
     book.$setRelated('publisher', publisherModel)
     await book.related('publisher').associate(publisherModel)
@@ -231,10 +240,12 @@ export class BooksHelper {
       }
     }
 
-    const trackModels = await Track.query().whereIn(
-      'public_id',
-      existingTracks.map((track) => track.id as string)
-    )
+    const trackModels = await Track.query()
+      .whereIn(
+        'public_id',
+        existingTracks.map((track) => track.id as string)
+      )
+      .whereNull('deleted_at')
 
     if (!trackModels || trackModels.length !== existingTracks.length) {
       throw Error('At least one of the provided tracks does not exist')

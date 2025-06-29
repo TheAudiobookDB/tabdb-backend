@@ -45,7 +45,10 @@ export default class ConfirmsController {
     }
 
     if (model === 'book') {
-      const book = await Book.query().where('publicId', payload.id).firstOrFail()
+      const book = await Book.query()
+        .where('publicId', payload.id)
+        .whereNull('deleted_at')
+        .firstOrFail()
       if (book.enabled) {
         return { message: 'Book already enabled' }
       }
@@ -55,7 +58,10 @@ export default class ConfirmsController {
     }
 
     if (model === 'contributor') {
-      const contributor = await Contributor.query().where('publicId', payload.id).firstOrFail()
+      const contributor = await Contributor.query()
+        .where('publicId', payload.id)
+        .whereNull('deleted_at')
+        .firstOrFail()
       if (contributor.enabled) {
         return { message: 'Contributor already enabled' }
       }
@@ -66,7 +72,10 @@ export default class ConfirmsController {
     }
 
     if (model === 'series') {
-      const series = await Series.query().where('publicId', payload.id).firstOrFail()
+      const series = await Series.query()
+        .where('publicId', payload.id)
+        .whereNull('deleted_at')
+        .firstOrFail()
       if (series.enabled) {
         return { message: 'Series already enabled' }
       }
@@ -77,7 +86,10 @@ export default class ConfirmsController {
     }
 
     if (model === 'genre') {
-      const genre = await Genre.query().where('publicId', payload.id).firstOrFail()
+      const genre = await Genre.query()
+        .where('publicId', payload.id)
+        .whereNull('deleted_at')
+        .firstOrFail()
       if (genre.enabled) {
         return { message: 'Genre already enabled' }
       }
@@ -88,7 +100,10 @@ export default class ConfirmsController {
     }
 
     if (model === 'publisher') {
-      const publisher = await Publisher.query().where('publicId', payload.id).firstOrFail()
+      const publisher = await Publisher.query()
+        .where('publicId', payload.id)
+        .whereNull('deleted_at')
+        .firstOrFail()
       if (publisher.enabled) {
         return { message: 'Publisher already enabled' }
       }

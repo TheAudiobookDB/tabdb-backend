@@ -45,7 +45,7 @@ export default class AuthController {
 
     const { email, username } = request.all()
 
-    const user = await User.findBy('email', email)
+    const user = await User.query().where('email', email).whereNull('deleted_at').first()
     if (!user && !username) {
       return response.notFound({
         message: 'You must provide a username to create a new user',
@@ -100,10 +100,13 @@ export default class AuthController {
       const email = request.param('email')
       const { uuid, username } = request.qs()
 
-      let user = await User.findBy('email', email)
+      let user = await User.query().where('email', email).whereNull('deleted_at').first()
 
       if (username) {
-        let existingUser = await User.findBy('username', username)
+        let existingUser = await User.query()
+          .where('username', username)
+          .whereNull('deleted_at')
+          .first()
         if (existingUser && email !== existingUser.email) {
           return response.badRequest({
             message: 'Username is already taken',
@@ -223,7 +226,7 @@ export default class AuthController {
     await usernameValidator.validate(request.params())
     const username = request.param('username')
 
-    const user = await User.findBy('username', username)
+    const user = await User.query().where('username', username).whereNull('deleted_at').first()
     if (user) {
       return response.badRequest({
         message: 'Username is already taken',

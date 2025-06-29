@@ -260,11 +260,13 @@ export default class BooksController {
 
     const book1: Book = await Book.query()
       .where('public_id', payload.item1.id)
+      .whereNull('deleted_at')
       .withScopes((s) => s.fullAll())
       .firstOrFail()
 
     const book2: Book = await Book.query()
       .where('public_id', payload.item2.id)
+      .whereNull('deleted_at')
       .withScopes((s) => s.fullAll())
       .firstOrFail()
 
@@ -291,6 +293,7 @@ export default class BooksController {
 
     const book: Book = await Book.query()
       .where('public_id', params.id)
+      .whereNull('deleted_at')
       .withScopes((s) => s.fullAll())
       .firstOrFail()
 
@@ -311,6 +314,7 @@ export default class BooksController {
 
     const books: Book[] = await Book.query()
       .whereIn('public_id', payload.ids)
+      .whereNull('deleted_at')
       .withScopes((s) => s.minimalAll())
 
     books.forEach((book) => {
@@ -337,7 +341,8 @@ export default class BooksController {
     const payload = await getIdPaginationValidator.validate(params)
 
     const images = await Image.query()
-      .preload('book', (q) => q.where('public_id', payload.id))
+      .preload('book', (q) => q.where('public_id', payload.id).whereNull('deleted_at'))
+      .whereNull('deleted_at')
       .paginate(payload.page ?? 1, payload.limit ?? 10)
 
     if (!images || images.length === 0) throw new NotFoundException()

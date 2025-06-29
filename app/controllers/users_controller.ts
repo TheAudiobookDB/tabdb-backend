@@ -48,7 +48,9 @@ export default class UsersController {
   @successApiResponse({ type: UserPublicDto, status: 200 })
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
-    return new UserPublicDto(await User.query().where('publicId', payload.id).firstOrFail())
+    return new UserPublicDto(
+      await User.query().where('publicId', payload.id).whereNull('deleted_at').firstOrFail()
+    )
   }
 
   @ApiOperation({
@@ -70,7 +72,10 @@ export default class UsersController {
     const abilities = authUser.currentAccessToken.abilities
     const privileged = abilities.includes('role:moderator') || abilities.includes('role:admin')
 
-    const fetchUser = await User.query().where('publicId', payload.id).firstOrFail()
+    const fetchUser = await User.query()
+      .where('publicId', payload.id)
+      .whereNull('deleted_at')
+      .firstOrFail()
 
     return LogBaseDto.fromPaginator(
       await Log.query()

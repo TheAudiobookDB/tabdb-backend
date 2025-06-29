@@ -46,7 +46,9 @@ export default class GenresController {
   @successApiResponse({ type: GenreFullDto, status: 200 })
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
-    return new GenreFullDto(await Genre.query().where('publicId', payload.id).firstOrFail())
+    return new GenreFullDto(
+      await Genre.query().where('publicId', payload.id).whereNull('deleted_at').firstOrFail()
+    )
   }
 
   @ApiOperation({
@@ -63,15 +65,15 @@ export default class GenresController {
     const payload = await getIdPaginationValidator.validate(params)
     return BookDto.fromPaginator(
       await Book.query()
-        .preload('genres')
-        .preload('genres', (q) => q.pivotColumns(['role', 'type']))
-        .preload('series')
-        .preload('identifiers')
-        .preload('genres')
-        .preload('tracks')
-        .preload('publisher')
+        .whereNull('deleted_at')
+        .preload('genres', (q) => q.whereNull('deleted_at'))
+        .preload('contributors', (q) => q.pivotColumns(['role', 'type']).whereNull('deleted_at'))
+        .preload('series', (q) => q.whereNull('deleted_at'))
+        .preload('identifiers', (q) => q.whereNull('deleted_at'))
+        .preload('tracks', (q) => q.whereNull('deleted_at'))
+        .preload('publisher', (q) => q.whereNull('deleted_at'))
         .whereHas('genres', (q) => {
-          q.where('public_id', payload.id)
+          q.where('public_id', payload.id).whereNull('deleted_at')
         })
         .paginate(payload.page, payload.limit)
     )
@@ -89,7 +91,9 @@ export default class GenresController {
   async getMultiple({ request }: HttpContext) {
     const payload = await getIdsValidator.validate(request.qs())
 
-    const genres: Genre[] = await Genre.query().whereIn('public_id', payload.ids)
+    const genres: Genre[] = await Genre.query()
+      .whereIn('public_id', payload.ids)
+      .whereNull('deleted_at')
 
     if (!genres || genres.length === 0) throw new NotFoundException()
 

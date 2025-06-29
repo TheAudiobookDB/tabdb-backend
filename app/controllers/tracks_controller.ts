@@ -49,7 +49,9 @@ export default class TracksController {
   @successApiResponse({ type: TrackFullDto, status: 200 })
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
-    return new TrackFullDto(await Track.query().where('publicId', payload.id).firstOrFail())
+    return new TrackFullDto(
+      await Track.query().where('publicId', payload.id).whereNull('deleted_at').firstOrFail()
+    )
   }
 
   /**
@@ -78,13 +80,22 @@ export default class TracksController {
   async getTracksForBook({ params }: HttpContext) {
     const payload = await getIdPaginationValidator.validate(params)
 
-    const book = await Book.findByOrFail('publicId', payload.id)
+    const book = await Book.query()
+      .where('publicId', payload.id)
+      .whereNull('deleted_at')
+      .firstOrFail()
 
     return TrackFullDto.fromPaginator(
       await Track.query()
         .where('bookId', book?.id)
-        .preload('contributors', (q) => q.withScopes((s) => s.minimal()).pivotColumns(['role']))
-        .preload('images')
+        .whereNull('deleted_at')
+        .preload('contributors', (q) =>
+          q
+            .withScopes((s) => s.minimal())
+            .pivotColumns(['role'])
+            .whereNull('deleted_at')
+        )
+        .preload('images', (q) => q.whereNull('deleted_at'))
         .orderBy('start')
         .paginate(payload.page, payload.limit)
     )

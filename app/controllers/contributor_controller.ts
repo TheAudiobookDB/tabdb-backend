@@ -48,7 +48,11 @@ export default class NarratorsController {
   async get({ params }: HttpContext) {
     const payload = await getIdValidator.validate(params)
     return new ContributorFullDto(
-      await Contributor.query().where('publicId', payload.id).preload('identifiers').firstOrFail()
+      await Contributor.query()
+        .where('publicId', payload.id)
+        .whereNull('deleted_at')
+        .preload('identifiers')
+        .firstOrFail()
     )
   }
 
@@ -66,14 +70,15 @@ export default class NarratorsController {
     const payload = await getIdPaginationValidator.validate(params)
     return BookDto.fromPaginator(
       await Book.query()
-        .preload('contributors', (q) => q.pivotColumns(['role', 'type']))
-        .preload('series')
-        .preload('identifiers')
-        .preload('genres')
-        .preload('tracks')
-        .preload('publisher')
+        .whereNull('deleted_at')
+        .preload('contributors', (q) => q.pivotColumns(['role', 'type']).whereNull('deleted_at'))
+        .preload('series', (q) => q.whereNull('deleted_at'))
+        .preload('identifiers', (q) => q.whereNull('deleted_at'))
+        .preload('genres', (q) => q.whereNull('deleted_at'))
+        .preload('tracks', (q) => q.whereNull('deleted_at'))
+        .preload('publisher', (q) => q.whereNull('deleted_at'))
         .whereHas('contributors', (q) => {
-          q.where('public_id', payload.id)
+          q.where('public_id', payload.id).whereNull('deleted_at')
         })
         .paginate(payload.page, payload.limit)
     )
@@ -93,7 +98,8 @@ export default class NarratorsController {
 
     const contributors: Contributor[] = await Contributor.query()
       .whereIn('public_id', payload.ids)
-      .preload('identifiers')
+      .whereNull('deleted_at')
+      .preload('identifiers', (q) => q.whereNull('deleted_at'))
 
     if (!contributors || contributors.length === 0) throw new NotFoundException()
 
